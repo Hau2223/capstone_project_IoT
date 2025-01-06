@@ -13,7 +13,7 @@ const LoginScreen = () => {
   return (
     <LinearGradient
       colors={['#A7AEF9', '#DDCCF8', '#F5C9D9', '#CEBBFA', '#FAF1EE']}
-      locations={[0.08, 0.32, 0.6, 0.86, 1]} // Tỷ lệ % dừng
+      locations={[0.08, 0.32, 0.6, 0.86, 1]}
       style={styles.container}>
       <StatusBar barStyle={'light-content'} hidden={true} />
       <View style={styles.formLogin}>
@@ -27,7 +27,7 @@ const LoginScreen = () => {
               width: '100%',
               backgroundColor: '#F5F5F5',
               borderRadius: 30,
-              paddingHorizontal: 10
+              paddingHorizontal: 10,
             }}
           />
           <TextInput
@@ -38,7 +38,7 @@ const LoginScreen = () => {
               width: '100%',
               backgroundColor: '#F5F5F5',
               borderRadius: 30,
-              paddingHorizontal: 10
+              paddingHorizontal: 10,
             }}
           />
           <Text style={styles.txtForget}>Quên mật khẩu</Text>
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     height: '50%',
     width: '80%',
     backgroundColor: 'white',
-    gap: 18
+    gap: 18,
   },
   txtTitle: {
     fontSize: 24,
