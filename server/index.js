@@ -1,9 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const swaggerUi = require('swagger-ui-express');
-const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerSpec = require('./utils/swaggerConfig');
 const cors = require('cors');
-
 const app = express();
 const port = 8000;
 
@@ -19,39 +18,21 @@ mongoose
     console.log('Error connecting to MongoDB', err);
   });
 
-// Cấu hình Swagger JSDoc
-const options = {
-  definition: {
-    openapi: '3.0.0', // Chỉ định phiên bản OpenAPI
-    info: {
-      title: 'My API',
-      version: '1.0.0',
-      description: 'API cho dự án IoT',
-    },
-  },
-  apis: ['./index.js'], // Đọc tài liệu API từ file hiện tại
-};
 
-const swaggerSpec = swaggerJsdoc(options);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Middleware CORS
+
+const userRou = require('./routes/userRouter');
+const sensorRou = require('./routes/sensorRouter');
+
+
 app.use(cors());
 
-// API đơn giản
-/**
- * @swagger
- * /hello:
- *   get:
- *     description: Lấy thông tin từ API
- *     responses:
- *       200:
- *         description: Thành công
- */
-app.get('/hello', (req, res) => {
-  res.send('Welcome to my API!');
-});
+app.use('/api/sensor', sensorRou);
+app.use('/api/user', userRou);
+
+
 
 
 app.listen(port, () => {
