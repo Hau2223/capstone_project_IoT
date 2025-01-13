@@ -5,6 +5,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  deviceID: {
+    type: String,
+    default: '',
+  },
   email: {
     type: String,
     required: true,
