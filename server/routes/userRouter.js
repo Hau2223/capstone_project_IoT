@@ -11,16 +11,18 @@ app.use(passport.initialize());
 // Create a new cart
 /**
  * @swagger
- * /register:
+ * /api/user/register:
  *   post:
  *     summary: Register a new user
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/User'
+ *        application/json:
+ *           example:  # Dữ liệu JSON mẫu để test
+ *             name: "Nguyen van A"
+ *             email: "vana@gmail.com"
+ *             password: "1"
  *     responses:
  *       200:
  *         description: User registered successfully
@@ -29,24 +31,19 @@ app.use(passport.initialize());
  *       500:
  *         description: Internal server error
  */
-app.post('/register', (req, res) => {
-  const { name, email, password } = req.body;
-  const newUser = new User({ name, email, password });
-  newUser
-    .save()
-    .then(() => {
-      res.status(200).json({ message: 'User registered successfully!' });
-    })
-    .catch(err => {
-      if (err.code === 11000) {
-        res.status(400).json({ message: 'Email already exists!' });
-      } else {
-        console.error('Error registering user:', err);
-        res.status(500).json({ message: 'Internal server error!' });
-      }
-    });
+app.post('/register', async (req, res) => {
+  const {name, email, password} = req.body;
+  try {
+    if (await User.findOne({email})) {
+      return res.status(400).json({message: 'Email already exists!'});
+    }
+    await new User({name, email, password}).save();
+    return res.status(200).json({message: 'User registered successfully!'});
+  } catch (err) {
+    console.error('Error registering user:', err);
+    return res.status(500).json({message: 'Internal server error!'});
+  }
 });
-
 
 const createToken = userId => {
   const payload = {
@@ -57,7 +54,7 @@ const createToken = userId => {
 };
 /**
  * @swagger
- * /login:
+ * /api/user/login:
  *   post:
  *     summary: Login a user
  *     tags: [Authentication]
@@ -65,48 +62,57 @@ const createToken = userId => {
  *       required: true
  *       content:
  *         application/json:
+ *           example:  # Example JSON data for testing
+ *             email: "vana@gmail.com"
+ *             password: "1"
+ *             deviceID: "12345-abcde"
  *           schema:
  *             type: object
  *             required:
- *               - username
+ *               - email
  *               - password
+ *               - deviceID
  *             properties:
- *               username:
+ *               email:
  *                 type: string
  *               password:
  *                 type: string
+ *               deviceID:
+ *                 type: string
  *     responses:
  *       200:
- *         description: Login successful, returns token
+ *         description: Login successful, returns token and user type
  *       404:
  *         description: User not found or invalid credentials
  *       500:
  *         description: Internal server error
  */
-app.post('/login', (req, res) => {
-  const {username, password} = req.body;
-  if (!username || !password) {
-    return res
-      .status(404)
-      .json({message: 'Email and the password are required'});
+app.post('/login', async (req, res) => {
+  const { email, password, deviceID } = req.body;
+
+  if (!email || !password || !deviceID) {
+    return res.status(400).json({ message: 'Email, password, and deviceID are required' });
   }
 
-  User.findOne({username})
-    .then(user => {
-      if (!user) {
-        return res.status(404).json({message: 'User not found'});
-      }
-      if (user.password !== password) {
-        return res.status(404).json({message: 'Invalid Password'});
-      }
-      const token = createToken(user._id);
-      const type = user.type;
-      res.status(200).json({type, token, status: 200});
-    })
-    .catch(err => {
-      console.log('Error in finding the user', err);
-      res.status(404).json({message: 'Internal server Error!'});
-    });
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.password !== password) {
+      return res.status(404).json({ message: 'Invalid password' });
+    }
+
+    const token = createToken(user._id, deviceID);
+    const type = user.type;
+
+    res.status(200).json({ type, token, status: 200 });
+  } catch (err) {
+    console.error('Error logging in user:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
 module.exports = app;

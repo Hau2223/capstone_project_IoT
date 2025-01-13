@@ -7,9 +7,13 @@ import {
   Pressable,
 } from 'react-native';
 import React, {memo} from 'react';
+import IconOni from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
+import DeviceInfo from 'react-native-device-info';
+
 
 const LoginScreen = () => {
+  const deviceId = DeviceInfo.getDeviceId();
   return (
     <LinearGradient
       colors={['#A7AEF9', '#DDCCF8', '#F5C9D9', '#CEBBFA', '#FAF1EE']}
