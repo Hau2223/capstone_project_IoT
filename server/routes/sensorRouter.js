@@ -19,6 +19,12 @@ const app = express();
  *                 type: number
  *               temperature:
  *                 type: number
+ *               humidity:
+ *                 type: number
+ *               rainCover:
+ *                 type: number
+ *               lightIntensity:
+ *                 type: number
  *     responses:
  *       201:
  *         description: Dữ liệu đã được lưu
