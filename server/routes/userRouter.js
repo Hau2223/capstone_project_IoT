@@ -105,13 +105,59 @@ app.post('/login', async (req, res) => {
       return res.status(404).json({ message: 'Invalid password' });
     }
 
-    const token = createToken(user._id, deviceID);
+    user.deviceID = deviceID; // Update deviceID
+    await user.save();
+
+    const token = createToken(user._id);
     const type = user.type;
 
     res.status(200).json({ type, token, status: 200 });
   } catch (err) {
     console.error('Error logging in user:', err);
     res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /api/user/profile/{id}:
+ *   get:
+ *     summary: Get infomation user
+ *     tags: [Information]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The user ID
+ *     responses:
+ *       200:
+ *         description: User details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+app.get('/profile/:id', async (req, res) => {
+  try {
+      const { id } = req.params;
+      const product = await User.findById(id);
+      res.status(200).json(product);
+  } catch (error) {
+      console.error('Error fetching product:', error);
+      res.status(404).json({ message: 'Product not found' });
   }
 });
 
