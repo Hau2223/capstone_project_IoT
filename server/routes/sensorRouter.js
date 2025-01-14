@@ -4,7 +4,7 @@ const app = express();
 
 /**
  * @swagger
- * /data:
+ * /api/sensor/data:
  *   post:
  *     description: Lưu dữ liệu cảm biến vào MongoDB
  *     tags: [Sensor]
