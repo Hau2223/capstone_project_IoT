@@ -21,6 +21,7 @@
     "react-native-device-info": "^14.0.2",
     "react-native-elements": "^3.4.3",
     "react-native-linear-gradient": "^2.8.3",
+    "react-native-paper": "^5.13.1",
     "react-native-safe-area-context": "^5.0.0",
     "react-native-screens": "^4.4.0",
     "react-native-svg": "^15.10.1",

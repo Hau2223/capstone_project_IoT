@@ -5,6 +5,11 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import LoginScreen from './Screens/LoginScreen/LoginScreen';
+import TestScreen from './Screens/test';
+import DetailScreen from './Screens/DetailScreen/DetailScreen';
+import ScheduleScreen from './Screens/ScheduleScreen/ScheduleScreen';
+import AlarmScreen from './Screens/ScheduleScreen/AlarmScreen';
+import SetTimerScreen from './Screens/ScheduleScreen/SetTimerScreen';
 
 const Tab = createBottomTabNavigator();
 const StackNav = createNativeStackNavigator();
@@ -107,7 +112,7 @@ const Navigator = () => {
   return (
     <NavigationContainer>
       <StackNav.Navigator
-        initialRouteName="Login"
+        initialRouteName="ScheduleScreen"
         screenOptions={{
           headerShown: false,
         }}>
@@ -120,6 +125,31 @@ const Navigator = () => {
           name="Login"
           component={LoginScreen}
           options={{headerShown: false, animation: 'fade_from_bottom'}}
+        />
+        <StackNav.Screen
+          name="Test"
+          component={TestScreen}
+          options={{headerShown: false, animation: 'fade_from_bottom'}}
+        />
+        <StackNav.Screen
+          name="DetailScreen"
+          component={DetailScreen}
+          options={{ headerShown: false, animation: 'fade_from_bottom' }}
+        />
+        <StackNav.Screen
+          name="ScheduleScreen"
+          component={ScheduleScreen}
+          options={{ headerShown: false, animation: 'fade_from_bottom' }}
+        />
+        <StackNav.Screen
+          name="AlarmScreen"
+          component={AlarmScreen}
+          options={{ headerShown: false, animation: 'fade_from_bottom' }}
+        />
+        <StackNav.Screen
+          name="SetTimerScreen"
+          component={SetTimerScreen}
+          options={{ headerShown: false, animation: 'fade_from_bottom' }}
         />
       </StackNav.Navigator>
     </NavigationContainer>
