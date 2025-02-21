@@ -5,6 +5,7 @@ const Device = require('../models/deviceModel');
 const Sensor = require('../models/sensorModel');
 const app = express();
 const bodyParser = require('body-parser');
+const {default: axios} = require('axios');
 app.use(bodyParser.json());
 
 /**
@@ -112,13 +113,48 @@ app.post('/create', async (req, res) => {
  *     responses:
  *       200:
  *         description: Điều khiển thành công
- *       403:
- *         description: Người dùng không có quyền điều khiển thiết bị
  *       404:
  *         description: Không tìm thấy thiết bị hoặc người dùng
  *       500:
  *         description: Lỗi khi điều khiển thiết bị
  */
+// app.post('/active/:userId/:deviceId', async (req, res) => {
+//   const {userId, deviceId} = req.params;
+
+//   try {
+//     // Kiểm tra xem người dùng có tồn tại
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(404).json({message: 'User not found'});
+//     }
+
+//     // Kiểm tra xem thiết bị có tồn tại
+//     const device = await Device.findOne({idDevice: deviceId});
+//     if (!device) {
+//       return res.status(404).json({message: 'Device not found'});
+//     }
+
+//     // Cập nhật trạng thái active của thiết bị
+//     device.active = !device.active; // Toggle active status
+//     await device.save();
+
+//     // Cập nhật sensor control properties
+//     const sensors = await Sensor.find({idDevice: deviceId});
+//     sensors.forEach(sensor => {
+//       sensor.updateControl(device.active);
+//       sensor.save();
+//     });
+
+//     res.status(200).json({
+//       message: 'Device activation status toggled successfully',
+//       device,
+//       sensors,
+//     });
+//   } catch (error) {
+//     res.status(500).json({message: 'Error activating device', error});
+//   }
+// });
+
 app.post('/active/:userId/:deviceId', async (req, res) => {
   const {userId, deviceId} = req.params;
 
@@ -138,11 +174,9 @@ app.post('/active/:userId/:deviceId', async (req, res) => {
     // Kiểm tra xem người dùng có quyền điều khiển thiết bị không
     const controlRecord = await Control.findOne({id_Device: deviceId});
     if (!controlRecord || !controlRecord.id_User.includes(userId)) {
-      return res
-        .status(403)
-        .json({
-          message: 'User does not have permission to control this device',
-        });
+      return res.status(403).json({
+        message: 'User does not have permission to control this device',
+      });
     }
 
     device.active = !device.active;
@@ -155,6 +189,11 @@ app.post('/active/:userId/:deviceId', async (req, res) => {
       sensor.save();
     });
 
+    // Gửi HTTP yêu cầu đến ESP32 để điều khiển thiết bị
+    const esp32IP = 'http://' + device.ipDevice; // Đặt IP của ESP32
+    await axios.post(`${esp32IP}/controlAll`, {
+      status: device.active,
+    });
     res.status(200).json({
       message: 'Device activation status toggled successfully',
       device,
