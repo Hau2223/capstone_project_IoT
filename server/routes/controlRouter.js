@@ -5,7 +5,8 @@ const Device = require('../models/deviceModel');
 const Sensor = require('../models/sensorModel');
 const app = express();
 const bodyParser = require('body-parser');
-const {default: axios} = require('axios');
+const { default: axios } = require('axios');
+
 app.use(bodyParser.json());
 
 /**
