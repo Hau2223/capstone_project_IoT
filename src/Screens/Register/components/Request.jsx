@@ -4,36 +4,24 @@ import {
   View,
   TextInput,
   Pressable,
-  BackHandler,
-  Image,
+  useWindowDimensions,
 } from 'react-native';
-import React, {
-  useState,
-  useEffect,
-  useContext,
-  useRef,
-  useCallback,
-  memo,
-} from 'react';
+import React, {useState, useRef, memo} from 'react';
 import IconOni from 'react-native-vector-icons/Ionicons';
-import LinearGradient from 'react-native-linear-gradient';
-import DeviceInfo from 'react-native-device-info';
 import {useNavigation} from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {login} from '../../../services/authServices';
-import {UserContext} from '../../../utils/UserContext';
-import colors from '../../../assets/common/colorCss';
+import colors from '../../../../assets/common/colorCss';
 
-const LoginScreen = () => {
+const Request = () => {
   const navigation = useNavigation();
-  const deviceId = DeviceInfo.getDeviceId();
+  const {width, height} = useWindowDimensions();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
   const [focusedFieldPhone, setFocusedFieldPhone] = useState(null);
   const [focusedFieldPass, setFocusedFieldPass] = useState(null);
+
   const [showPassword, setShowPassword] = useState(false);
   const [showInfoAlert, setShowInfoAlert] = useState(false);
-  const {setUserToken} = useContext(UserContext);
   const textInputUserRef = useRef(null);
   const textInputPassRef = useRef(null);
 
@@ -46,78 +34,15 @@ const LoginScreen = () => {
   const toggleDelPasVisible = () => {
     setPassword('');
   };
+  
 
-  // useEffect(() => {
-  //   console.log('Bắt đầu gọi API bằng axios...');
-  //   const fetchAPI = async () => {
-  //     try {
-  //       const response = await me('67851c04ad4d24acdadbb6cc');
-  //       console.log('Dữ liệu nhận được từ axios:', response?.data?._id); // response.data thay vì response.json()
-  //     } catch (error) {
-  //       console.error('Lỗi khi gọi API bằng axios:', error.message);
-  //     }
-  //   };
-  //   fetchAPI();
-  // }, []);
-
-  const handleLogin = useCallback(() => {
-    login({
-      email,
-      password,
-      deviceId,
-    })
-      .then(response => {
-        if (response?.status === 404) {
-          setShowInfoAlert(true);
-        } else if (response?.data) {
-          const token = response.data;
-          setShowInfoAlert(false);
-          AsyncStorage.setItem('authToken', token);
-          token && setUserToken(token);
-          navigation.navigate('Tabs');
-        }
-        console.log('Response:', response);
-      })
-      .catch(err => {
-        setShowInfoAlert(true);
-        console.log('Login Error', err.response?.data || err.message);
-      });
-  }, [email, password, deviceId, setUserToken, navigation]);
-
-  const shouldExitApp = React.useCallback(() => {
-    const currentRoute =
-      navigation.getState().routes[navigation.getState().index].name;
-    return currentRoute === 'Login';
-  }, [navigation]);
-
-  useEffect(() => {
-    const backAction = () => {
-      if (shouldExitApp()) {
-        BackHandler.exitApp();
-        return true;
-      } else {
-        navigation.goBack();
-        return true;
-      }
-    };
-
-    const subscription = BackHandler.addEventListener(
-      'hardwareBackPress',
-      backAction,
-    );
-
-    return () => subscription.remove();
-  }, [navigation, shouldExitApp]);
 
   return (
-    <LinearGradient
-      colors={['#A7AEF9', '#DDCCF8', '#F5C9D9', '#CEBBFA', '#FAF1EE']}
-      locations={[0.08, 0.32, 0.6, 0.86, 1]}
-      style={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.txtTitle}>HỆ THỐNG QUẢN LÝ THIẾT BỊ IOT</Text>
       <View style={styles.formLogin}>
         <View style={styles.login}>
-          <Text style={styles.txtLogin}>Đăng Nhập</Text>
+          <Text style={styles.txtLogin}>Đăng Kí</Text>
           <View
             style={styles.edtInput}
             onTouchStart={() => {
@@ -138,7 +63,11 @@ const LoginScreen = () => {
             {focusedFieldPhone && email.length > 0 && (
               <>
                 <Pressable onPress={toggleDelUserVisible}>
-                  <IconOni name="close-circle" color={colors.loginTxt} size={20} />
+                  <IconOni
+                    name="close-circle"
+                    color={colors.loginTxt}
+                    size={20}
+                  />
                 </Pressable>
               </>
             )}
@@ -165,7 +94,11 @@ const LoginScreen = () => {
             <View style={styles.iconPass}>
               {focusedFieldPass && password.length > 0 && (
                 <Pressable onPress={toggleDelPasVisible}>
-                  <IconOni name="close-circle" color={colors.loginTxt} size={20} />
+                  <IconOni
+                    name="close-circle"
+                    color={colors.loginTxt}
+                    size={20}
+                  />
                 </Pressable>
               )}
               <IconOni
@@ -176,33 +109,32 @@ const LoginScreen = () => {
               />
             </View>
           </View>
-          <Text style={styles.txtForget}>Quên mật khẩu</Text>
         </View>
         <View style={styles.layoutbtn}>
-          <Pressable style={styles.btnLogin} onPress={handleLogin}>
-            <Text style={styles.txtBtn}>Đăng Nhập</Text>
+          <Pressable style={styles.btnLogin} onPress={() => console.log('123')}>
+            <Text style={styles.txtBtn}>Tạo Tài Khoản</Text>
           </Pressable>
           <Text style={styles.txtAccNaN}>
-            Bạn chưa có tài khoản?{' '}
+            Bạn đã có tài khoản?{' '}
             <Text
               style={styles.txtRegister}
-              onPress={() => navigation.navigate('Register')}>
-              Đăng kí
+              onPress={() => navigation.navigate('Login')}>
+              Đăng nhập
             </Text>
           </Text>
         </View>
       </View>
-    </LinearGradient>
+    </View>
   );
 };
 
-export default memo(LoginScreen);
+export default memo(Request);
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
+    flex: 0.85,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   formLogin: {
     width: '80%',
@@ -221,17 +153,13 @@ const styles = StyleSheet.create({
   login: {
     marginVertical: 20,
     width: '80%',
-    backgroundColor: colors.white,
+
     gap: 18,
   },
   txtLogin: {
     fontSize: 34,
     color: colors.black,
     fontWeight: 'bold',
-  },
-  txtForget: {
-    fontStyle: 'italic',
-    color: colors.txtForget,
   },
   edtInput: {
     width: '100%',

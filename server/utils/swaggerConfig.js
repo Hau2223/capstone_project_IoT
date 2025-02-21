@@ -8,9 +8,23 @@ const options = {
       version: '1.0.0',
       description: 'API Documentation for IoT project',
     },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
     servers: [
       {
-        url: 'https://capstone-project-iot-1.onrender.com',
+        url: 'http://localhost:8000',
         // //https://capstone-project-iot-1.onrender.com
         // //http://localhost:8000
       },

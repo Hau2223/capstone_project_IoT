@@ -1,62 +1,59 @@
-import {Button, StyleSheet, Text, View} from 'react-native';
-import React from 'react';
+import {Button, StyleSheet, Text, View, ActivityIndicator} from 'react-native';
+import React, {useContext, useEffect, useState} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+
+import {UserProvider, UserContext} from '../utils/UserContext';
+import OnBoardingScreen from './Screens/OnBoarding/OnBoardingScreen';
 import LoginScreen from './Screens/LoginScreen/LoginScreen';
+import RegisterScreen from './Screens/Register/RegisterScreen';
 
 const Tab = createBottomTabNavigator();
 const StackNav = createNativeStackNavigator();
 
-const HomeScreen = ({navigation}) => {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Home Screen</Text>
-      <Button
-        title="Go to Details"
-        onPress={() => navigation.navigate('Details')}
-      />
-    </View>
-  );
-};
+const HomeScreen = ({navigation}) => (
+  <View style={styles.container}>
+    <Text style={styles.text}>Home Screen</Text>
+    <Button
+      title="Go to Details"
+      onPress={() => navigation.navigate('Details')}
+    />
+  </View>
+);
 
-const DetailsScreen = ({navigation}) => {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Details Screen</Text>
-      <Button title="Go back" onPress={() => navigation.goBack()} />
-    </View>
-  );
-};
+const DetailsScreen = ({navigation}) => (
+  <View style={styles.container}>
+    <Text style={styles.text}>Details Screen</Text>
+    <Button title="Go back" onPress={() => navigation.goBack()} />
+  </View>
+);
 
-const SettingScreen = ({navigation}) => {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Setting Screen</Text>
-      <Button title="Go back" onPress={() => navigation.goBack()} />
-    </View>
-  );
-};
+const SettingScreen = ({navigation}) => (
+  <View style={styles.container}>
+    <Text style={styles.text}>Setting Screen</Text>
+    <Button title="Go back" onPress={() => navigation.goBack()} />
+  </View>
+);
 
-// Hàm để lấy icon dựa trên tên tab
+const LoadingScreen = ({navigation}) => (
+  <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+    <ActivityIndicator size="large" color="tomato" />
+  </View>
+);
+
+// Hàm lấy icon
 const getTabBarIcon = (name, color) => {
-  let iconName;
-  switch (name) {
-    case 'Home':
-      iconName = 'home-outline';
-      break;
-    case 'Detail':
-      iconName = 'information-circle-outline';
-      break;
-    case 'Setting':
-      iconName = 'settings-outline';
-      break;
-    default:
-      iconName = 'help-outline';
-  }
-
-  return <Ionicons name={iconName} size={24} color={color} />;
+  const icons = {
+    Home: 'home-outline',
+    Detail: 'information-circle-outline',
+    Setting: 'settings-outline',
+  };
+  return (
+    <Ionicons name={icons[name] || 'help-outline'} size={24} color={color} />
+  );
 };
 
 function MyTabs() {
@@ -102,26 +99,42 @@ function MyTabs() {
     </Tab.Navigator>
   );
 }
-
 const Navigator = () => {
   return (
     <NavigationContainer>
-      <StackNav.Navigator
-        initialRouteName="Login"
-        screenOptions={{
-          headerShown: false,
-        }}>
-        <StackNav.Screen
-          name="Tabs"
-          component={MyTabs}
-          options={{headerShown: false, animation: 'fade_from_bottom'}}
-        />
-        <StackNav.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{headerShown: false, animation: 'fade_from_bottom'}}
-        />
-      </StackNav.Navigator>
+      <UserProvider>
+        <StackNav.Navigator
+          initialRouteName="Loading"
+          screenOptions={{
+            headerShown: false,
+          }}>
+          <StackNav.Screen
+            name="Loading"
+            component={LoadingScreen}
+            options={{headerShown: false, animation: 'fade_from_bottom'}}
+          />
+          <StackNav.Screen
+            name="OnBoarding"
+            component={OnBoardingScreen}
+            options={{headerShown: false, animation: 'fade_from_bottom'}}
+          />
+          <StackNav.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{headerShown: false, animation: 'fade_from_bottom'}}
+          />
+          <StackNav.Screen
+            name="Register"
+            component={RegisterScreen}
+            options={{animation: 'fade'}}
+          />
+          <StackNav.Screen
+            name="Tabs"
+            component={MyTabs}
+            options={{headerShown: false, animation: 'fade_from_bottom'}}
+          />
+        </StackNav.Navigator>
+      </UserProvider>
     </NavigationContainer>
   );
 };
@@ -135,8 +148,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'tomato',
   },
-  text: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
+  text: {fontSize: 24, fontWeight: 'bold'},
 });
