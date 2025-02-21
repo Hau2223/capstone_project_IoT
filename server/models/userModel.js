@@ -18,8 +18,22 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  avatar: {
+    type: String,
+  },
+  full_name: {
+    type: String,
+  },
+  date_of_birth: {
+    type: Date,
+  },
+  gender: {
+    type: String,
+  },
+  role: {
+    type: String,
+  },
 });
 
 const User = mongoose.model('User', userSchema);
-
 module.exports = User;
