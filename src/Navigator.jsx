@@ -9,15 +9,12 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {UserProvider, UserContext} from '../utils/UserContext';
 import OnBoardingScreen from './Screens/OnBoarding/OnBoardingScreen';
 import LoginScreen from './Screens/LoginScreen/LoginScreen';
-<<<<<<< HEAD
 import TestScreen from './Screens/test';
 import DetailScreen from './Screens/DetailScreen/DetailScreen';
 import ScheduleScreen from './Screens/ScheduleScreen/ScheduleScreen';
 import AlarmScreen from './Screens/ScheduleScreen/AlarmScreen';
 import SetTimerScreen from './Screens/ScheduleScreen/SetTimerScreen';
-=======
 import RegisterScreen from './Screens/Register/RegisterScreen';
->>>>>>> 7504e687282fb0945b7e30a984479a9e878f1a8f
 
 const Tab = createBottomTabNavigator();
 const StackNav = createNativeStackNavigator();

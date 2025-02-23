@@ -25,11 +25,8 @@
     "react-native-device-info": "^14.0.2",
     "react-native-elements": "^3.4.3",
     "react-native-linear-gradient": "^2.8.3",
-<<<<<<< HEAD
-=======
     "react-native-onboarding-swiper": "^1.3.0",
     "react-native-otp-entry": "^1.8.2",
->>>>>>> 7504e687282fb0945b7e30a984479a9e878f1a8f
     "react-native-paper": "^5.13.1",
     "react-native-safe-area-context": "^5.0.0",
     "react-native-screens": "^4.4.0",
