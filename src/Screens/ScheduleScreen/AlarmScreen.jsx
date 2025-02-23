@@ -1,4 +1,4 @@
-import {StyleSheet, Text, View,FlatList} from 'react-native';
+import {StyleSheet, Text, View,FlatList,TouchableOpacity} from 'react-native';
 import {React, useState} from 'react';
 import {Switch} from 'react-native-paper';
 
@@ -8,6 +8,12 @@ const AlarmScreen = ({route,navigation}) => {
     { id: '1', numbClock: '06:00', timer: '30 phút', calendar: 'T.3, T.5, T.7', isWatering: true },
     { id: '2', numbClock: '07:30', timer: '45 phút', calendar: 'T.2, T.4, T.6', isWatering: true },
     { id: '3', numbClock: '08:15', timer: '60 phút', calendar: 'C.N, T.5', isWatering: true },
+    { id: '4', numbClock: '08:15', timer: '60 phút', calendar: 'C.N, T.5', isWatering: true },
+    { id: '5', numbClock: '08:15', timer: '60 phút', calendar: 'C.N, T.5', isWatering: true },
+    { id: '6', numbClock: '08:15', timer: '60 phút', calendar: 'C.N, T.5', isWatering: true },
+    { id: '7', numbClock: '08:15', timer: '60 phút', calendar: 'C.N, T.5', isWatering: true },
+    { id: '8', numbClock: '08:15', timer: '60 phút', calendar: 'C.N, T.5', isWatering: true },
+    { id: '9', numbClock: '08:20', timer: '60 phút', calendar: 'C.N, T.5', isWatering: true },
   ]);
 
   const {item} = route.params;
@@ -52,10 +58,10 @@ const AlarmScreen = ({route,navigation}) => {
   );
 };
 
-const ItemAlarm = ({ isWatering,toggleSwitch,numbClock,timer,calendar }) => {
+const ItemAlarm = ({ isWatering,toggleSwitch,numbClock,timer,calendar,onPress }) => {
 
   return (
-    <View style={styles.frameItem} onPress={() => handleGoToSetTimer(item)}>
+    <TouchableOpacity style={styles.frameItem} onPress={onPress}>
       <View style={styles.content1}>
         <View style={styles.textNumClock}>
           <Text style={styles.txtNumClock}>{numbClock}</Text>
@@ -78,7 +84,7 @@ const ItemAlarm = ({ isWatering,toggleSwitch,numbClock,timer,calendar }) => {
             />
           </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -105,7 +111,8 @@ const styles = StyleSheet.create({
     height: "auto",
     width: '100%',
     alignItems: 'center',
-    marginTop:10
+    marginTop:10,
+    marginBottom:0
   },
 
   //css ItemAlarm

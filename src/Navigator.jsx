@@ -101,58 +101,23 @@ function MyTabs() {
           tabBarIcon: ({color}) => getTabBarIcon('Setting', color),
         }}
       />
+      <Tab.Screen
+          name="ScheduleScreen"
+          component={ScheduleScreen}
+          options={{
+            headerShown: false,
+            tabBarIcon: ({color}) => getTabBarIcon('Detail', color),
+          }}
+        />
     </Tab.Navigator>
   );
 }
 const Navigator = () => {
   return (
     <NavigationContainer>
-<<<<<<< HEAD
-      <StackNav.Navigator
-        initialRouteName="ScheduleScreen"
-        screenOptions={{
-          headerShown: false,
-        }}>
-        <StackNav.Screen
-          name="Tabs"
-          component={MyTabs}
-          options={{headerShown: false, animation: 'fade_from_bottom'}}
-        />
-        <StackNav.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{headerShown: false, animation: 'fade_from_bottom'}}
-        />
-        <StackNav.Screen
-          name="Test"
-          component={TestScreen}
-          options={{headerShown: false, animation: 'fade_from_bottom'}}
-        />
-        <StackNav.Screen
-          name="DetailScreen"
-          component={DetailScreen}
-          options={{ headerShown: false, animation: 'fade_from_bottom' }}
-        />
-        <StackNav.Screen
-          name="ScheduleScreen"
-          component={ScheduleScreen}
-          options={{ headerShown: false, animation: 'fade_from_bottom' }}
-        />
-        <StackNav.Screen
-          name="AlarmScreen"
-          component={AlarmScreen}
-          options={{ headerShown: false, animation: 'fade_from_bottom' }}
-        />
-        <StackNav.Screen
-          name="SetTimerScreen"
-          component={SetTimerScreen}
-          options={{ headerShown: false, animation: 'fade_from_bottom' }}
-        />
-      </StackNav.Navigator>
-=======
       <UserProvider>
         <StackNav.Navigator
-          initialRouteName="Loading"
+          initialRouteName="Tabs"
           screenOptions={{
             headerShown: false,
           }}>
@@ -181,9 +146,29 @@ const Navigator = () => {
             component={MyTabs}
             options={{headerShown: false, animation: 'fade_from_bottom'}}
           />
+                  <StackNav.Screen
+          name="Test"
+          component={TestScreen}
+          options={{headerShown: false, animation: 'fade_from_bottom'}}
+        />
+        <StackNav.Screen
+          name="DetailScreen"
+          component={DetailScreen}
+          options={{ headerShown: false, animation: 'fade_from_bottom' }}
+        />
+        
+        <StackNav.Screen
+          name="AlarmScreen"
+          component={AlarmScreen}
+          options={{ headerShown: false, animation: 'fade_from_bottom' }}
+        />
+        <StackNav.Screen
+          name="SetTimerScreen"
+          component={SetTimerScreen}
+          options={{ headerShown: false, animation: 'fade_from_bottom' }}
+        />
         </StackNav.Navigator>
       </UserProvider>
->>>>>>> 7504e687282fb0945b7e30a984479a9e878f1a8f
     </NavigationContainer>
   );
 };
@@ -199,3 +184,4 @@ const styles = StyleSheet.create({
   },
   text: {fontSize: 24, fontWeight: 'bold'},
 });
+
