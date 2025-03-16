@@ -9,6 +9,11 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {UserProvider, UserContext} from '../utils/UserContext';
 import OnBoardingScreen from './Screens/OnBoarding/OnBoardingScreen';
 import LoginScreen from './Screens/LoginScreen/LoginScreen';
+import TestScreen from './Screens/test';
+import DetailScreen from './Screens/DetailScreen/DetailScreen';
+import ScheduleScreen from './Screens/ScheduleScreen/ScheduleScreen';
+import AlarmScreen from './Screens/ScheduleScreen/AlarmScreen';
+import SetTimerScreen from './Screens/ScheduleScreen/SetTimerScreen';
 import RegisterScreen from './Screens/Register/RegisterScreen';
 
 const Tab = createBottomTabNavigator();
@@ -96,6 +101,14 @@ function MyTabs() {
           tabBarIcon: ({color}) => getTabBarIcon('Setting', color),
         }}
       />
+      <Tab.Screen
+          name="ScheduleScreen"
+          component={ScheduleScreen}
+          options={{
+            headerShown: false,
+            tabBarIcon: ({color}) => getTabBarIcon('Detail', color),
+          }}
+        />
     </Tab.Navigator>
   );
 }
@@ -104,7 +117,7 @@ const Navigator = () => {
     <NavigationContainer>
       <UserProvider>
         <StackNav.Navigator
-          initialRouteName="Loading"
+          initialRouteName="Tabs"
           screenOptions={{
             headerShown: false,
           }}>
@@ -133,6 +146,27 @@ const Navigator = () => {
             component={MyTabs}
             options={{headerShown: false, animation: 'fade_from_bottom'}}
           />
+                  <StackNav.Screen
+          name="Test"
+          component={TestScreen}
+          options={{headerShown: false, animation: 'fade_from_bottom'}}
+        />
+        <StackNav.Screen
+          name="DetailScreen"
+          component={DetailScreen}
+          options={{ headerShown: false, animation: 'fade_from_bottom' }}
+        />
+        
+        <StackNav.Screen
+          name="AlarmScreen"
+          component={AlarmScreen}
+          options={{ headerShown: false, animation: 'fade_from_bottom' }}
+        />
+        <StackNav.Screen
+          name="SetTimerScreen"
+          component={SetTimerScreen}
+          options={{ headerShown: false, animation: 'fade_from_bottom' }}
+        />
         </StackNav.Navigator>
       </UserProvider>
     </NavigationContainer>
@@ -150,3 +184,4 @@ const styles = StyleSheet.create({
   },
   text: {fontSize: 24, fontWeight: 'bold'},
 });
+
