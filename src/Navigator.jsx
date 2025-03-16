@@ -15,6 +15,7 @@ const Tab = createBottomTabNavigator();
 const StackNav = createNativeStackNavigator();
 
 const HomeScreen = ({navigation}) => (
+
   <View style={styles.container}>
     <Text style={styles.text}>Home Screen</Text>
     <Button
@@ -24,12 +25,18 @@ const HomeScreen = ({navigation}) => (
   </View>
 );
 
-const DetailsScreen = ({navigation}) => (
-  <View style={styles.container}>
-    <Text style={styles.text}>Details Screen</Text>
-    <Button title="Go back" onPress={() => navigation.goBack()} />
-  </View>
-);
+const DetailsScreen = ({ navigation }) => {
+  const handleGoBack = async () => {
+    await AsyncStorage.removeItem('authToken');
+    navigation.goBack();
+  };
+  return (
+    <View style={styles.container}>
+      <Text style={styles.text}>Details Screen</Text>
+      <Button title="Go back" onPress={handleGoBack} />
+    </View>
+  );
+};
 
 const SettingScreen = ({navigation}) => (
   <View style={styles.container}>

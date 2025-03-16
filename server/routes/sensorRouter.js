@@ -140,5 +140,169 @@ app.get('/getData', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/sensor/controlPump:
+ *   post:
+ *     summary: Control the pump state
+ *     tags: [Control]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example:
+ *             idDevice: 'device-123'
+ *             state: 'on'  # Possible values: 'on', 'off', 'auto'
+ *     responses:
+ *       200:
+ *         description: Pump state updated successfully
+ *       404:
+ *         description: Device not found
+ *       400:
+ *         description: Invalid state value
+ *       500:
+ *         description: Error updating pump state
+ */
+app.post('/controlPump', async (req, res) => {
+  try {
+    const { idDevice, state } = req.body;
+
+    if (!idDevice) {
+      return res.status(400).json({ message: 'idDevice is required' });
+    }
+
+    if (!['on', 'off', 'auto'].includes(state)) {
+      return res.status(400).json({ message: 'Invalid state value' });
+    }
+
+    // Find the sensor data for the given idDevice
+    const sensorData = await Sensor.findOne({ idDevice });
+
+    if (!sensorData) {
+      return res.status(404).json({ message: 'Device not found' });
+    }
+
+    // Update the pump control state
+    sensorData.control.pump.on = state === 'on';
+    sensorData.control.pump.off = state === 'off';
+    sensorData.control.pump.auto = state === 'auto';
+
+    await sensorData.save();
+
+    res.status(200).json({ message: 'Pump state updated successfully', control: sensorData.control });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating pump state', error });
+  }
+});
+
+/**
+ * @swagger
+ * /api/sensor/controlFan:
+ *   post:
+ *     summary: Control the pump state
+ *     tags: [Control]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example:
+ *             idDevice: 'device-123'
+ *             state: 'on'  # Possible values: 'on', 'off', 'auto'
+ *     responses:
+ *       200:
+ *         description: Pump state updated successfully
+ *       404:
+ *         description: Device not found
+ *       400:
+ *         description: Invalid state value
+ *       500:
+ *         description: Error updating pump state
+ */
+app.post('/controlFan', async (req, res) => {
+  try {
+    const { idDevice, state } = req.body;
+
+    if (!idDevice) {
+      return res.status(400).json({ message: 'idDevice is required' });
+    }
+
+    if (!['on', 'off', 'auto'].includes(state)) {
+      return res.status(400).json({ message: 'Invalid state value' });
+    }
+
+    // Find the sensor data for the given idDevice
+    const sensorData = await Sensor.findOne({ idDevice });
+
+    if (!sensorData) {
+      return res.status(404).json({ message: 'Device not found' });
+    }
+
+    // Update the pump control state
+    sensorData.control.fan.on = state === 'on';
+    sensorData.control.fan.off = state === 'off';
+    sensorData.control.fan.auto = state === 'auto';
+
+    await sensorData.save();
+
+    res.status(200).json({ message: 'Pump state updated successfully', control: sensorData.control });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating pump state', error });
+  }
+});
+
+/**
+ * @swagger
+ * /api/sensor/controlLight:
+ *   post:
+ *     summary: Control the pump state
+ *     tags: [Control]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example:
+ *             idDevice: 'device-123'
+ *             state: 'on'  # Possible values: 'on', 'off', 'auto'
+ *     responses:
+ *       200:
+ *         description: Pump state updated successfully
+ *       404:
+ *         description: Device not found
+ *       400:
+ *         description: Invalid state value
+ *       500:
+ *         description: Error updating pump state
+ */
+app.post('/controlLight', async (req, res) => {
+  try {
+    const { idDevice, state } = req.body;
+
+    if (!idDevice) {
+      return res.status(400).json({ message: 'idDevice is required' });
+    }
+
+    if (!['on', 'off', 'auto'].includes(state)) {
+      return res.status(400).json({ message: 'Invalid state value' });
+    }
+
+    // Find the sensor data for the given idDevice
+    const sensorData = await Sensor.findOne({ idDevice });
+
+    if (!sensorData) {
+      return res.status(404).json({ message: 'Device not found' });
+    }
+
+    // Update the pump control state
+    sensorData.control.light.on = state === 'on';
+    sensorData.control.light.off = state === 'off';
+    sensorData.control.light.auto = state === 'auto';
+
+    await sensorData.save();
+
+    res.status(200).json({ message: 'Pump state updated successfully', control: sensorData.control });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating pump state', error });
+  }
+});
 
 module.exports = app;

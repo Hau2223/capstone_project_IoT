@@ -20,60 +20,7 @@ app.use(passport.initialize());
 const authenticateJWT = require('../middlewares/authMiddleware');
 const otpStore = {};
 const pendingRegistrations = {};
-const registeredUsers = {}; 
-
-/**
- * @swagger
- * /api/user/register:
- *   post:
- *     summary: Register a new user
- *     tags: [Authentication]
- *     requestBody:
- *       required: true
- *       content:
- *        application/json:
- *           example:  # Dữ liệu JSON mẫu để test
- *             name: "Nguyen van A"
- *             email: "vana@gmail.com"
- *             password: "1"
- *     responses:
- *       200:
- *         description: User registered successfully
- *       400:
- *         description: Email already exists
- *       500:
- *         description: Internal server error
- */
-app.post('/register', async (req, res) => {
-  const {name, email, password } = req.body;
-
-  // Kiểm tra xem email có đang chờ xác thực hay không
-  if (!pendingRegistrations[email]) {
-    return res.status(400).json({ message: 'Please verify your OTP before registering' });
-  }
-
-  // Kiểm tra xem email đã được đăng ký chưa
-  if (registeredUsers[email]) {
-    return res.status(400).json({ message: 'User already registered!' });
-  }
-
-  try {
-    // Kiểm tra xem email đã tồn tại trong cơ sở dữ liệu chưa
-    if (await User.findOne({ email })) {
-      return res.status(400).json({ message: 'Email already exists!' });
-    }
-
-    // Tạo tài khoản người dùng mới
-    await new User({name, email, password }).save();
-    registeredUsers[email] = true; // Đánh dấu email đã được đăng ký
-    delete pendingRegistrations[email]; // Xóa trạng thái đăng ký sau khi tạo thành công
-
-    return res.status(200).json({ message: 'User registered successfully!' });
-  } catch (err) {
-    console.error('Error registering user:', err);
-    return res.status(500).json({ message: 'Internal server error!' });
-  }
-});
+const registeredUsers = {};
 
 const createToken = userId => {
   const payload = {
@@ -136,15 +83,22 @@ app.post('/login', async (req, res) => {
       return res.status(404).json({status: 404, message: 'Invalid password'});
     }
 
-    user.deviceID = deviceID; // Update deviceID
-    await user.save();
+    // Kiểm tra nếu có người dùng khác đã đăng nhập
+    if (user.deviceID && user.deviceID !== deviceID) {
+      // Hủy phiên đăng nhập trước bằng cách cập nhật token rỗng hoặc đổi token
+      user.token = null;
+      return res.status(404).json({status: 404, message: 'Account is logged in', data: user.token});
+    }
 
-    const token = createToken(user._id);
+    user.deviceID = deviceID; // Cập nhật deviceID
+    const token = createToken(user._id); // Tạo token mới
+    user.token = token; // Lưu token vào database
+    await user.save();
 
     res.status(200).json({data: token, status: 200});
   } catch (err) {
     console.error('Error logging in user:', err);
-    res.status(500).json({status: 404, message: 'Internal server error'});
+    res.status(500).json({status: 500, message: 'Internal server error'});
   }
 });
 
@@ -226,18 +180,20 @@ app.get('/profile/:id', async (req, res) => {
  */
 app.get('/sendCode/:email', async (req, res) => {
   const email = req.params.email;
-
+  if (registeredUsers[email]) {
+    return res.status(400).json({message: 'User already registered!'});
+  }
   try {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      return res.status(500).json({ message: 'Email configuration error' });
+      return res.status(500).json({message: 'Email configuration error'});
     }
 
-    const randomNumber = Math.floor(100000 + Math.random() * 900000);
+    const randomNumber = Math.floor(1000 + Math.random() * 9000);
     otpStore[email] = {
       code: String(randomNumber),
       expires: Date.now() + 3 * 60 * 1000, // Hết hạn sau 3 phút
     };
-    
+
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -262,7 +218,9 @@ app.get('/sendCode/:email', async (req, res) => {
     });
   } catch (error) {
     console.error('Error sending email:', error.message);
-    res.status(500).json({ message: 'Failed to send email', error: error.message });
+    res
+      .status(500)
+      .json({message: 'Failed to send email', error: error.message});
   }
 });
 
@@ -291,34 +249,96 @@ app.get('/sendCode/:email', async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-
 app.post('/verifyOTP', (req, res) => {
-  const { email, code } = req.body;
+  const {email, code} = req.body;
 
   try {
     const otpEntry = otpStore[email];
 
     // Kiểm tra mã OTP
     if (!otpEntry) {
-      return res.status(400).json({ message: 'OTP does not exist or is invalid' });
+      return res
+        .status(400)
+        .json({message: 'OTP does not exist or is invalid'});
     }
 
     if (otpEntry.code !== code) {
-      return res.status(400).json({ message: 'Invalid OTP code' });
+      return res.status(400).json({message: 'Invalid OTP code'});
     }
 
     if (Date.now() > otpEntry.expires) {
       delete otpStore[email]; // Xóa mã OTP đã hết hạn
-      return res.status(400).json({ message: 'OTP has expired' });
+      return res.status(400).json({message: 'OTP has expired'});
     }
 
     // Xóa mã OTP đã xác thực
     delete otpStore[email];
-    res.status(200).json({ message: 'OTP verified successfully' });
+    res.status(200).json({message: 'OTP verified successfully'});
   } catch (error) {
     console.error('Error verifying OTP:', error.message);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({message: 'Internal server error'});
   }
 });
+
+/**
+ * @swagger
+ * /api/user/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *        application/json:
+ *           example:  # Dữ liệu JSON mẫu để test
+ *             name: "Nguyen van A"
+ *             email: "vana@gmail.com"
+ *             password: "1"
+ *     responses:
+ *       200:
+ *         description: User registered successfully
+ *       400:
+ *         description: Email already exists
+ *       500:
+ *         description: Internal server error
+ */
+app.post('/register', async (req, res) => {
+  const { name, email, password } = req.body;
+
+  if (registeredUsers[email]) {
+    return res.status(400).json({ message: 'User already registered!' });
+  }
+
+  if (!pendingRegistrations[email]) {
+    return res.status(400).json({ message: 'Please verify your OTP before registering' });
+  }
+
+  try {
+    // Kiểm tra email đã tồn tại chưa
+    if (await User.findOne({ email })) {
+      return res.status(400).json({ message: 'Email already exists!' });
+    }
+
+    // Tạo user mới
+    const newUser = new User({ name, email, password });
+    const token = createToken(newUser._id); // Tạo token mới
+    newUser.token = token; // Lưu token vào database
+    await newUser.save();
+
+    // Xóa trạng thái đăng ký
+    registeredUsers[email] = true;
+    delete pendingRegistrations[email];
+
+    return res.status(200).json({
+      message: 'User registered successfully!',
+      token, // Trả về token để tự động đăng nhập
+      status: 200,
+    });
+  } catch (err) {
+    console.error('Error registering user:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 
 module.exports = app;
