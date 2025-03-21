@@ -26,22 +26,26 @@ const deviceSchema = new Schema({
         required: true,
       },
       role: {
-        type: [String],
+        type: String,
         enum: ['owner', 'member'],
         default: 'member',
       },
     },
   ],
-  sensorIDs: [
+  sensors: [
     {
-      type: Schema.Types.ObjectId,
-      ref: 'Sensor',
+      sensorId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Sensor',
+      },
     },
   ],
-  controlIDs: [
+  controls: [
     {
-      type: Schema.Types.ObjectId,
-      ref: 'Control',
+      controlId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Control',
+      },
     },
   ],
 });
