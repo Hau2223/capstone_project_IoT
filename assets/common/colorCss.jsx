@@ -8,6 +8,8 @@ const colors = {
   loginTxt: '#8F8F8F',
   loginBtn: '#8359E3',
   txtForget: '#2567EA',
+  InputOTP: '#D5CBF2',
+  reSendOTP: '#12589E',
 };
 
 export default colors;

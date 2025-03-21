@@ -9,13 +9,11 @@ export const login = async params => {
 };
 
 export const signUp = async params => {
-  const data = {
+  return await post('/user/register', {
     name: params.name,
     email: params.email,
     password: params.password,
-  };
-  console.log('data', data);
-  return await post('/user/register', data);
+  });
 };
 
 export const sendOTPEmail = async params => {
@@ -23,12 +21,12 @@ export const sendOTPEmail = async params => {
 };
 
 export const verifyOTP = async params => {
-  const data = {
-    code: params.otp,
-  };
-  console.log('data', data);
-  return await get('/user/verifyOTP', data);
+  return await post('/user/verifyOTP', {
+    email: params.email,
+    code: params.code,
+  });
 };
+
 
 export const profile = async id => {
   return await get(`/user/profile/${id}`);

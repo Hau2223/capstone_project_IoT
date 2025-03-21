@@ -1,26 +1,33 @@
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const reportSchema = new mongoose.Schema({
-  id_user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    default: '',
-  },
-  id_device: {
-    type: mongoose.Schema.Types.ObjectId,
+const reportSchema = new Schema({
+  deviceId: {
+    type: Schema.Types.ObjectId,
     ref: 'Device',
-    default: '',
+    required: true,
   },
-  id_sensor: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Sensor',
-    default: '',
-  },
-  timeStamp: {
+  time_created: {
     type: Date,
     default: Date.now,
   },
+  water_usage: {
+    type: Number,
+    required: true,
+  },
+  water_duration: {
+    type: Number,
+    required: true,
+  },
+  light_usage: {
+    type: Number,
+    required: true,
+  },
+  light_duration: {
+    type: Number,
+    required: true,
+  },
 });
 
-const Report = mongoose.model('Report', reportSchema);
-module.exports = Report;
+const History = mongoose.model('History', reportSchema);
+module.exports = History;

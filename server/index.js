@@ -36,7 +36,6 @@ app.use(
 const userRou = require('./routes/userRouter');
 const deviceRou = require('./routes/deviceRouter');
 const controlRou = require('./routes/controlRouter');
-
 const sensorRou = require('./routes/sensorRouter');
 
 app.use(cors());

@@ -6,36 +6,14 @@ import {
   Pressable,
   useWindowDimensions,
 } from 'react-native';
-import React, {useState, useRef, memo} from 'react';
+import React, {memo} from 'react';
 import IconOni from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
 import colors from '../../../../assets/common/colorCss';
 
-const Request = () => {
+const Request = ({data, handleInputChange, handleData}) => {
   const navigation = useNavigation();
-  const {width, height} = useWindowDimensions();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const [focusedFieldPhone, setFocusedFieldPhone] = useState(null);
-  const [focusedFieldPass, setFocusedFieldPass] = useState(null);
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [showInfoAlert, setShowInfoAlert] = useState(false);
-  const textInputUserRef = useRef(null);
-  const textInputPassRef = useRef(null);
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-  const toggleDelUserVisible = () => {
-    setEmail('');
-  };
-  const toggleDelPasVisible = () => {
-    setPassword('');
-  };
-  
-
+  const {width} = useWindowDimensions();
 
   return (
     <View style={styles.container}>
@@ -43,75 +21,26 @@ const Request = () => {
       <View style={styles.formLogin}>
         <View style={styles.login}>
           <Text style={styles.txtLogin}>Đăng Kí</Text>
-          <View
-            style={styles.edtInput}
-            onTouchStart={() => {
-              textInputUserRef.current.focus();
-            }}>
+          <View style={styles.edtInput}>
             <TextInput
-              ref={textInputUserRef}
-              value={email}
-              selectionColor={colors.loginTxt}
-              underlineColorAndroid="transparent"
-              onChangeText={text => setEmail(text)}
-              onFocus={() => setFocusedFieldPhone('phone')}
-              onBlur={() => setFocusedFieldPhone(null)}
+              value={data.email}
+              onChangeText={text => handleInputChange('email', text)}
               placeholder={'Nhập Email'}
-              placeholderTextColor={colors.loginTxt}
               style={styles.txtInput}
             />
-            {focusedFieldPhone && email.length > 0 && (
-              <>
-                <Pressable onPress={toggleDelUserVisible}>
-                  <IconOni
-                    name="close-circle"
-                    color={colors.loginTxt}
-                    size={20}
-                  />
-                </Pressable>
-              </>
-            )}
           </View>
-          <View
-            style={styles.edtInput}
-            onTouchStart={() => {
-              textInputPassRef.current.focus();
-            }}>
+          <View style={styles.edtInput}>
             <TextInput
-              ref={textInputPassRef}
-              value={password}
-              selectionColor={colors.loginTxt}
-              underlineColorAndroid="transparent"
-              onChangeText={text => setPassword(text)}
-              onFocus={() => setFocusedFieldPass('password')}
-              onBlur={() => setFocusedFieldPass(null)}
-              secureTextEntry={!showPassword}
+              value={data.password}
+              onChangeText={text => handleInputChange('password', text)}
+              secureTextEntry
               placeholder={'Nhập mật khẩu'}
-              placeholderTextColor={colors.loginTxt}
-              passwordRules="required: lower; required: upper; required: digit; max-consecutive: 2; minlength: 8;"
               style={styles.txtInput}
             />
-            <View style={styles.iconPass}>
-              {focusedFieldPass && password.length > 0 && (
-                <Pressable onPress={toggleDelPasVisible}>
-                  <IconOni
-                    name="close-circle"
-                    color={colors.loginTxt}
-                    size={20}
-                  />
-                </Pressable>
-              )}
-              <IconOni
-                name={showPassword ? 'eye-sharp' : 'eye-off-sharp'}
-                color={colors.loginTxt}
-                size={20}
-                onPress={togglePasswordVisibility}
-              />
-            </View>
           </View>
         </View>
         <View style={styles.layoutbtn}>
-          <Pressable style={styles.btnLogin} onPress={() => console.log('123')}>
+          <Pressable style={styles.btnLogin} onPress={handleData}>
             <Text style={styles.txtBtn}>Tạo Tài Khoản</Text>
           </Pressable>
           <Text style={styles.txtAccNaN}>
@@ -153,7 +82,6 @@ const styles = StyleSheet.create({
   login: {
     marginVertical: 20,
     width: '80%',
-
     gap: 18,
   },
   txtLogin: {
@@ -165,20 +93,12 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 36,
     backgroundColor: colors.loginInput,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     borderRadius: 50,
     paddingHorizontal: 10,
   },
   txtInput: {
     maxWidth: '90%',
   },
-  iconPass: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-
   layoutbtn: {
     width: '100%',
     paddingVertical: 20,
