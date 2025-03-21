@@ -1,8 +1,5 @@
 const express = require('express');
 const Control = require('../models/controlModel');
-const User = require('../models/userModel');
-const Device = require('../models/deviceModel');
-const Sensor = require('../models/sensorModel');
 const app = express();
 const bodyParser = require('body-parser');
 
@@ -10,10 +7,186 @@ app.use(bodyParser.json());
 
 /**
  * @swagger
+ * /api/control/detailControl:
+ *   get:
+ *     summary: Lấy danh sách dữ liệu điều khiển
+ *     tags: [Control]
+ *     responses:
+ *       200:
+ *         description: Trả về danh sách dữ liệu điều khiển
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   name:
+ *                     type: string
+ *                     example: "light"
+ *                   status:
+ *                     type: boolean
+ *                     example: false
+ *                   threshold_min:
+ *                     type: number
+ *                     example: 0
+ *                   threshold_max:
+ *                     type: number
+ *                     example: 100
+ *                   mode:
+ *                     type: string
+ *                     example: manual
+ *       500:
+ *         description: Lỗi khi lấy dữ liệu
+ */
+app.get('/detailControl', async (req, res) => {
+  try {
+    const data = await Control.find().sort({timestamp: -1});
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({message: 'Error fetching data', error});
+  }
+});
+
+/**
+ * @swagger
+ * /api/control/detailControlBy/{id}:
+ *   get:
+ *     summary: Lấy dữ liệu điều khiển theo ID
+ *     tags: [Control]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của điều khiển cần lấy dữ liệu
+ *     responses:
+ *       200:
+ *         description: Trả về dữ liệu điều khiển
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                   example: "light"
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 threshold_min:
+ *                   type: number
+ *                   example: 0
+ *                 threshold_max:
+ *                   type: number
+ *                   example: 100
+ *                 mode:
+ *                   type: string
+ *                   example: "manual"
+ *       400:
+ *         description: ID không hợp lệ
+ *       404:
+ *         description: Không tìm thấy dữ liệu
+ *       500:
+ *         description: Lỗi khi lấy dữ liệu
+ */
+
+app.get('/detailControlBy/:id', async (req, res) => {
+  try {
+    const {id} = req.params;
+
+    // Kiểm tra nếu ID không hợp lệ
+    if (!id) {
+      return res.status(400).json({message: 'ID is required'});
+    }
+
+    // Tìm dữ liệu theo ID
+    const controlData = await Control.findById(id);
+
+    // Kiểm tra nếu không tìm thấy dữ liệu
+    if (!controlData) {
+      return res.status(404).json({message: 'Control data not found'});
+    }
+
+    res.status(200).json(controlData);
+  } catch (error) {
+    res
+      .status(500)
+      .json({message: 'Error fetching data', error: error.message});
+  }
+});
+
+/**
+ * @swagger
  * /api/control/create:
  *   post:
- *     summary: Tạo bản ghi điều khiển
+ *     summary: Tạo dữ liệu điều khiển mới
  *     tags: [Control]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example:  # Dữ liệu JSON mẫu để test
+ *             name: "light"
+ *             status: true
+ *             threshold_min: 0
+ *             threshold_max: 100
+ *             mode: "manual"
+ *     responses:
+ *       201:
+ *         description: Dữ liệu đã được lưu thành công
+ *       200:
+ *         description: Dữ liệu đã được cập nhật thành công
+ *       400:
+ *         description: idDevice là bắt buộc
+ *       500:
+ *         description: Lỗi khi xử lý dữ liệu
+ */
+app.post('/createControl', async (req, res) => {
+  try {
+    const {name, status, threshold_min, threshold_max, mode} = req.body;
+
+    // Kiểm tra dữ liệu đầu vào
+    if (!name) {
+      return res.status(400).json({message: 'Missing required fields'});
+    }
+    if (!['manual', 'schedule', 'threshold'].includes(mode)) {
+      return res.status(400).json({
+        message:
+          'Invalid sensor type, mode includes ["manual","schedule","threshold"]',
+      });
+    }
+
+    // Tạo bản ghi mới
+    const newData = new Control({
+      name,
+      status: status ?? false,
+      threshold_min,
+      threshold_max,
+      mode,
+    });
+
+    await newData.save();
+    res.status(201).json({message: 'Data saved successfully', data: newData});
+  } catch (error) {
+    res.status(500).json({message: 'Error saving data', error: error.message});
+  }
+});
+
+/**
+ * @swagger
+ * /api/control/updateControlBy/{id}:
+ *   put:
+ *     summary: Cập nhật dữ liệu điều khiển
+ *     tags: [Control]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của điều khiển cần cập nhật
  *     requestBody:
  *       required: true
  *       content:
@@ -21,137 +194,60 @@ app.use(bodyParser.json());
  *           schema:
  *             type: object
  *             properties:
- *               idDevice:
+ *               type:
  *                 type: string
- *                 example: device-123
- *               idUsers:
- *                 type: array
- *                 items:
- *                   type: string
- *                   example: user-123
+ *                 example: "moisture"
+ *               value:
+ *                 type: number
+ *                 example: 600
+ *               status:
+ *                 type: boolean
+ *                 example: false
  *     responses:
  *       200:
- *         description: Tạo bản ghi điều khiển thành công
+ *         description: Dữ liệu đã được cập nhật thành công
  *       400:
- *         description: Thiếu thông tin
- *       409:
- *         description: Bản ghi đã tồn tại
- *       500:
- *         description: Lỗi khi tạo bản ghi
- */
-app.post('/create', async (req, res) => {
-  const {idDevice, idUsers} = req.body;
-
-  // Kiểm tra xem thông tin có được cung cấp đầy đủ không
-  if (
-    !idDevice ||
-    !idUsers ||
-    !Array.isArray(idUsers) ||
-    idUsers.length === 0
-  ) {
-    return res.status(400).json({message: 'idDevice and idUsers are required'});
-  }
-
-  try {
-    // Kiểm tra xem bản ghi đã tồn tại chưa
-    const existingControlRecord = await Control.findOne({id_Device: idDevice});
-
-    if (existingControlRecord) {
-      // Nếu bản ghi đã tồn tại, kiểm tra xem idUsers đã có chưa
-      const newUsers = idUsers.filter(
-        user => !existingControlRecord.id_User.includes(user),
-      );
-      if (newUsers.length === 0) {
-        return res
-          .status(409)
-          .json({message: 'Control record already exists for these users'});
-      }
-
-      // Cập nhật danh sách người dùng
-      existingControlRecord.id_User.push(...newUsers);
-      await existingControlRecord.save();
-      return res
-        .status(200)
-        .json({message: 'Control record updated successfully!'});
-    }
-
-    // Tạo bản ghi mới trong Control schema
-    const controlRecord = new Control({id_User: idUsers, id_Device: idDevice});
-    await controlRecord.save();
-
-    return res
-      .status(200)
-      .json({message: 'Control record created successfully!'});
-  } catch (error) {
-    return res
-      .status(500)
-      .json({message: 'Error creating control record', error});
-  }
-});
-
-/**
- * @swagger
- * /api/control/active/{userId}/{deviceId}:
- *   post:
- *     summary: Điều khiển thiết bị
- *     tags: [Control]
- *     parameters:
- *       - name: userId
- *         in: path
- *         required: true
- *         description: ID của người dùng
- *         schema:
- *           type: string
- *           example: 67b7eed866da6b0cd1a3f9d4
- *       - name: deviceId
- *         in: path
- *         required: true
- *         description: ID của thiết bị
- *         schema:
- *           type: string
- *           example: device-123
- *     responses:
- *       200:
- *         description: Điều khiển thành công
+ *         description: ID không hợp lệ hoặc dữ liệu không hợp lệ
  *       404:
- *         description: Không tìm thấy thiết bị hoặc người dùng
+ *         description: Không tìm thấy điều khiển
  *       500:
- *         description: Lỗi khi điều khiển thiết bị
+ *         description: Lỗi khi cập nhật dữ liệu
  */
-app.post('/active/:userId/:deviceId', async (req, res) => {
-  const {userId, deviceId} = req.params;
-
+app.put('/updateControlBy/:id', async (req, res) => {
   try {
-    // Kiểm tra xem người dùng có tồn tại
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({message: 'User not found'});
+    const {id} = req.params;
+    const {name, status, threshold_min, threshold_max, mode} = req.body;
+
+    // Kiểm tra nếu ID không hợp lệ
+    if (!id) {
+      return res.status(400).json({message: 'ID is required'});
+    }
+    if (!['manual', 'schedule', 'threshold'].includes(mode)) {
+      return res.status(400).json({
+        message:
+          'Invalid control type, mode includes ["manual","schedule","threshold"]',
+      });
     }
 
-    // Kiểm tra xem thiết bị có tồn tại
-    const device = await Device.findOne({idDevice: deviceId});
-    if (!device) {
-      return res.status(404).json({message: 'Device not found'});
+    // Tìm và cập nhật dữ liệu
+    const updatedControl = await Control.findByIdAndUpdate(
+      id,
+      {name, status, threshold_min, threshold_max, mode},
+      {new: true, runValidators: true},
+    );
+
+    // Kiểm tra nếu không tìm thấy cảm biến
+    if (!updatedControl) {
+      return res.status(404).json({message: 'Sensor not found'});
     }
 
-    // Cập nhật trạng thái active của thiết bị
-    device.active = !device.active; // Toggle active status
-    await device.save();
-
-    // Cập nhật sensor control properties
-    const sensors = await Sensor.find({idDevice: deviceId});
-    sensors.forEach(sensor => {
-      sensor.updateControl(device.active);
-      sensor.save();
-    });
-
-    res.status(200).json({
-      message: 'Device activation status toggled successfully',
-      device,
-      sensors,
-    });
+    res
+      .status(200)
+      .json({message: 'Data updated successfully', data: updatedControl});
   } catch (error) {
-    res.status(500).json({message: 'Error activating device', error});
+    res
+      .status(500)
+      .json({message: 'Error updating data', error: error.message});
   }
 });
 

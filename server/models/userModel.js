@@ -24,12 +24,6 @@ const userSchema = new mongoose.Schema({
   full_name: {
     type: String,
   },
-  date_of_birth: {
-    type: Date,
-  },
-  gender: {
-    type: String,
-  },
   role: {
     type: String,
   },

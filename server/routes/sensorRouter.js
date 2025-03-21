@@ -3,99 +3,13 @@ const Sensor = require('../models/sensorModel');
 const app = express();
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
-/**
- * @swagger
- * /api/sensor/create:
- *   post:
- *     summary: post sensor data
- *     tags: [Sensor]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           example:  # Dữ liệu JSON mẫu để test
- *             idDevice: 'device-123'
- *             ipDevice: 'IP-Devive-001'
- *             soilMoisture: 5
- *             temperature: 8
- *             humidity: 8
- *             rainCover: 8
- *             lightIntensity: 8
- *     responses:
- *       201:
- *         description: Dữ liệu đã được lưu thành công
- *       200:
- *         description: Dữ liệu đã được cập nhật thành công
- *       400:
- *         description: idDevice là bắt buộc
- *       500:
- *         description: Lỗi khi xử lý dữ liệu
- */
-app.post('/create', async (req, res) => {
-  try {
-    const {
-      idDevice,
-      ipDevice,
-      soilMoisture,
-      temperature,
-      humidity,
-      rainCover,
-      lightIntensity,
-      control,
-    } = req.body;
-
-    if (!idDevice) {
-      return res.status(400).json({message: 'idDevice is required'});
-    }
-
-    // Kiểm tra nếu đã có dữ liệu cho idDevice
-    const existingData = await Sensor.findOne({idDevice});
-
-    if (existingData) {
-      // Nếu đã tồn tại dữ liệu cho idDevice, cập nhật dữ liệu mới
-      await Sensor.updateOne(
-        {idDevice},
-        {ipDevice},
-        {
-          $set: {
-            control,
-            soilMoisture,
-            temperature,
-            humidity,
-            rainCover,
-            lightIntensity,
-            timestamp: new Date(),
-          },
-        },
-      );
-      return res.status(200).json({message: 'Data updated successfully'});
-    }
-
-    // Nếu chưa có dữ liệu, tạo bản ghi mới
-    const newData = new Sensor({
-      idDevice,
-      ipDevice,
-      control,
-      soilMoisture,
-      temperature,
-      humidity,
-      rainCover,
-      lightIntensity,
-    });
-    await newData.save();
-
-    res.status(201).json({message: 'Data saved successfully'});
-  } catch (error) {
-    res.status(500).json({message: 'Error saving data', error});
-  }
-});
 
 /**
  * @swagger
  * /api/sensor/getData:
  *   get:
  *     summary: Lấy danh sách dữ liệu cảm biến
- *     tags: [Sensor]
+ *     tags: [Sensors]
  *     responses:
  *       200:
  *         description: Trả về danh sách dữ liệu cảm biến
@@ -106,28 +20,15 @@ app.post('/create', async (req, res) => {
  *               items:
  *                 type: object
  *                 properties:
- *                   idDevice:
+ *                   type:
  *                     type: string
- *                     example: device-123
- *                   soilMoisture:
+ *                     example: "moisture"
+ *                   value:
  *                     type: number
- *                     example: 5
- *                   temperature:
- *                     type: number
- *                     example: 25
- *                   humidity:
- *                     type: number
- *                     example: 60
- *                   rainCover:
- *                     type: number
- *                     example: 1
- *                   lightIntensity:
- *                     type: number
- *                     example: 1200
- *                   timestamp:
- *                     type: string
- *                     format: date-time
- *                     example: "2025-01-17T08:15:30Z"
+ *                     example: 555
+ *                   status:
+ *                     type: boolean
+ *                     example: false
  *       500:
  *         description: Lỗi khi lấy dữ liệu
  */
@@ -142,166 +43,212 @@ app.get('/getData', async (req, res) => {
 
 /**
  * @swagger
- * /api/sensor/controlPump:
+ * /api/sensor/getById/{id}:
+ *   get:
+ *     summary: Lấy dữ liệu cảm biến theo ID
+ *     tags: [Sensors]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của cảm biến cần lấy dữ liệu
+ *     responses:
+ *       200:
+ *         description: Trả về dữ liệu cảm biến theo ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 type:
+ *                   type: string
+ *                   example: "moisture"
+ *                 value:
+ *                   type: number
+ *                   example: 555
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *       400:
+ *         description: ID không hợp lệ
+ *       404:
+ *         description: Không tìm thấy cảm biến
+ *       500:
+ *         description: Lỗi khi lấy dữ liệu
+ */
+app.get('/getById/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Kiểm tra nếu ID không hợp lệ
+    if (!id) {
+      return res.status(400).json({ message: 'ID is required' });
+    }
+
+    // Tìm cảm biến theo ID
+    const sensor = await Sensor.findById(id);
+
+    // Kiểm tra nếu không tìm thấy cảm biến
+    if (!sensor) {
+      return res.status(404).json({ message: 'Sensor not found' });
+    }
+
+    res.status(200).json(sensor);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching sensor data', error: error.message });
+  }
+});
+
+
+/**
+ * @swagger
+ * /api/sensor/create:
  *   post:
- *     summary: Control the pump state
- *     tags: [Control]
+ *     summary: Tạo dữ liệu cảm biến mới
+ *     tags: [Sensors]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
- *           example:
- *             idDevice: 'device-123'
- *             state: 'on'  # Possible values: 'on', 'off', 'auto'
+ *           example:  # Dữ liệu JSON mẫu để test
+ *             type: 'moisture'
+ *             value: 0
+ *             status: true
  *     responses:
+ *       201:
+ *         description: Dữ liệu đã được lưu thành công
  *       200:
- *         description: Pump state updated successfully
- *       404:
- *         description: Device not found
+ *         description: Dữ liệu đã được cập nhật thành công
  *       400:
- *         description: Invalid state value
+ *         description: idDevice là bắt buộc
  *       500:
- *         description: Error updating pump state
+ *         description: Lỗi khi xử lý dữ liệu
  */
-app.post('/controlPump', async (req, res) => {
+app.post('/create', async (req, res) => {
   try {
-    const { idDevice, state } = req.body;
+    const {type, value, status} = req.body;
 
-    if (!idDevice) {
-      return res.status(400).json({ message: 'idDevice is required' });
+    // Kiểm tra dữ liệu đầu vào
+    if (!type) {
+      return res.status(400).json({message: 'Missing required fields'});
+    }
+    if (
+      ![
+        'moisture',
+        'light',
+        'rain',
+        'temperature',
+        'humidity',
+        'water_flow',
+      ].includes(type)
+    ) {
+      return res.status(400).json({
+          message:
+            'Invalid sensor type, type includes ["moisture","light", "rain", "temperature", "humidity", "water_flow" ]',
+        });
     }
 
-    if (!['on', 'off', 'auto'].includes(state)) {
-      return res.status(400).json({ message: 'Invalid state value' });
-    }
+    // Tạo bản ghi mới
+    const newData = new Sensor({
+      type,
+      value,
+      status: status ?? false,
+    });
 
-    // Find the sensor data for the given idDevice
-    const sensorData = await Sensor.findOne({ idDevice });
-
-    if (!sensorData) {
-      return res.status(404).json({ message: 'Device not found' });
-    }
-
-    // Update the pump control state
-    sensorData.control.pump.on = state === 'on';
-    sensorData.control.pump.off = state === 'off';
-    sensorData.control.pump.auto = state === 'auto';
-
-    await sensorData.save();
-
-    res.status(200).json({ message: 'Pump state updated successfully', control: sensorData.control });
+    await newData.save();
+    res.status(201).json({message: 'Data saved successfully', data: newData});
   } catch (error) {
-    res.status(500).json({ message: 'Error updating pump state', error });
+    res.status(500).json({message: 'Error saving data', error: error.message});
   }
 });
 
 /**
  * @swagger
- * /api/sensor/controlFan:
- *   post:
- *     summary: Control the pump state
- *     tags: [Control]
+ * /api/sensor/update/{id}:
+ *   put:
+ *     summary: Cập nhật dữ liệu cảm biến
+ *     tags: [Sensors]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của cảm biến cần cập nhật
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
- *           example:
- *             idDevice: 'device-123'
- *             state: 'on'  # Possible values: 'on', 'off', 'auto'
+ *           schema:
+ *             type: object
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 example: "moisture"
+ *               value:
+ *                 type: number
+ *                 example: 600
+ *               status:
+ *                 type: boolean
+ *                 example: false
  *     responses:
  *       200:
- *         description: Pump state updated successfully
- *       404:
- *         description: Device not found
+ *         description: Dữ liệu đã được cập nhật thành công
  *       400:
- *         description: Invalid state value
- *       500:
- *         description: Error updating pump state
- */
-app.post('/controlFan', async (req, res) => {
-  try {
-    const { idDevice, state } = req.body;
-
-    if (!idDevice) {
-      return res.status(400).json({ message: 'idDevice is required' });
-    }
-
-    if (!['on', 'off', 'auto'].includes(state)) {
-      return res.status(400).json({ message: 'Invalid state value' });
-    }
-
-    // Find the sensor data for the given idDevice
-    const sensorData = await Sensor.findOne({ idDevice });
-
-    if (!sensorData) {
-      return res.status(404).json({ message: 'Device not found' });
-    }
-
-    // Update the pump control state
-    sensorData.control.fan.on = state === 'on';
-    sensorData.control.fan.off = state === 'off';
-    sensorData.control.fan.auto = state === 'auto';
-
-    await sensorData.save();
-
-    res.status(200).json({ message: 'Pump state updated successfully', control: sensorData.control });
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating pump state', error });
-  }
-});
-
-/**
- * @swagger
- * /api/sensor/controlLight:
- *   post:
- *     summary: Control the pump state
- *     tags: [Control]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           example:
- *             idDevice: 'device-123'
- *             state: 'on'  # Possible values: 'on', 'off', 'auto'
- *     responses:
- *       200:
- *         description: Pump state updated successfully
+ *         description: ID không hợp lệ hoặc dữ liệu không hợp lệ
  *       404:
- *         description: Device not found
- *       400:
- *         description: Invalid state value
+ *         description: Không tìm thấy cảm biến
  *       500:
- *         description: Error updating pump state
+ *         description: Lỗi khi cập nhật dữ liệu
  */
-app.post('/controlLight', async (req, res) => {
+app.put('/update/:id', async (req, res) => {
   try {
-    const { idDevice, state } = req.body;
+    const {id} = req.params;
+    const {type, value, status} = req.body;
 
-    if (!idDevice) {
-      return res.status(400).json({ message: 'idDevice is required' });
+    // Kiểm tra nếu ID không hợp lệ
+    if (!id) {
+      return res.status(400).json({message: 'ID is required'});
+    }
+    if (
+      ![
+        'moisture',
+        'light',
+        'rain',
+        'temperature',
+        'humidity',
+        'water_flow',
+      ].includes(type)
+    ) {
+      return res
+        .status(400)
+        .json({
+          message:
+            'Invalid sensor type, type includes ["moisture","light", "rain", "temperature", "humidity", "water_flow" ]',
+        });
     }
 
-    if (!['on', 'off', 'auto'].includes(state)) {
-      return res.status(400).json({ message: 'Invalid state value' });
+    // Tìm và cập nhật dữ liệu
+    const updatedSensor = await Sensor.findByIdAndUpdate(
+      id,
+      {type, value, status},
+      {new: true, runValidators: true},
+    );
+
+    // Kiểm tra nếu không tìm thấy cảm biến
+    if (!updatedSensor) {
+      return res.status(404).json({message: 'Sensor not found'});
     }
 
-    // Find the sensor data for the given idDevice
-    const sensorData = await Sensor.findOne({ idDevice });
-
-    if (!sensorData) {
-      return res.status(404).json({ message: 'Device not found' });
-    }
-
-    // Update the pump control state
-    sensorData.control.light.on = state === 'on';
-    sensorData.control.light.off = state === 'off';
-    sensorData.control.light.auto = state === 'auto';
-
-    await sensorData.save();
-
-    res.status(200).json({ message: 'Pump state updated successfully', control: sensorData.control });
+    res
+      .status(200)
+      .json({message: 'Data updated successfully', data: updatedSensor});
   } catch (error) {
-    res.status(500).json({ message: 'Error updating pump state', error });
+    res
+      .status(500)
+      .json({message: 'Error updating data', error: error.message});
   }
 });
 

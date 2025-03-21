@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const passport = require('passport');
 const nodemailer = require('nodemailer');
+const bcrypt = require('bcrypt');
 
 require('dotenv').config({
   path: './utils/config.env',
@@ -33,7 +34,7 @@ const createToken = userId => {
  * @swagger
  * /api/user/login:
  *   post:
- *     summary: Login a user
+ *     summary: Login a user (password is compared with hashed value)
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
@@ -54,18 +55,24 @@ const createToken = userId => {
  *                 type: string
  *               password:
  *                 type: string
+ *                 description: The user's password (compared with hashed value in database)
  *               deviceID:
  *                 type: string
  *     responses:
  *       200:
- *         description: Login successful, returns token and user type
+ *         description: Login successful, returns token
+ *         content:
+ *           application/json:
+ *             example:
+ *               data: "jwt-token-here"
+ *               status: 200
  *       404:
  *         description: User not found or invalid credentials
  *       500:
  *         description: Internal server error
  */
 app.post('/login', async (req, res) => {
-  const {email, password, deviceID} = req.body;
+  const { email, password, deviceID } = req.body;
 
   if (!email || !password || !deviceID) {
     return res.status(400).json({
@@ -75,19 +82,21 @@ app.post('/login', async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({email});
+    const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({status: 404, message: 'User not found'});
+      return res.status(404).json({ status: 404, message: 'User not found' });
     }
-    if (user.password !== password) {
-      return res.status(404).json({status: 404, message: 'Invalid password'});
+
+    // So sánh mật khẩu
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(404).json({ status: 404, message: 'Invalid password' });
     }
 
     // Kiểm tra nếu có người dùng khác đã đăng nhập
     if (user.deviceID && user.deviceID !== deviceID) {
-      // Hủy phiên đăng nhập trước bằng cách cập nhật token rỗng hoặc đổi token
       user.token = null;
-      return res.status(404).json({status: 404, message: 'Account is logged in', data: user.token});
+      return res.status(404).json({ status: 404, message: 'Account is logged in', data: user.token });
     }
 
     user.deviceID = deviceID; // Cập nhật deviceID
@@ -95,10 +104,10 @@ app.post('/login', async (req, res) => {
     user.token = token; // Lưu token vào database
     await user.save();
 
-    res.status(200).json({data: token, status: 200});
+    res.status(200).json({ data: token, status: 200 });
   } catch (err) {
     console.error('Error logging in user:', err);
-    res.status(500).json({status: 500, message: 'Internal server error'});
+    res.status(500).json({ status: 500, message: 'Internal server error' });
   }
 });
 
@@ -284,21 +293,40 @@ app.post('/verifyOTP', (req, res) => {
  * @swagger
  * /api/user/register:
  *   post:
- *     summary: Register a new user
+ *     summary: Register a new user (password will be hashed before saving)
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
- *        application/json:
+ *         application/json:
  *           example:  # Dữ liệu JSON mẫu để test
  *             name: "Nguyen van A"
  *             email: "vana@gmail.com"
  *             password: "1"
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *                 description: The user's password (will be hashed before storing)
  *     responses:
  *       200:
  *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "User registered successfully!"
+ *               status: 200
  *       400:
- *         description: Email already exists
+ *         description: Email already exists or OTP not verified
  *       500:
  *         description: Internal server error
  */
@@ -319,10 +347,12 @@ app.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Email already exists!' });
     }
 
-    // Tạo user mới
-    const newUser = new User({ name, email, password });
-    const token = createToken(newUser._id); // Tạo token mới
-    newUser.token = token; // Lưu token vào database
+    // Mã hóa mật khẩu
+    const saltRounds = 10; // Số vòng băm, thường là 10
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Tạo user mới với mật khẩu đã mã hóa
+    const newUser = new User({ name, email, password: hashedPassword });
     await newUser.save();
 
     // Xóa trạng thái đăng ký
@@ -331,7 +361,6 @@ app.post('/register', async (req, res) => {
 
     return res.status(200).json({
       message: 'User registered successfully!',
-      token, // Trả về token để tự động đăng nhập
       status: 200,
     });
   } catch (err) {

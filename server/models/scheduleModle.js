@@ -1,20 +1,31 @@
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const scheduleSchema = new mongoose.Schema({
-  id_sensor: {
-    type: String,
-    require: true,
-    req: 'Sensor',
-  },
-  datetime_start: {
-    type: Date,
-  },
-  datetime_end: {
-    type: Date,
-  },
+const scheduleSchema = new Schema({
   status: {
     type: Boolean,
     default: false,
+  },
+  timeOfDay: {
+    type: String,
+    required: true,
+  },
+  duration: {
+    type: Number, // second/minute
+    required: true,
+  },
+  repeat: {
+    type: [String],
+    enum: [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ],
+    required: true,
   },
 });
 
