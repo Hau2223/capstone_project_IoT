@@ -38,7 +38,16 @@ const deviceRou = require('./routes/deviceRouter');
 const controlRou = require('./routes/controlRouter');
 const sensorRou = require('./routes/sensorRouter');
 
-app.use(cors());
+app.use(
+  cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    preflightContinue: true,
+    credentials: true,
+  }),
+);
+
 app.use('/api/user', userRou);
 app.use('/api/device', deviceRou);
 app.use('/api/control', controlRou);

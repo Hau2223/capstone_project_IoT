@@ -6,7 +6,7 @@ app.use(bodyParser.json());
 
 /**
  * @swagger
- * /api/sensor/getData:
+ * /api/sensor/detailSensor:
  *   get:
  *     summary: Lấy danh sách dữ liệu cảm biến
  *     tags: [Sensors]
@@ -32,7 +32,7 @@ app.use(bodyParser.json());
  *       500:
  *         description: Lỗi khi lấy dữ liệu
  */
-app.get('/getData', async (req, res) => {
+app.get('/detailSensor', async (req, res) => {
   try {
     const data = await Sensor.find().sort({timestamp: -1});
     res.json(data);
@@ -43,7 +43,7 @@ app.get('/getData', async (req, res) => {
 
 /**
  * @swagger
- * /api/sensor/getById/{id}:
+ * /api/sensor/detailSensorBy/{id}:
  *   get:
  *     summary: Lấy dữ liệu cảm biến theo ID
  *     tags: [Sensors]
@@ -78,7 +78,7 @@ app.get('/getData', async (req, res) => {
  *       500:
  *         description: Lỗi khi lấy dữ liệu
  */
-app.get('/getById/:id', async (req, res) => {
+app.get('/detailSensorBy/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -166,7 +166,7 @@ app.post('/create', async (req, res) => {
 
 /**
  * @swagger
- * /api/sensor/update/{id}:
+ * /api/sensor/updateSensorBy/{id}:
  *   put:
  *     summary: Cập nhật dữ liệu cảm biến
  *     tags: [Sensors]
@@ -203,7 +203,7 @@ app.post('/create', async (req, res) => {
  *       500:
  *         description: Lỗi khi cập nhật dữ liệu
  */
-app.put('/update/:id', async (req, res) => {
+app.put('/updateSensorBy/:id', async (req, res) => {
   try {
     const {id} = req.params;
     const {type, value, status} = req.body;
