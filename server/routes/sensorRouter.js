@@ -26,9 +26,6 @@ app.use(bodyParser.json());
  *                   value:
  *                     type: number
  *                     example: 555
- *                   status:
- *                     type: boolean
- *                     example: false
  *       500:
  *         description: Lỗi khi lấy dữ liệu
  */
@@ -68,9 +65,6 @@ app.get('/detailSensor', async (req, res) => {
  *                 value:
  *                   type: number
  *                   example: 555
- *                 status:
- *                   type: boolean
- *                   example: false
  *       400:
  *         description: ID không hợp lệ
  *       404:
@@ -115,7 +109,6 @@ app.get('/detailSensorBy/:id', async (req, res) => {
  *           example:  # Dữ liệu JSON mẫu để test
  *             type: 'moisture'
  *             value: 0
- *             status: true
  *     responses:
  *       201:
  *         description: Dữ liệu đã được lưu thành công
@@ -154,7 +147,6 @@ app.post('/create', async (req, res) => {
     const newData = new Sensor({
       type,
       value,
-      status: status ?? false,
     });
 
     await newData.save();
@@ -190,9 +182,6 @@ app.post('/create', async (req, res) => {
  *               value:
  *                 type: number
  *                 example: 600
- *               status:
- *                 type: boolean
- *                 example: false
  *     responses:
  *       200:
  *         description: Dữ liệu đã được cập nhật thành công
@@ -206,7 +195,7 @@ app.post('/create', async (req, res) => {
 app.put('/updateSensorBy/:id', async (req, res) => {
   try {
     const {id} = req.params;
-    const {type, value, status} = req.body;
+    const {type, value} = req.body;
 
     // Kiểm tra nếu ID không hợp lệ
     if (!id) {
@@ -233,7 +222,7 @@ app.put('/updateSensorBy/:id', async (req, res) => {
     // Tìm và cập nhật dữ liệu
     const updatedSensor = await Sensor.findByIdAndUpdate(
       id,
-      {type, value, status},
+      {type, value},
       {new: true, runValidators: true},
     );
 
