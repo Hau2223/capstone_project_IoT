@@ -11,10 +11,6 @@ const sensorSchema = new Schema({
     type: Number,
     default: 0,
   },
-  status: {
-    type: Boolean,
-    default: false,
-  },
 });
 
 const Sensor = mongoose.model('Sensor', sensorSchema);
