@@ -6,8 +6,8 @@ const scheduleSchema = new Schema({
     type: Boolean,
     default: false,
   },
-  timeOfDay: {
-    type: String,
+  startTime: {
+    type: Date,
     required: true,
   },
   duration: {
