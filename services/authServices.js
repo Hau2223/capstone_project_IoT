@@ -27,6 +27,12 @@ export const verifyOTP = async params => {
   });
 };
 
+export const resetPass = async params => {
+  return await post('/user/register', {
+    email: params.email,
+    newPassword: params.newPassword,
+  });
+};
 
 export const profile = async id => {
   return await get(`/user/profile/${id}`);

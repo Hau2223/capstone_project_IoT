@@ -2,7 +2,6 @@ const express = require('express');
 const Control = require('../models/controlModel');
 const app = express();
 const bodyParser = require('body-parser');
-
 app.use(bodyParser.json());
 
 /**
@@ -10,7 +9,7 @@ app.use(bodyParser.json());
  * /api/control/detailControl:
  *   get:
  *     summary: Lấy danh sách dữ liệu điều khiển
- *     tags: [Control]
+ *     tags: [Controls]
  *     responses:
  *       200:
  *         description: Trả về danh sách dữ liệu điều khiển
@@ -53,7 +52,7 @@ app.get('/detailControl', async (req, res) => {
  * /api/control/detailControlBy/{id}:
  *   get:
  *     summary: Lấy dữ liệu điều khiển theo ID
- *     tags: [Control]
+ *     tags: [Controls]
  *     parameters:
  *       - in: path
  *         name: id
@@ -91,7 +90,6 @@ app.get('/detailControl', async (req, res) => {
  *       500:
  *         description: Lỗi khi lấy dữ liệu
  */
-
 app.get('/detailControlBy/:id', async (req, res) => {
   try {
     const {id} = req.params;
@@ -119,10 +117,10 @@ app.get('/detailControlBy/:id', async (req, res) => {
 
 /**
  * @swagger
- * /api/control/create:
+ * /api/control/createControl:
  *   post:
  *     summary: Tạo dữ liệu điều khiển mới
- *     tags: [Control]
+ *     tags: [Controls]
  *     requestBody:
  *       required: true
  *       content:
@@ -179,7 +177,7 @@ app.post('/createControl', async (req, res) => {
  * /api/control/updateControlBy/{id}:
  *   put:
  *     summary: Cập nhật dữ liệu điều khiển
- *     tags: [Control]
+ *     tags: [Controls]
  *     parameters:
  *       - in: path
  *         name: id

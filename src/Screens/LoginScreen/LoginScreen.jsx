@@ -5,7 +5,8 @@ import {
   TextInput,
   Pressable,
   BackHandler,
-  Image,
+  ImageBackground,
+  useWindowDimensions,
 } from 'react-native';
 import React, {
   useState,
@@ -16,16 +17,18 @@ import React, {
   memo,
 } from 'react';
 import IconOni from 'react-native-vector-icons/Ionicons';
-import LinearGradient from 'react-native-linear-gradient';
 import DeviceInfo from 'react-native-device-info';
 import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {login} from '../../../services/authServices';
 import {UserContext} from '../../../utils/UserContext';
 import colors from '../../../assets/common/colorCss';
+import {IMAGES} from '../../../utils/constants';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
+  const {width} = useWindowDimensions();
+  const isTablet = width >= 720;
   const deviceId = DeviceInfo.getDeviceId();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -110,9 +113,8 @@ const LoginScreen = () => {
   }, [navigation, shouldExitApp]);
 
   return (
-    <LinearGradient
-      colors={['#A7AEF9', '#DDCCF8', '#F5C9D9', '#CEBBFA', '#FAF1EE']}
-      locations={[0.08, 0.32, 0.6, 0.86, 1]}
+    <ImageBackground
+      source={{uri: isTablet ? IMAGES.BG_TABLET : IMAGES.BG_MOBILE}}
       style={styles.container}>
       <Text style={styles.txtTitle}>HỆ THỐNG QUẢN LÝ THIẾT BỊ IOT</Text>
       <View style={styles.formLogin}>
@@ -138,7 +140,11 @@ const LoginScreen = () => {
             {focusedFieldPhone && email.length > 0 && (
               <>
                 <Pressable onPress={toggleDelUserVisible}>
-                  <IconOni name="close-circle" color={colors.loginTxt} size={20} />
+                  <IconOni
+                    name="close-circle"
+                    color={colors.loginTxt}
+                    size={20}
+                  />
                 </Pressable>
               </>
             )}
@@ -165,7 +171,11 @@ const LoginScreen = () => {
             <View style={styles.iconPass}>
               {focusedFieldPass && password.length > 0 && (
                 <Pressable onPress={toggleDelPasVisible}>
-                  <IconOni name="close-circle" color={colors.loginTxt} size={20} />
+                  <IconOni
+                    name="close-circle"
+                    color={colors.loginTxt}
+                    size={20}
+                  />
                 </Pressable>
               )}
               <IconOni
@@ -176,7 +186,13 @@ const LoginScreen = () => {
               />
             </View>
           </View>
-          <Text style={styles.txtForget}>Quên mật khẩu</Text>
+            <Text
+              style={styles.txtForget}
+              onPress={() => {
+                navigation.navigate('ResetPass', {email});
+              }}>
+              Quên mật khẩu
+            </Text>
         </View>
         <View style={styles.layoutbtn}>
           <Pressable style={styles.btnLogin} onPress={handleLogin}>
@@ -192,7 +208,7 @@ const LoginScreen = () => {
           </Text>
         </View>
       </View>
-    </LinearGradient>
+    </ImageBackground>
   );
 };
 
@@ -232,6 +248,7 @@ const styles = StyleSheet.create({
   txtForget: {
     fontStyle: 'italic',
     color: colors.txtForget,
+    alignSelf: 'flex-start',
   },
   edtInput: {
     width: '100%',
@@ -253,7 +270,7 @@ const styles = StyleSheet.create({
 
   layoutbtn: {
     width: '100%',
-    paddingVertical: 20,
+    paddingBottom: 20,
     justifyContent: 'center',
     alignItems: 'center',
     gap: 10,

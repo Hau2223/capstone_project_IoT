@@ -4,7 +4,7 @@ const app = express();
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 /**
-* @swagger
+ * @swagger
  * /api/schedule/detailScheduleBy:
  *   get:
  *     summary: Chi tiết lịch biểu theo ID
@@ -64,21 +64,20 @@ app.use(bodyParser.json());
  *                   example: "Internal server error"
  */
 app.get('/detailScheduleBy', async (req, res) => {
-    try {
-        const { id } = req.query;
-        // Kiểm tra nếu ID không hợp lệ
-        if (!id) {
-            return res.status(400).json({ message: 'ID is required' });
-        }
-        const schedule = await Schedule.findById(id);
-        if (!schedule) {
-            return res.status(404).json({ message: 'Schedule not found' });
-        }
-        res.status(200).json(schedule);
-
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+  try {
+    const {id} = req.query;
+    // Kiểm tra nếu ID không hợp lệ
+    if (!id) {
+      return res.status(400).json({message: 'ID is required'});
     }
+    const schedule = await Schedule.findById(id);
+    if (!schedule) {
+      return res.status(404).json({message: 'Schedule not found'});
+    }
+    res.status(200).json(schedule);
+  } catch (error) {
+    res.status(500).json({message: error.message});
+  }
 });
 
 /**
@@ -146,27 +145,27 @@ app.get('/detailScheduleBy', async (req, res) => {
  */
 
 app.post('/createSchedule', async (req, res) => {
-    try {
-        const { status, startTime, duration, repeat } = req.body;
-        if (!startTime || !duration || !repeat) {
-            return res.status(400).json({ message: 'Required fields are missing' });
-        }
-        const schedule = new Schedule({
-            status: status || false,
-            startTime,
-            duration,
-            repeat
-        });
-        await schedule.save();
-        res.status(201).json(schedule);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+  try {
+    const {status, startTime, duration, repeat} = req.body;
+    if (!startTime || !duration || !repeat) {
+      return res.status(400).json({message: 'Required fields are missing'});
     }
+    const schedule = new Schedule({
+      status: status || false,
+      startTime,
+      duration,
+      repeat,
+    });
+    await schedule.save();
+    res.status(201).json(schedule);
+  } catch (error) {
+    res.status(500).json({message: error.message});
+  }
 });
 
 /**
-* @swagger
-* /api/schedule/updateSchedule/{id}:
+ * @swagger
+ * /api/schedule/updateSchedule/{id}:
  *   put:
  *     summary: Cập nhật lịch biểu
  *     tags: [Schedules]
@@ -245,26 +244,26 @@ app.post('/createSchedule', async (req, res) => {
  *                   example: "Internal server error"
  */
 app.put('/updateSchedule/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { status, startTime, duration, repeat } = req.body;
-        if (!startTime || !duration || !repeat) {
-            return res.status(400).json({ message: 'Required fields are missing' });
-        }
-        const schedule = await Schedule.findByIdAndUpdate(
-            id,
-            {
-                status: status || false,
-                startTime,
-                duration,
-                repeat
-            },
-            { new: true }
-        );
-        res.status(200).json(schedule);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+  try {
+    const {id} = req.params;
+    const {status, startTime, duration, repeat} = req.body;
+    if (!startTime || !duration || !repeat) {
+      return res.status(400).json({message: 'Required fields are missing'});
     }
+    const schedule = await Schedule.findByIdAndUpdate(
+      id,
+      {
+        status: status || false,
+        startTime,
+        duration,
+        repeat,
+      },
+      {new: true},
+    );
+    res.status(200).json(schedule);
+  } catch (error) {
+    res.status(500).json({message: error.message});
+  }
 });
 
 /**
@@ -321,18 +320,18 @@ app.put('/updateSchedule/:id', async (req, res) => {
  *                 message:
  *                   type: string
  *                   example: "Internal server error"
- */ 
+ */
 app.delete('/deleteSchedule/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        if (!id) {
-            return res.status(400).json({ message: 'ID is required' });
-        }
-        await Schedule.findByIdAndDelete(id);
-        res.status(200).json({ message: 'Schedule deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+  try {
+    const {id} = req.params;
+    if (!id) {
+      return res.status(400).json({message: 'ID is required'});
     }
+    await Schedule.findByIdAndDelete(id);
+    res.status(200).json({message: 'Schedule deleted successfully'});
+  } catch (error) {
+    res.status(500).json({message: error.message});
+  }
 });
 
 /**
@@ -376,12 +375,12 @@ app.delete('/deleteSchedule/:id', async (req, res) => {
  *                   example: "Internal server error"
  */
 app.get('/listSchedule', async (req, res) => {
-    try {
-        const schedule = await Schedule.find();
-        res.status(200).json(schedule);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  try {
+    const schedule = await Schedule.find();
+    res.status(200).json(schedule);
+  } catch (error) {
+    res.status(500).json({message: error.message});
+  }
 });
 
 module.exports = app;

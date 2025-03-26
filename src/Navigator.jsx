@@ -15,6 +15,7 @@ import ScheduleScreen from './Screens/ScheduleScreen/ScheduleScreen';
 import AlarmScreen from './Screens/ScheduleScreen/AlarmScreen';
 import SetTimerScreen from './Screens/ScheduleScreen/SetTimerScreen';
 import RegisterScreen from './Screens/Register/RegisterScreen';
+import ResetPasswordScreen from './Screens/ResetPasswordScreen/ResetPasswordScreen';
 
 const Tab = createBottomTabNavigator();
 const StackNav = createNativeStackNavigator();
@@ -124,7 +125,7 @@ const Navigator = () => {
     <NavigationContainer>
       <UserProvider>
         <StackNav.Navigator
-          initialRouteName="Tabs"
+          initialRouteName="Loading"
           screenOptions={{
             headerShown: false,
           }}>
@@ -146,6 +147,11 @@ const Navigator = () => {
           <StackNav.Screen
             name="Register"
             component={RegisterScreen}
+            options={{animation: 'fade'}}
+          />
+          <StackNav.Screen
+            name="ResetPass"
+            component={ResetPasswordScreen}
             options={{animation: 'fade'}}
           />
           <StackNav.Screen

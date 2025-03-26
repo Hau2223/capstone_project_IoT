@@ -3,7 +3,7 @@ import React, {useState} from 'react';
 import {OtpInput} from 'react-native-otp-entry';
 import colors from '../../../../assets/common/colorCss';
 
-const Verification = ({email, handleVerifyOTP, handleReSendCode}) => {
+const VerifyReset = ({email, handleVerifyOTP, handleReSendCode}) => {
   const [otp, setOtp] = useState('');
 
   return (
@@ -55,7 +55,7 @@ const Verification = ({email, handleVerifyOTP, handleReSendCode}) => {
   );
 };
 
-export default Verification;
+export default VerifyReset;
 
 const styles = StyleSheet.create({
   container: {

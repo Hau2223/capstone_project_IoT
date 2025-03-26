@@ -27,7 +27,7 @@ const createToken = userId => {
   const payload = {
     userId: userId,
   };
-  const token = jwt.sign(payload, 'Q$r2K6W8n!jCW%Zk', {expiresIn: '1h'});
+  const token = jwt.sign(payload, 'Q$r2K6W8n!jCW%Zk');
   return token;
 };
 /**
@@ -72,7 +72,7 @@ const createToken = userId => {
  *         description: Internal server error
  */
 app.post('/login', async (req, res) => {
-  const { email, password, deviceID } = req.body;
+  const {email, password, deviceID} = req.body;
 
   if (!email || !password || !deviceID) {
     return res.status(400).json({
@@ -82,32 +82,35 @@ app.post('/login', async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({email});
     if (!user) {
-      return res.status(404).json({ status: 404, message: 'User not found' });
+      return res.status(404).json({status: 404, message: 'User not found'});
     }
 
     // So sánh mật khẩu
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(404).json({ status: 404, message: 'Invalid password' });
+      return res.status(404).json({status: 404, message: 'Invalid password'});
     }
 
     // Kiểm tra nếu có người dùng khác đã đăng nhập
-    if (user.deviceID && user.deviceID !== deviceID) {
-      user.token = null;
-      return res.status(404).json({ status: 404, message: 'Account is logged in', data: user.token });
-    }
+    console.log(deviceID);
+    // if (user.deviceID && user.deviceID !== deviceID) {
+    //   user.token = null;
+    //   return res
+    //     .status(404)
+    //     .json({status: 404, message: 'Account is logged in', data: user.token});
+    // }
 
-    user.deviceID = deviceID; // Cập nhật deviceID
-    const token = createToken(user._id); // Tạo token mới
-    user.token = token; // Lưu token vào database
+    user.deviceID = deviceID;
+    const token = createToken(user); // Tạo token mới
+    user.token = token;
     await user.save();
 
-    res.status(200).json({ data: token, status: 200 });
+    res.status(200).json({data: token, status: 200});
   } catch (err) {
     console.error('Error logging in user:', err);
-    res.status(500).json({ status: 500, message: 'Internal server error' });
+    res.status(500).json({status: 500, message: 'Internal server error'});
   }
 });
 
@@ -138,7 +141,6 @@ app.post('/login', async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-
 app.get('/profile/:id', async (req, res) => {
   try {
     const {id} = req.params;
@@ -200,7 +202,7 @@ app.get('/sendCode/:email', async (req, res) => {
     const randomNumber = Math.floor(1000 + Math.random() * 9000);
     otpStore[email] = {
       code: String(randomNumber),
-      expires: Date.now() + 3 * 60 * 1000, // Hết hạn sau 3 phút
+      expires: Date.now() + 1 * 60 * 1000, // Hết hạn sau 3 phút
     };
 
     const transporter = nodemailer.createTransport({
@@ -263,7 +265,7 @@ app.post('/verifyOTP', (req, res) => {
 
   try {
     const otpEntry = otpStore[email];
-
+    console.log(otpStore);
     // Kiểm tra mã OTP
     if (!otpEntry) {
       return res
@@ -331,20 +333,22 @@ app.post('/verifyOTP', (req, res) => {
  *         description: Internal server error
  */
 app.post('/register', async (req, res) => {
-  const { name, email, password } = req.body;
+  const {name, email, password} = req.body;
 
   if (registeredUsers[email]) {
-    return res.status(400).json({ message: 'User already registered!' });
+    return res.status(400).json({message: 'User already registered!'});
   }
 
   if (!pendingRegistrations[email]) {
-    return res.status(400).json({ message: 'Please verify your OTP before registering' });
+    return res
+      .status(400)
+      .json({message: 'Please verify your OTP before registering'});
   }
 
   try {
     // Kiểm tra email đã tồn tại chưa
-    if (await User.findOne({ email })) {
-      return res.status(400).json({ message: 'Email already exists!' });
+    if (await User.findOne({email})) {
+      return res.status(400).json({message: 'Email already exists!'});
     }
 
     // Mã hóa mật khẩu
@@ -352,7 +356,7 @@ app.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Tạo user mới với mật khẩu đã mã hóa
-    const newUser = new User({ name, email, password: hashedPassword });
+    const newUser = new User({name, email, password: hashedPassword});
     await newUser.save();
 
     // Xóa trạng thái đăng ký
@@ -365,9 +369,79 @@ app.post('/register', async (req, res) => {
     });
   } catch (err) {
     console.error('Error registering user:', err);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({message: 'Internal server error'});
   }
 });
 
+/**
+ * @swagger
+ * /api/user/resetPassword:
+ *   post:
+ *     summary: Reset user password
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - newPassword
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The user's registered email address
+ *               newPassword:
+ *                 type: string
+ *                 description: The new password (will be hashed before storing)
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Password reset successfully!"
+ *       400:
+ *         description: User not found or invalid input
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "User not found!"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Internal server error"
+ */
+app.post('/resetPassword', async (req, res) => {
+  const {email, newPassword} = req.body;
+
+  try {
+    if (!registeredUsers[email]) {
+      return res.status(400).json({message: 'User not found!'});
+    }
+    // Mã hóa mật khẩu mới
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    const user = await User.findOneAndUpdate(
+      {email},
+      {password: hashedPassword},
+      {new: true},
+    );
+
+    if (!user) {
+      return res.status(400).json({message: 'User not found!'});
+    }
+
+    res.status(200).json({message: 'Password reset successfully!'});
+  } catch (err) {
+    console.error('Error resetting password:', err);
+    res.status(500).json({message: 'Internal server error'});
+  }
+});
 
 module.exports = app;

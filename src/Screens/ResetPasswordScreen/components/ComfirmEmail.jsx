@@ -9,7 +9,12 @@ import {
 import React from 'react';
 import colors from '../../../../assets/common/colorCss';
 
-const Comfirm = ({email, handleSendCode, handleInputChange, handleEmail}) => {
+const ComfirmEmail = ({
+  email,
+  handleInputChange,
+  handleEmail,
+  handleSendCode,
+}) => {
   const handlePress = () => {
     handleEmail();
     handleSendCode();
@@ -22,12 +27,14 @@ const Comfirm = ({email, handleSendCode, handleInputChange, handleEmail}) => {
           source={require('../../../../assets/icon/ic_protect.png')}
         />
         <Text style={styles.txtTitle}>Xác minh OTP</Text>
-        <Text style={styles.txtSub}>Chúng tôi sẽ gửi mã xác nhận đến cho bạn</Text>
+        <Text style={styles.txtSub}>
+          Chúng tôi sẽ gửi mã xác nhận đến cho bạn
+        </Text>
         <View style={styles.layoutInput}>
           <Text style={styles.txtform}>Xác nhận email</Text>
           <TextInput
             value={email}
-            onChangeText={text => handleInputChange('email', text)}
+            onChangeText={text => handleInputChange('newEmail', text)}
             placeholder={'Nhập Email'}
             placeholderTextColor={colors.white}
             style={[styles.txtform, styles.txtEmail]}
@@ -35,14 +42,14 @@ const Comfirm = ({email, handleSendCode, handleInputChange, handleEmail}) => {
         </View>
 
         <Pressable onPress={handlePress} style={styles.button}>
-  <Text style={styles.buttonText}>Gửi mã</Text>
-</Pressable>
+          <Text style={styles.buttonText}>Gửi mã</Text>
+        </Pressable>
       </View>
     </View>
   );
 };
 
-export default Comfirm;
+export default ComfirmEmail;
 
 const styles = StyleSheet.create({
   container: {
