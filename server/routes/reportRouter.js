@@ -46,23 +46,24 @@ app.use(bodyParser.json());
  *               message: "Error fetching data"
  */
 app.get('/detailReportBy', async (req, res) => {
-    try {
-        const { deviceId } = req.query;
-        if (!deviceId) return res.status(400).json({ message: 'Missing device ID' });
-
-        // Find all reports with the given deviceId
-        const reports = await Report.find({ deviceId });
-
-        if (reports.length === 0) {
-            return res.status(404).json({ message: 'No reports found for this device' });
-        }
-        res.status(200).json(reports); // Return an array of reports
-    } catch (error) {
-        res.status(500).json({ message: 'Error fetching data', error });
+  try {
+    const {deviceId} = req.query;
+    if (!deviceId) {
+      return res.status(400).json({message: 'Missing device ID'});
     }
+    // Find all reports with the given deviceId
+    const reports = await Report.find({deviceId});
+
+    if (reports.length === 0) {
+      return res
+        .status(404)
+        .json({message: 'No reports found for this device'});
+    }
+    res.status(200).json(reports); // Return an array of reports
+  } catch (error) {
+    res.status(500).json({message: 'Error fetching data', error});
+  }
 });
-
-
 
 /**
  * @swagger
@@ -146,17 +147,37 @@ app.get('/detailReportBy', async (req, res) => {
  *                   message: "Internal server error"
  */
 app.post('/createReport', async (req, res) => {
-    try {
-        const { deviceId, time_created, water_usage, water_duration, light_usage, light_duration } = req.body;
-        if (!deviceId || !water_usage || !water_duration || !light_usage || !light_duration) {
-            return res.status(400).json({ message: 'Missing required fields' });
-        }
-        const report = new Report({ deviceId, time_created, water_usage, water_duration, light_usage, light_duration });
-        await report.save();
-        res.status(201).json({ message: 'Report saved successfully', report });
-    } catch (error) {
-        res.status(500).json({ message: 'Error saving data', error });
+  try {
+    const {
+      deviceId,
+      time_created,
+      water_usage,
+      water_duration,
+      light_usage,
+      light_duration,
+    } = req.body;
+    if (
+      !deviceId ||
+      !water_usage ||
+      !water_duration ||
+      !light_usage ||
+      !light_duration
+    ) {
+      return res.status(400).json({message: 'Missing required fields'});
     }
+    const report = new Report({
+      deviceId,
+      time_created,
+      water_usage,
+      water_duration,
+      light_usage,
+      light_duration,
+    });
+    await report.save();
+    res.status(201).json({message: 'Report saved successfully', report});
+  } catch (error) {
+    res.status(500).json({message: 'Error saving data', error});
+  }
 });
 
 /**
@@ -277,47 +298,55 @@ app.post('/createReport', async (req, res) => {
  *               error: "Internal server error details"
  */
 app.put('/updateReport/:deviceId', async (req, res) => {
-    try {
-        const { deviceId } = req.params;
-        const { water_usage, water_duration, light_usage, light_duration } = req.body;
+  try {
+    const {deviceId} = req.params;
+    const {water_usage, water_duration, light_usage, light_duration} = req.body;
 
-        // Validate input fields
-        if (!deviceId || !water_usage || !water_duration || !light_usage || !light_duration) {
-            return res.status(400).json({ message: 'Missing required fields' });
-        }
-
-        // Find the NEWEST report for this device (sorted by time_created DESCENDING)
-        const newestReport = await Report.findOne({ deviceId }).sort({ time_created: -1 });
-
-        if (!newestReport) {
-            return res.status(404).json({ message: 'No report found for this device' });
-        }
-
-        // Update the newest report
-        const updatedReport = await Report.findByIdAndUpdate(
-            newestReport._id,
-            {
-                $set: {
-                    water_usage,
-                    water_duration,
-                    light_usage,
-                    light_duration
-                }
-            },
-            { new: true }
-        );
-
-        res.status(200).json({
-            message: 'Report updated successfully',
-            report: updatedReport
-        });
-    } catch (error) {
-        console.error('Error updating report:', error);
-        res.status(500).json({
-            message: 'Error updating data',
-            error: error.message
-        });
+    // Validate input fields
+    if (
+      !deviceId ||
+      !water_usage ||
+      !water_duration ||
+      !light_usage ||
+      !light_duration
+    ) {
+      return res.status(400).json({message: 'Missing required fields'});
     }
+
+    // Find the NEWEST report for this device (sorted by time_created DESCENDING)
+    const newestReport = await Report.findOne({deviceId}).sort({
+      time_created: -1,
+    });
+
+    if (!newestReport) {
+      return res.status(404).json({message: 'No report found for this device'});
+    }
+
+    // Update the newest report
+    const updatedReport = await Report.findByIdAndUpdate(
+      newestReport._id,
+      {
+        $set: {
+          water_usage,
+          water_duration,
+          light_usage,
+          light_duration,
+        },
+      },
+      {new: true},
+    );
+
+    res.status(200).json({
+      message: 'Report updated successfully',
+      report: updatedReport,
+    });
+  } catch (error) {
+    console.error('Error updating report:', error);
+    res.status(500).json({
+      message: 'Error updating data',
+      error: error.message,
+    });
+  }
 });
 
 /**
@@ -354,14 +383,14 @@ app.put('/updateReport/:deviceId', async (req, res) => {
  *               message: "Error deleting data"
  */
 app.delete('/deleteReport/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const report = await Report.findByIdAndDelete(id);
-        if (!report) return res.status(404).json({ message: 'Report not found' });
-        res.status(200).json({ message: 'Report deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error deleting data', error });
-    }
+  try {
+    const {id} = req.params;
+    const report = await Report.findByIdAndDelete(id);
+    if (!report) return res.status(404).json({message: 'Report not found'});
+    res.status(200).json({message: 'Report deleted successfully'});
+  } catch (error) {
+    res.status(500).json({message: 'Error deleting data', error});
+  }
 });
 
 /**
@@ -387,12 +416,12 @@ app.delete('/deleteReport/:id', async (req, res) => {
  *               message: "Error fetching data"
  */
 app.get('/listReport', async (req, res) => {
-    try {
-        const reports = await Report.find();
-        res.status(200).json(reports);
-    } catch (error) {
-        res.status(500).json({ message: 'Error fetching data', error });
-    }
+  try {
+    const reports = await Report.find();
+    res.status(200).json(reports);
+  } catch (error) {
+    res.status(500).json({message: 'Error fetching data', error});
+  }
 });
 
 module.exports = app;
