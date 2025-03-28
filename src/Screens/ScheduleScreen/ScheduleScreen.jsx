@@ -99,8 +99,8 @@ export const styles = StyleSheet.create({
   container: {
     height: 'auto',
     width: '100%',
-    flexDirection: 'column',
-    marginBottom: 180,
+    flexDirection: "column",
+    marginBottom: 230,
   },
   itemWrapper: {
     alignItems: 'center',

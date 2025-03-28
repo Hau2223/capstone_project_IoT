@@ -15,6 +15,8 @@ import ScheduleScreen from './Screens/ScheduleScreen/ScheduleScreen';
 import AlarmScreen from './Screens/ScheduleScreen/AlarmScreen';
 import SetTimerScreen from './Screens/ScheduleScreen/SetTimerScreen';
 import RegisterScreen from './Screens/Register/RegisterScreen';
+import ReportScreen from './Screens/ReportScreen/ReportScreen';
+import ReportDetail from './Screens/ReportScreen/ReportDetail';
 import ResetPasswordScreen from './Screens/ResetPasswordScreen/ResetPasswordScreen';
 
 const Tab = createBottomTabNavigator();
@@ -72,7 +74,7 @@ const getTabBarIcon = (name, color) => {
 function MyTabs() {
   return (
     <Tab.Navigator
-      initialRouteName="Home"
+      initialRouteName="Test"
       screenOptions={{
         tabBarStyle: {
           backgroundColor: '#FFF',
@@ -86,15 +88,15 @@ function MyTabs() {
         tabBarHideOnKeyboard: true,
       }}>
       <Tab.Screen
-        name="Home"
-        component={HomeScreen}
+        name="Test"
+        component={TestScreen}
         options={{
           headerShown: false,
           tabBarIcon: ({color}) => getTabBarIcon('Home', color),
         }}
       />
       <Tab.Screen
-        name="Detail"
+        name="DetailsScreen"
         component={DetailsScreen}
         options={{
           headerShown: false,
@@ -102,8 +104,8 @@ function MyTabs() {
         }}
       />
       <Tab.Screen
-        name="Setting"
-        component={SettingScreen}
+        name="ReportScreen"
+        component={ReportScreen}
         options={{
           headerShown: false,
           tabBarIcon: ({color}) => getTabBarIcon('Setting', color),
@@ -178,6 +180,11 @@ const Navigator = () => {
           <StackNav.Screen
             name="SetTimerScreen"
             component={SetTimerScreen}
+            options={{headerShown: false, animation: 'fade_from_bottom'}}
+          />
+          <StackNav.Screen
+            name="ReportDetail"
+            component={ReportDetail}
             options={{headerShown: false, animation: 'fade_from_bottom'}}
           />
         </StackNav.Navigator>
