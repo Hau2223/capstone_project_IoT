@@ -14,10 +14,19 @@ const DetailScreen = ({route}) => {
         <Image style={styles.imgStyle} source={item.imageSource} />
       </View>
       <View style={styles.content}>
-        <Text style={styles.header2}>{item.tenKhu}</Text>
+        <Text style={styles.header2}>Khu {item.tenKhu}</Text>
         <View style={styles.content1}>
-          <Text style={styles.textStyle}>{item.nhietDo}</Text>
-          <Text style={styles.textStyle}>{item.doAm}</Text>
+          <Text style={styles.textStyle}>Nhiệt độ: {item.nhietDo}</Text>
+          <Text style={styles.textStyle}>Độ ẩm đất: {item.doAm}</Text>
+          <Text style={styles.textStyle}>Ánh sáng: {item.anhSang}</Text>
+          <View style={styles.settingOnOff}>
+            <View style={styles.frameIconLight}>
+              <Image style={styles.iconLight} source={require('../../../assets/icon/iconLight.png')} />
+            </View>
+            <View style={styles.frameTxtLight}>
+              <Text style={styles.txtLightLevel}>Cài đặt mức sáng bật/tắt đèn</Text>
+            </View>
+          </View>
         </View>
         <View style={styles.line} />
         <View style={styles.content2}>
@@ -59,7 +68,7 @@ export default DetailScreen;
 
 const styles = StyleSheet.create({
   frame: {
-    height: 'auto',
+    height: '100%',
     width: '100%',
     backgroundColor: '#EAEAEA',
     alignItems: 'center',
@@ -82,7 +91,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   header2: {
-    color: '#000000',
+    color: '#206477',
     fontSize: 32,
     fontWeight: 'bold',
     margin: 10,
@@ -121,6 +130,8 @@ const styles = StyleSheet.create({
   textStyle: {
     color: '#636363',
     fontSize: 23,
+    marginTop:5,
+    marginBottom:5
   },
   line: {
     height: 2,
@@ -129,4 +140,28 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     marginRight: 15,
   },
+  settingOnOff:{
+    flexDirection:'row',
+    width:'100%',
+    height:'auto',
+    alignItems:'center'
+
+  },
+  frameIconLight:{
+    height:25,
+    width:25,
+
+  },
+  iconLight:{
+    height:25,
+    width:'auto',
+    
+  },
+  txtLightLevel:{
+    color: '#636363',
+    fontSize: 18,
+    marginLeft:7,
+    color:'#5787E5',
+    textDecorationLine: 'underline'
+  }
 });

@@ -100,7 +100,7 @@ export const styles = StyleSheet.create({
     height: 'auto',
     width: '100%',
     flexDirection: "column",
-    marginBottom: 180,
+    marginBottom: 230,
   },
   itemWrapper: {
     alignItems: 'center',
