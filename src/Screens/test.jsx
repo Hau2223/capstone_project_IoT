@@ -1,14 +1,15 @@
-import {StyleSheet, Text, View,Image,FlatList,TextInput,Button, ScrollView} from 'react-native';
+import {Modal,TouchableOpacity,StyleSheet, Text, View,Image,FlatList,TextInput,Button, ScrollView} from 'react-native';
 import React, { useState } from 'react';
 import ItemHomePage from '../components/ItemHomePage';
+import CustomAlert from '../components/CustomAlert';
 
 const data = [
-  { id: '1', tenKhu: 'Khu 1', nhietDo: 'Nhiệt độ: 19°C', doAm: 'Độ ẩm đất: 25%', trangThaiTuoi: 'Trạng thái tưới: OFF', quat: 'Quạt: ON',imageSource: require('../../assets/img/1.png'), },
-  { id: '2', tenKhu: 'Khu 2', nhietDo: 'Nhiệt độ: 21°C', doAm: 'Độ ẩm đất: 30%', trangThaiTuoi: 'Trạng thái tưới: ON', quat: 'Quạt: OFF',imageSource: require('../../assets/img/1.png'), },
-  { id: '3', tenKhu: 'Khu 3', nhietDo: 'Nhiệt độ: 18°C', doAm: 'Độ ẩm đất: 28%', trangThaiTuoi: 'Trạng thái tưới: OFF', quat: 'Quạt: ON',imageSource: require('../../assets/img/1.png'), },
-  { id: '4', tenKhu: 'Khu 4', nhietDo: 'Nhiệt độ: 20°C', doAm: 'Độ ẩm đất: 35%', trangThaiTuoi: 'Trạng thái tưới: ON', quat: 'Quạt: OFF',imageSource: require('../../assets/img/1.png'), },
-  { id: '5', tenKhu: 'Khu 5', nhietDo: 'Nhiệt độ: 22°C', doAm: 'Độ ẩm đất: 40%', trangThaiTuoi: 'Trạng thái tưới: OFF', quat: 'Quạt: ON',imageSource: require('../../assets/img/1.png'), },
-  { id: '6', tenKhu: 'Khu 6', nhietDo: 'Nhiệt độ: 22°C', doAm: 'Độ ẩm đất: 40%', trangThaiTuoi: 'Trạng thái tưới: OFF', quat: 'Quạt: ON',imageSource: require('../../assets/img/1.png'), },
+  { id: '1', tenKhu: '1', nhietDo: '19°C', doAm: '25%', trangThaiTuoi: 'OFF', quat: 'ON',imageSource: require('../../assets/img/1.png'),anhSang:'20%' },
+  { id: '2', tenKhu: '2', nhietDo: '21°C', doAm: '30%', trangThaiTuoi: 'ON', quat: 'OFF',imageSource: require('../../assets/img/1.png'),anhSang:'30%' },
+  { id: '3', tenKhu: '3', nhietDo: '18°C', doAm: '28%', trangThaiTuoi: 'OFF', quat: 'ON',imageSource: require('../../assets/img/1.png'),anhSang:'10%' },
+  { id: '4', tenKhu: '4', nhietDo: '20°C', doAm: '35%', trangThaiTuoi: 'ON', quat: 'OFF',imageSource: require('../../assets/img/1.png'),anhSang:'20%' },
+  { id: '5', tenKhu: '5', nhietDo: '22°C', doAm: '40%', trangThaiTuoi: 'OFF', quat: 'ON',imageSource: require('../../assets/img/1.png'),anhSang:'30%' },
+  { id: '6', tenKhu: '6', nhietDo: '22°C', doAm: '40%', trangThaiTuoi: 'OFF', quat: 'ON',imageSource: require('../../assets/img/1.png'),anhSang:'40%' },
 ];
 
 
@@ -18,6 +19,12 @@ const TestScreen = ({navigation}) => {
     const handleGoToDetail = (item) => {
       navigation.navigate('DetailScreen', { item }); // Chuyển dữ liệu sang DetailItem
     };
+    
+      const showAlert = () => {
+        Alert.alert("Thông báo", "Đây là nội dung thông báo!", [{ text: "OK" }]);
+      }
+
+      const [modalVisible, setModalVisible] = useState(false);
 
   return (
   
@@ -26,9 +33,10 @@ const TestScreen = ({navigation}) => {
         <View style={styles.header1}>
           <Text style={styles.textHeader}>Vườn tiêu Bình Phước</Text>
         </View>
-        <View style={styles.header2}>
-          <Image source={require('../../assets/icon/canhBao.png')} style={{ width: 30, height: 30, resizeMode:"contain" }} />
-        </View>
+        <TouchableOpacity style={styles.header2} onPress={() => setModalVisible(true)}>
+          <Image source={require('../../assets/icon/canhBao.png')} style={styles.alertIcon} />
+        </TouchableOpacity>
+        <CustomAlert visible={modalVisible} onClose={() => setModalVisible(false)} />
       </View>
       <View style={styles.container}>
           
@@ -39,12 +47,13 @@ const TestScreen = ({navigation}) => {
           renderItem={({ item }) => (
             <View style={styles.itemWrapper}>
               <ItemHomePage
-                tenKhu={item.tenKhu}
-                nhietDo={item.nhietDo}
-                doAm={item.doAm}
-                trangThaiTuoi={item.trangThaiTuoi}
-                quat={item.quat}
+                tenKhu={'Khu '+item.tenKhu}
+                nhietDo={'Nhiệt độ: '+item.nhietDo}
+                doAm={'Độ ẩm: '+item.doAm}
+                trangThaiTuoi={'Trạng thái tưới: '+item.trangThaiTuoi}
+                quat={'Quạt: '+item.quat}
                 imageSource={item.imageSource}
+                anhSang={item.anhSang}
                 onPress={() => handleGoToDetail(item)}
               />
             </View>
@@ -77,7 +86,7 @@ export const styles = StyleSheet.create({
       justifyContent: "center"
     },
     textHeader: {
-      color:"#000000",
+      color:"#206477",
       fontSize:32,
       fontWeight:"bold",
       marginLeft:20
@@ -93,7 +102,7 @@ export const styles = StyleSheet.create({
       width:"100%",
       flexDirection:"row",
       alignItems:"center",
-      marginBottom:180
+      marginBottom:230
     },
     itemWrapper: {
       alignItems: 'center',
@@ -103,6 +112,8 @@ export const styles = StyleSheet.create({
       paddingHorizontal: 10, 
       paddingVertical: 10 
     },
+    
+    
 });
 
 export default TestScreen;
