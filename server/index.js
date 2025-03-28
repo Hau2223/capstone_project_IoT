@@ -25,11 +25,13 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 const userRou = require('./routes/userRouter');
 const sensorRou = require('./routes/sensorRouter');
+const { checkUser } = require('./middleware/authMiddleware');
 
 
 app.use(cors());
-
+// app.get("*", checkUser);
 app.use('/api/sensor', sensorRou);
+
 app.use('/api/user', userRou);
 
 

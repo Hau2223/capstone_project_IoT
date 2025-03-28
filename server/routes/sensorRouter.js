@@ -27,6 +27,7 @@ const app = express();
  */
 app.post('/data', async (req, res) => {
   try {
+    
     const newData = new SensorData(req.body);
     await newData.save();
     res.status(201).json({message: 'Data saved successfully'});
@@ -37,6 +38,8 @@ app.post('/data', async (req, res) => {
 
 app.get('/data', async (req, res) => {
   try {
+    console.log(req);
+
     const data = await SensorData.find().sort({timestamp: -1});
     res.json(data);
   } catch (error) {

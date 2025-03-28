@@ -85,13 +85,14 @@ const createToken = userId => {
  */
 app.post('/login', (req, res) => {
   const {username, password} = req.body;
+  
   if (!username || !password) {
     return res
       .status(404)
       .json({message: 'Email and the password are required'});
   }
-
-  User.findOne({username})
+  
+  User.findOne({email:username})
     .then(user => {
       if (!user) {
         return res.status(404).json({message: 'User not found'});
@@ -100,6 +101,7 @@ app.post('/login', (req, res) => {
         return res.status(404).json({message: 'Invalid Password'});
       }
       const token = createToken(user._id);
+      res.cookie('token', token, {httpOnly: true});
       const type = user.type;
       res.status(200).json({type, token, status: 200});
     })
@@ -107,6 +109,16 @@ app.post('/login', (req, res) => {
       console.log('Error in finding the user', err);
       res.status(404).json({message: 'Internal server Error!'});
     });
+});
+
+app.post('/logout', (req, res) => {
+  const {username} = req.body;
+  if (!username) {
+    return res
+      .status(404)
+      .json({message: ' are required'});
+  }
+  
 });
 
 module.exports = app;
