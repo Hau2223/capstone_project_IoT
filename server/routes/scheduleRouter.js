@@ -5,12 +5,12 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 /**
  * @swagger
- * /api/schedule/detailScheduleBy:
+ * /api/schedule/detailScheduleBy/{id}:
  *   get:
  *     summary: Chi tiết lịch biểu theo ID
  *     tags: [Schedules]
  *     parameters:
- *       - in: query
+ *       - in: path
  *         name: id
  *         required: true
  *         schema:
@@ -63,20 +63,23 @@ app.use(bodyParser.json());
  *                   type: string
  *                   example: "Internal server error"
  */
-app.get('/detailScheduleBy', async (req, res) => {
+app.get('/detailScheduleBy/:id', async (req, res) => {
   try {
-    const {id} = req.query;
+    const { id } = req.params;
+
     // Kiểm tra nếu ID không hợp lệ
     if (!id) {
-      return res.status(400).json({message: 'ID is required'});
+      return res.status(400).json({ message: 'ID is required' });
     }
+
     const schedule = await Schedule.findById(id);
     if (!schedule) {
-      return res.status(404).json({message: 'Schedule not found'});
+      return res.status(404).json({ message: 'Schedule not found' });
     }
+
     res.status(200).json(schedule);
   } catch (error) {
-    res.status(500).json({message: error.message});
+    res.status(500).json({ message: error.message });
   }
 });
 

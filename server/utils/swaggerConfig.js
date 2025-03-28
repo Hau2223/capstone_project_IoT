@@ -31,10 +31,10 @@ const options = {
     ],
     servers: [
       {
-        url: 'https://capstone-project-iot-1.onrender.com',
+        url: 'http://192.168.1.158:8000',
         // //https://capstone-project-iot-1.onrender.com
         // //http://localhost:8000
-        // //http://192.168.1.12:8000
+        // //http://192.168.0.241:8000
       },
     ],
   },

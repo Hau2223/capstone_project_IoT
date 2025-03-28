@@ -1,6 +1,6 @@
 export const CONFIG = {
   // baseUrl: 'https://capstone-project-iot-1.onrender.com/api',
-  baseUrl: 'http://192.168.0.241:8000/api',
+  baseUrl: 'http://192.168.1.158:8000/api',
 };
 
 export const IMAGES = {

@@ -1,8 +1,8 @@
 import {StyleSheet, ImageBackground, useWindowDimensions} from 'react-native';
 import React, {useState, useCallback, memo} from 'react';
 import {useNavigation} from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import {IMAGES} from '../../../utils/constants';
-
 import HeaderCompo from '../../components/HeaderCompo';
 import Request from './components/Request';
 import Verification from './components/Verification';
@@ -12,9 +12,9 @@ import AlertModelCompo from '../../components/AlertModelCompo'; // Import modal
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
+  const {t} = useTranslation();
   const {width} = useWindowDimensions();
   const isTablet = width >= 720;
-
   const [step, setStep] = useState('request');
   const [data, setData] = useState({
     name: '',
@@ -59,14 +59,14 @@ const RegisterScreen = () => {
 
   const handleEmail = useCallback(() => {
     if (!data.email.length) {
-      showAlert('warning', 'Vui lòng nhập email của bạn');
+      showAlert(t('alert_warning'), t('email_required'));
       return false;
     } else if (!data.email.endsWith('@gmail.com')) {
-      showAlert('warning', 'Email phải có đuôi @gmail.com');
+      showAlert(t('alert_warning'), t('email_invalid'));
       return false;
     }
     return true; // Email hợp lệ
-  }, [data]);
+  }, [data.email, t]);
 
   const handleInputChange = (key, value) => {
     setData(prev => ({...prev, [key]: value}));
@@ -85,8 +85,8 @@ const RegisterScreen = () => {
         // showAlert('success', 'Mã OTP đã được gửi!');
       })
       .catch(error => {
-        console.error('Lỗi khi gửi OTP:', error);
-        showAlert('error', 'Lỗi khi gửi OTP!');
+        console.error('Lỗi không thể gửi mã OTP!:', error);
+        showAlert(t('alert_error'), t('otp_send_error'));
       });
   };
   const handleReSendCode = () => {
@@ -100,7 +100,7 @@ const RegisterScreen = () => {
       })
       .catch(error => {
         console.error('Lỗi khi gửi OTP:', error);
-        showAlert('error', 'Lỗi khi gửi OTP!');
+        showAlert(t('alert_error'), t('otp_send_error'));
       });
   };
 
@@ -108,11 +108,11 @@ const RegisterScreen = () => {
     verifyOTP({email: data.email, code: otp})
       .then(res => {
         console.log('Xác minh thành công:', res);
-        showAlert('success', 'Xác minh thành công!');
+        showAlert(t('alert_success'), t('otp_verification_success'));
         signUp({name: data.name, email: data.email, password: data.password})
           .then(res => {
             console.log('Xác minh thành công:', res);
-            showAlert('success', 'Đăng kí tài khoản thành công');
+            showAlert(t('alert_success'), t('registration_success_message'));
             setData('');
             navigation.navigate('Login');
           })
@@ -123,11 +123,11 @@ const RegisterScreen = () => {
       .catch(err => {
         // console.error('Lỗi xác minh OTP:', err.response.data.message);
         if (err.response.data.message === 'Invalid OTP code') {
-          showAlert('warning', 'Invalid OTP code');
+          showAlert(t('alert_warning'), t('invalid_otp_code'));
         } else if (err.response.data.message === 'OTP has expired') {
-          showAlert('warning', 'TP has expired');
+          showAlert(t('alert_warning'),  t('otp_expired_message'));
         } else {
-          showAlert('error', 'Mã OTP không hợp lệ hoặc đã hết hạn');
+          showAlert(t('alert_error'), t('otp_invalid_or_expired'));
         }
       });
   };

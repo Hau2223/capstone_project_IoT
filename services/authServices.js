@@ -17,6 +17,11 @@ export const signUp = async params => {
 };
 
 export const sendOTPEmail = async params => {
+  console.log(params.email);
+  return await get(`/user/sendCode/${params.email}`);
+};
+
+export const sendEmailReset = async params => {
   return await get(`/user/sendCode/${params.email}`);
 };
 
@@ -28,7 +33,7 @@ export const verifyOTP = async params => {
 };
 
 export const resetPass = async params => {
-  return await post('/user/register', {
+  return await post('/user/resetPassword', {
     email: params.email,
     newPassword: params.newPassword,
   });

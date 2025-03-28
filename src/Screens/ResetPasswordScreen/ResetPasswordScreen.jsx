@@ -10,7 +10,12 @@ import {IMAGES} from '../../../utils/constants';
 import HeaderCompo from '../../components/HeaderCompo';
 import ComfirmEmail from './components/ComfirmEmail';
 import AlertModelCompo from '../../components/AlertModelCompo';
-import {resetPass, sendOTPEmail, verifyOTP} from '../../../services/authServices';
+import {
+  resetPass,
+  sendEmailReset,
+  sendOTPEmail,
+  verifyOTP,
+} from '../../../services/authServices';
 import VerifyReset from './components/VerifyReset';
 import ComfimNewPass from './components/ComfimNewPass';
 
@@ -43,7 +48,7 @@ const ResetPasswordScreen = ({route}) => {
     }
   }, [navigation, step]);
 
-  console.log(email);
+  console.log(data.newEmail);
 
   const handleInputChange = (key, value) => {
     setData(prev => ({...prev, [key]: value}));
@@ -68,18 +73,17 @@ const ResetPasswordScreen = ({route}) => {
       .then(response => {
         console.log('Mã OTP đã gửi:', response);
         setStep('verify');
-        // showAlert('success', 'Mã OTP đã được gửi!');
       })
       .catch(error => {
         console.error('Lỗi khi gửi OTP:', error);
-        showAlert('error', 'Lỗi khi gửi OTP!');
       });
   };
+
   const handleReSendCode = () => {
     if (!handleEmail()) {
       return;
     }
-    sendOTPEmail({email: data.newEmail})
+    sendEmailReset({email: data.newEmail})
       .then(res => {
         console.log('Mã OTP được gửi lại', res);
       })
@@ -109,19 +113,19 @@ const ResetPasswordScreen = ({route}) => {
   };
 
   const handleResetPass = () => {
-      // if (!handleData()) {
-      //   return;
-      // }
-      resetPass({email: data.newEmail, newPassword: data.newPassword})
-        .then(res => {
-          console.log('Xác minh thành công:', res);
-          showAlert('success', 'Đăng kí tài khoản thành công');
-          setData('');
-          navigation.navigate('Login');
-        })
-        .catch(err => {
-          console.error('Lỗi xác minh OTP:', err.response.data.message);
-        });
+    // if (!handleData()) {
+    //   return;
+    // }
+    resetPass({email: data.newEmail, newPassword: data.newPassword})
+      .then(res => {
+        console.log('Xác minh thành công:', res);
+        showAlert('success', 'Đăng kí tài khoản thành công');
+        setData('');
+        navigation.navigate('Login');
+      })
+      .catch(err => {
+        console.error('Lỗi xác minh OTP:', err.response.data.message);
+      });
   };
 
   return (

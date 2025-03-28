@@ -20,7 +20,7 @@ app.use(bodyParser.json());
 app.get('/detailDevice', async (req, res) => {
   try {
     const devices = await Device.find();
-    res.status(200).json(devices);
+    res.status(200).json({data: devices});
   } catch (error) {
     res
       .status(500)
@@ -55,7 +55,7 @@ app.get('/detailDeviceBy/:id_esp', async (req, res) => {
     if (!device) {
       return res.status(404).json({message: 'Device not found'});
     }
-    res.status(200).json(device);
+    res.status(200).json({data: device});
   } catch (error) {
     res
       .status(500)
@@ -198,7 +198,7 @@ app.post('/createDevice', async (req, res) => {
     await device.save();
     res
       .status(200)
-      .json({message: 'Device created/updated successfully', device});
+      .json({message: 'Device created/updated successfully', data: device});
   } catch (error) {
     res
       .status(500)
@@ -283,7 +283,7 @@ app.put('/updateDeviceBy/:id_esp', async (req, res) => {
     }
 
     await device.save();
-    res.status(200).json({message: 'Device updated successfully', device});
+    res.status(200).json({message: 'Device updated successfully', data: device});
   } catch (error) {
     res
       .status(500)
@@ -318,7 +318,7 @@ app.delete('/delDeviceBy/:id_esp', async (req, res) => {
     if (!device) {
       return res.status(404).json({ message: 'Device not found' });
     }
-    res.status(200).json({ message: 'Device deleted successfully' });
+    res.status(200).json({ message: 'Device deleted successfully', data: device});
   } catch (error) {
     res.status(500).json({ message: 'Error deleting device', error: error.message });
   }
