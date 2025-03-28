@@ -8,6 +8,13 @@ const options = {
       version: '1.0.0',
       description: 'API Documentation for IoT project',
     },
+    tags: [
+      { name: 'Authentication'},
+      { name: 'Controls'},
+      { name: 'Devices'},
+      { name: 'Sensors'},
+      { name: 'Information'},
+    ],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -27,6 +34,7 @@ const options = {
         url: 'https://capstone-project-iot-1.onrender.com',
         // //https://capstone-project-iot-1.onrender.com
         // //http://localhost:8000
+        // //http://192.168.1.12:8000
       },
     ],
   },

@@ -1,15 +1,27 @@
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const controlSchema = new mongoose.Schema({
-  id_User: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'User',
+const controlSchema = new Schema({
+  name: {
+    type: String,
     required: true,
   },
-  id_Device: {
+  status: {
+    type: Boolean,
+    default: false,
+  },
+  threshold_min: {
+    type: Number,
+    default: 0,
+  },
+  threshold_max: {
+    type: Number,
+    default: 100,
+  },
+  mode: {
     type: String,
-    ref: 'Device',
-    required: true,
+    enum: ['manual', 'schedule', 'threshold'],
+    default: 'manual',
   },
 });
 

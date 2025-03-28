@@ -1,193 +1,165 @@
-import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
+import {StyleSheet, TouchableOpacity, Text, View} from 'react-native';
 import React, {useState} from 'react';
 import {LineChart} from 'react-native-gifted-charts';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
-// Dữ liệu gồm 2 đường biểu đồ
-const monthlyData = [
-  {
-    month: 1, // Tháng 1
-    weeks: [
-      {
-        week: 1,
-        data1: [
-          {value: 120, label: 'Mon'},
-          {value: 80, label: 'Tue'},
-          {value: 90, label: 'Wed'},
-          {value: 70, label: 'Thu'},
-          {value: 35, label: 'Fri'},
-          {value: 20, label: 'Sat'},
-          {value: 70, label: 'Sun'},
-        ],
-        data2: [
-          {value: 100, label: 'Mon'},
-          {value: 60, label: 'Tue'},
-          {value: 80, label: 'Wed'},
-          {value: 50, label: 'Thu'},
-          {value: 25, label: 'Fri'},
-          {value: 10, label: 'Sat'},
-          {value: 50, label: 'Sun'},
-        ],
-      },
-      {
-        week: 2,
-        data1: [
-          {value: 40, label: 'Mon'},
-          {value: 60, label: 'Tue'},
-          {value: 100, label: 'Wed'},
-          {value: 80, label: 'Thu'},
-          {value: 10, label: 'Fri'},
-          {value: 30, label: 'Sat'},
-          {value: 40, label: 'Sun'},
-        ],
-        data2: [
-          {value: 30, label: 'Mon'},
-          {value: 50, label: 'Tue'},
-          {value: 90, label: 'Wed'},
-          {value: 70, label: 'Thu'},
-          {value: 15, label: 'Fri'},
-          {value: 20, label: 'Sat'},
-          {value: 30, label: 'Sun'},
-        ],
-      },
-    ],
-  },
-  {
-    month: 2, // Tháng 2
-    weeks: [
-      {
-        week: 1,
-        data1: [
-          {value: 60, label: 'Mon'},
-          {value: 50, label: 'Tue'},
-          {value: 80, label: 'Wed'},
-          {value: 70, label: 'Thu'},
-          {value: 10, label: 'Fri'},
-          {value: 30, label: 'Sat'},
-          {value: 20, label: 'Sun'},
-        ],
-        data2: [
-          {value: 80, label: 'Mon'},
-          {value: 45, label: 'Tue'},
-          {value: 20, label: 'Wed'},
-          {value: 65, label: 'Thu'},
-          {value: 35, label: 'Fri'},
-          {value: 25, label: 'Sat'},
-          {value: 15, label: 'Sun'},
-        ],
-      },
-      {
-        week: 2,
-        data1: [
-          {value: 70, label: 'Mon'},
-          {value: 90, label: 'Tue'},
-          {value: 60, label: 'Wed'},
-          {value: 50, label: 'Thu'},
-          {value: 30, label: 'Fri'},
-          {value: 20, label: 'Sat'},
-          {value: 10, label: 'Sun'},
-        ],
-        data2: [
-          {value: 65, label: 'Mon'},
-          {value: 85, label: 'Tue'},
-          {value: 55, label: 'Wed'},
-          {value: 45, label: 'Thu'},
-          {value: 25, label: 'Fri'},
-          {value: 15, label: 'Sat'},
-          {value: 5, label: 'Sun'},
-        ],
-      },
-    ],
-  },
-];
+const getWeekday = dateString => {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  return days[new Date(dateString).getDay()];
+};
+
+const dataRecords = [
+  {value: 120, date: '2025-01-01'},
+  {value: 80, date: '2025-01-02'},
+  {value: 90, date: '2025-01-03'},
+  {value: 70, date: '2025-01-04'},
+  {value: 35, date: '2025-01-05'},
+  {value: 20, date: '2025-01-06'},
+  {value: 70, date: '2025-01-07'},
+  {value: 110, date: '2025-01-08'},
+  {value: 60, date: '2025-01-09'},
+  {value: 80, date: '2025-01-10'},
+  {value: 45, date: '2025-01-11'},
+  {value: 25, date: '2025-01-12'},
+  {value: 95, date: '2025-01-13'},
+  {value: 130, date: '2025-01-14'},
+  {value: 75, date: '2025-01-15'},
+  {value: 85, date: '2025-01-16'},
+  {value: 30, date: '2025-01-17'},
+  {value: 60, date: '2025-01-18'},
+  {value: 120, date: '2025-01-19'},
+  {value: 50, date: '2025-01-20'},
+  {value: 70, date: '2025-01-21'},
+  {value: 110, date: '2025-01-22'},
+  {value: 90, date: '2025-01-23'},
+  {value: 100, date: '2025-01-24'},
+  {value: 55, date: '2025-01-25'},
+  {value: 40, date: '2025-01-26'},
+  {value: 85, date: '2025-01-27'},
+  {value: 115, date: '2025-01-28'},
+  {value: 60, date: '2025-01-29'},
+  {value: 90, date: '2025-01-30'},
+  {value: 35, date: '2025-01-31'},
+  {value: 50, date: '2025-02-01'},
+  {value: 70, date: '2025-02-02'},
+  {value: 100, date: '2025-02-03'},
+  {value: 80, date: '2025-02-04'},
+  {value: 95, date: '2025-02-05'},
+  {value: 60, date: '2025-02-06'},
+  {value: 75, date: '2025-02-07'},
+  {value: 130, date: '2025-02-08'},
+  {value: 90, date: '2025-02-09'},
+  {value: 55, date: '2025-02-10'},
+  {value: 70, date: '2025-02-11'},
+  {value: 85, date: '2025-02-12'},
+  {value: 120, date: '2025-02-13'},
+  {value: 110, date: '2025-02-14'},
+  {value: 95, date: '2025-02-15'},
+  {value: 80, date: '2025-02-16'},
+  {value: 65, date: '2025-02-17'},
+  {value: 100, date: '2025-02-18'},
+].map(record => ({...record, label: getWeekday(record.date)}));
+
+const WeekSelector = ({onSelectWeek}) => {
+  const [date, setDate] = useState(new Date());
+  const [show, setShow] = useState(false);
+
+  const getWeekRange = selectedDate => {
+    let startOfWeek = new Date(selectedDate);
+    startOfWeek.setDate(
+      startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7),
+    );
+    let endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    return {startOfWeek, endOfWeek};
+  };
+
+  const handleDateChange = (_, selectedDate) => {
+    setShow(false);
+    if (selectedDate) {
+      setDate(selectedDate);
+      onSelectWeek(getWeekRange(selectedDate));
+    }
+  };
+
+  return (
+    <View style={styles.weekSelectorContainer}>
+      <Text style={styles.chartTitle}>📊 Thống kê theo tuần</Text>
+      <TouchableOpacity style={styles.button} onPress={() => setShow(true)}>
+        <Text style={styles.buttonText}>📅</Text>
+      </TouchableOpacity>
+      {show && (
+        <DateTimePicker
+          value={date}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+        />
+      )}
+      <Text style={styles.weekText}>
+        Tuần: {getWeekRange(date).startOfWeek.toDateString()} -{' '}
+        {getWeekRange(date).endOfWeek.toDateString()}
+      </Text>
+    </View>
+  );
+};
+
+const LineChartComponent = ({data}) => {
+  return (
+    <View style={styles.chartContainer}>
+      
+      <LineChart
+        data={data}
+        color="#1B3278"
+        thickness={3}
+        showDataPoints
+        dataPointRadius={4}
+        dataPointColor="#FF5733"
+        yAxisColor="#888"
+        xAxisColor="#888"
+      />
+    </View>
+  );
+};
 
 const ReportDetail = () => {
-  const [monthIndex, setMonthIndex] = useState(0);
-  const [weekIndex, setWeekIndex] = useState(0);
+  const [weekRange, setWeekRange] = useState(null);
+  const [filteredData, setFilteredData] = useState([]);
 
-  const currentMonth = monthlyData[monthIndex];
-  const currentWeek = currentMonth.weeks[weekIndex];
+  const handleSelectDate = range => {
+    setWeekRange(range);
+    let weekDays = Array.from({length: 7}, (_, i) => {
+      let date = new Date(range.startOfWeek);
+      date.setDate(date.getDate() + i);
+      let dateString = date.toISOString().split('T')[0];
+      return {date: dateString, label: getWeekday(dateString), value: null};
+    });
 
-  const handlePrevMonth = () => {
-    if (monthIndex > 0) {
-      setMonthIndex(monthIndex - 1);
-      setWeekIndex(0); // Reset tuần khi đổi tháng
-    }
-  };
-
-  const handleNextMonth = () => {
-    if (monthIndex < monthlyData.length - 1) {
-      setMonthIndex(monthIndex + 1);
-      setWeekIndex(0);
-    }
-  };
-
-  const handlePrevWeek = () => {
-    if (weekIndex > 0) setWeekIndex(weekIndex - 1);
-  };
-
-  const handleNextWeek = () => {
-    if (weekIndex < currentMonth.weeks.length - 1) setWeekIndex(weekIndex + 1);
+    setFilteredData(
+      weekDays.map(day => ({
+        ...day,
+        value: dataRecords.find(d => d.date === day.date)?.value ?? null,
+      })),
+    );
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.textHeader}>Báo cáo & Thống kê</Text>
-      </View>
-
-      <View style={styles.frameReport}>
-        {/* Chọn Tháng */}
-        <View style={styles.selectionRow}>
-          <TouchableOpacity onPress={handlePrevMonth} style={styles.button}>
-            <Text style={styles.buttonText}>{'<'}</Text>
-          </TouchableOpacity>
-          <Text
-            style={styles.selectionText}>{`Tháng ${currentMonth.month}`}</Text>
-          <TouchableOpacity onPress={handleNextMonth} style={styles.button}>
-            <Text style={styles.buttonText}>{'>'}</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Chọn Tuần */}
-        <View style={styles.selectionRow}>
-          <TouchableOpacity onPress={handlePrevWeek} style={styles.button}>
-            <Text style={styles.buttonText}>{'<'}</Text>
-          </TouchableOpacity>
-          <Text style={styles.selectionText}>{`Tuần ${currentWeek.week}`}</Text>
-          <TouchableOpacity onPress={handleNextWeek} style={styles.button}>
-            <Text style={styles.buttonText}>{'>'}</Text>
-          </TouchableOpacity>
-        </View>
-
-        <LineChart
-          data={currentWeek.data1}
-          data2={currentWeek.data2}
-          color="#1B3278"
-          color2="#FF5733"
-          thickness={3}
-          thickness2={3}
-          areaChart={false}
-          showDataPoints
-          dataPointsColor="#1B3278"
-          dataPointsColor2="#FF5733"
-          dataPointsRadius={5}
-          adjustToWidth
-          width={300}
-          animationDuration={1000}
-          isAnimated
-          showTextOnPress={false}
-        />
-
-        <View style={styles.detailLine}>
-          <View style={styles.detail}>
-            <View style={styles.detailColor1}></View>
-            <Text style={styles.txtDetail}>Số lần tưới</Text>
-          </View>
-          <View style={styles.detail}>
-            <View style={styles.detailColor2}></View>
-            <Text style={styles.txtDetail}>Số lần bật đèn</Text>
-          </View>
-        </View>
+      <View style={styles.hi1}>
+        <WeekSelector onSelectWeek={handleSelectDate} />
+        {weekRange ? (
+          filteredData.every(d => d.value !== null) ? (
+            <LineChartComponent data={filteredData} />
+          ) : (
+            <Text style={styles.noDataText}>
+              ⚠️ Dữ liệu tuần này chưa được tổng hợp
+            </Text>
+          )
+        ) : (
+          <Text style={styles.noDataText}>
+            ⏳ Vui lòng chọn một tuần để xem dữ liệu
+          </Text>
+        )}
       </View>
     </View>
   );
@@ -198,92 +170,43 @@ export default ReportDetail;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F5FA',
-    padding: 20,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  textHeader: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#1A5276',
-  },
-  frameReport: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: {width: 0, height: 2},
-    shadowRadius: 5,
-    elevation: 3,
-    alignItems:'center'
-  },
-  selectionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: '#F4F7FC',
     justifyContent: 'center',
-    marginBottom: 15,
+    alignItems: 'center',
+  },
+  hi1:{
+    width:'95%',
+    height:'auto',
+    justifyContent:'center',
+    alignItems:'center',
+    backgroundColor:'white',
+    padding:30,
+    borderRadius:20,
+    borderColor:'#D1D1D1',
+    borderWidth:2
+  },
+  weekSelectorContainer:{
+    
   },
   button: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#4A90E2',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: {width: 0, height: 2},
-    shadowRadius: 3,
-    elevation: 3,
+    backgroundColor: '#1B3278',
+    width:'auto',
+    height:'auto'
   },
   buttonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
     color: '#FFF',
+    fontSize: 40,
+    fontWeight: 'bold',
   },
-  selectionText: {
-    fontSize: 20,
+  chartContainer: {
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  noDataText: {
+    textAlign: 'center',
+    fontSize: 16,
     fontWeight: '600',
-    color: '#333',
-    marginHorizontal: 15,
+    color: '#FF3B30',
+    marginTop: 20,
   },
-
-  detailLine: {
-    height: 50,
-    width: '100%',
-    marginTop:30,
-    flexDirection:'row',
-  },
-  detail: {
-    height: 50,
-    width: "50%",
-    flexDirection:'row',
-    alignItems:'center'
-  },
-  detailColor1:{
-    width:40,
-    height:3,
-    backgroundColor:"#1B3278",
-    transform: [{ rotate: "-30deg" }]
-  },
-  txtDetail:{
-    fontSize:17,
-    marginLeft:10,
-    fontWeight:'bold'
-  },
-  detailColor2:{
-    width:40,
-    height:3,
-    backgroundColor:"#FF5733",
-    transform: [{ rotate: "-30deg" }]
-  },
-  detail: {
-    height: 50,
-    width: "50%",
-    flexDirection:'row',
-    alignItems:'center'
-  },
-
 });

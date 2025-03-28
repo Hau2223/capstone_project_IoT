@@ -10,7 +10,7 @@ import {
 import {useNavigation} from '@react-navigation/native';
 import colors from '../../../../assets/common/colorCss';
 
-const Request = ({data, handleInputChange, handleData, handleRegister}) => {
+const ComfirmNewPass = ({data, handleInputChange, handleResetPass}) => {
   const navigation = useNavigation();
   const {width} = useWindowDimensions();
   const [error, setError] = useState({name: '', email: '', password: ''});
@@ -18,25 +18,26 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
   const handleRequest = () => {
     let newError = {name: '', email: '', password: ''};
 
-    if (!data.name.length) {
-      newError.name = 'Nhập tên không được để trống';
+    if (!data.newEmail.length) {
+      newError.newEmail = 'Nhập email không được để trống';
+    } else if (!data.newEmail.endsWith('@gmail.com')) {
+      newError.newEmail = 'Email phải có đuôi @gmail.com';
     }
-    if (!data.email.length) {
-      newError.email = 'Nhập email không được để trống';
-    } else if (!data.email.endsWith('@gmail.com')) {
-      newError.email = 'Email phải có đuôi @gmail.com';
+    if (!data.newPassword.length) {
+      newError.newPassword = 'Nhập mật khẩu không được để trống';
     }
 
-    if (!data.password.length) {
-      newError.password = 'Nhập mật khẩu không được để trống';
+    if (!data.cfnewPassword.length) {
+      newError.cfnewPassword = 'Vui lòng nhập lại mật khẩu';
+    } else if (data.cfnewPassword !== data.newPassword) {
+      newError.cfnewPassword = 'Xác nhận mật khẩu không chính xác';
     }
 
     setError(newError);
 
     // Nếu không có lỗi, gọi handleRegister
     if (!newError.name && !newError.email && !newError.password) {
-      handleRegister();
-
+      handleResetPass();
     }
   };
 
@@ -50,9 +51,9 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
           {/* Input Name */}
           <View style={styles.edtInput}>
             <TextInput
-              value={data.name}
-              onChangeText={text => handleInputChange('name', text)}
-              placeholder="Nhập tên"
+              value={data.newEmail}
+              onChangeText={text => handleInputChange('newEmail', text)}
+              placeholder="nhập email"
               style={styles.txtInput}
             />
             {error.name ? (
@@ -63,9 +64,9 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
           {/* Input Email */}
           <View style={styles.edtInput}>
             <TextInput
-              value={data.email}
-              onChangeText={text => handleInputChange('email', text)}
-              placeholder="Nhập Email"
+              value={data.newPassword}
+              onChangeText={text => handleInputChange('newPassword', text)}
+              placeholder="nhập mật khẩu mới"
               style={styles.txtInput}
             />
             {error.email ? (
@@ -76,10 +77,10 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
           {/* Input Password */}
           <View style={styles.edtInput}>
             <TextInput
-              value={data.password}
-              onChangeText={text => handleInputChange('password', text)}
+              value={data.cfnewPassword}
+              onChangeText={text => handleInputChange('cfNewPassword', text)}
               secureTextEntry
-              placeholder="Nhập mật khẩu"
+              placeholder="nhập lại mật khẩu"
               style={styles.txtInput}
             />
             {error.password ? (
@@ -107,7 +108,7 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
   );
 };
 
-export default memo(Request);
+export default memo(ComfirmNewPass);
 
 const styles = StyleSheet.create({
   container: {
@@ -132,7 +133,6 @@ const styles = StyleSheet.create({
   login: {
     marginVertical: 20,
     width: '80%',
-    gap: 6,
   },
   txtLogin: {
     fontSize: 34,

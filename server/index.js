@@ -36,14 +36,26 @@ app.use(
 const userRou = require('./routes/userRouter');
 const deviceRou = require('./routes/deviceRouter');
 const controlRou = require('./routes/controlRouter');
-
 const sensorRou = require('./routes/sensorRouter');
+const scheduleRou = require('./routes/scheduleRouter');
+const reportRou = require('./routes/reportRouter');
 
-app.use(cors());
+app.use(
+  cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    preflightContinue: true,
+    credentials: true,
+  }),
+);
+
 app.use('/api/user', userRou);
 app.use('/api/device', deviceRou);
 app.use('/api/control', controlRou);
 app.use('/api/sensor', sensorRou);
+app.use('/api/schedule', scheduleRou);
+app.use('/api/report', reportRou);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

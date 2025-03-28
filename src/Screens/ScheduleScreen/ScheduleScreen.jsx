@@ -43,9 +43,8 @@ const ScheduleScreen = ({navigation}) => {
     },
   ];
 
-  const handleGoToAlarm = (item) => {
-    navigation.navigate('AlarmScreen', { item });
-
+  const handleGoToAlarm = item => {
+    navigation.navigate('AlarmScreen', {item});
   };
   return (
     <View>
@@ -56,6 +55,7 @@ const ScheduleScreen = ({navigation}) => {
       </View>
       <View style={styles.container}>
         <FlatList
+          showsVerticalScrollIndicator={false}
           data={data}
           numColumns={1}
           keyExtractor={item => item.id}
@@ -106,9 +106,9 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
-  
-  listContainer: { 
-    paddingHorizontal: 0, 
-    paddingVertical: 10 
+
+  listContainer: {
+    paddingHorizontal: 0,
+    paddingVertical: 10,
   },
 });
