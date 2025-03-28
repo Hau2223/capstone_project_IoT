@@ -1,9 +1,11 @@
 import {Pressable, StyleSheet, View, Text, Image} from 'react-native';
 import React, {useState} from 'react';
 import {OtpInput} from 'react-native-otp-entry';
+import { useTranslation } from 'react-i18next';
 import colors from '../../../../assets/common/colorCss';
 
 const Verification = ({email, handleVerifyOTP, handleReSendCode}) => {
+  const {t} = useTranslation();
   const [otp, setOtp] = useState('');
 
   return (
@@ -12,9 +14,9 @@ const Verification = ({email, handleVerifyOTP, handleReSendCode}) => {
         style={styles.img}
         source={require('../../../../assets/icon/ic_protect.png')}
       />
-      <Text style={styles.txtTitle}>Xác minh OTP</Text>
+      <Text style={styles.txtTitle}>{t('otp_verification')}</Text>
       <Text style={styles.txtSub}>
-        Đã gửi mã xác thực đến Email: {'\n'}
+        {t('otp_sent_message')} {'\n'}
         {email}
       </Text>
       <View style={styles.formLogin}>
@@ -42,13 +44,13 @@ const Verification = ({email, handleVerifyOTP, handleReSendCode}) => {
           }}
         />
         <Text style={styles.txtNaNOtp}>
-          Bạn không nhận được mã?{' '}
+          {t('did_not_receive_code')}{' '}
           <Text style={styles.reSendOTP} onPress={() => handleReSendCode()}>
-            Gửi lại
+            {t('resend_code')}
           </Text>
         </Text>
         <Pressable onPress={() => handleVerifyOTP(otp)} style={styles.button}>
-          <Text style={styles.buttonText}>Verify</Text>
+          <Text style={styles.buttonText}>{t('verify')}</Text>
         </Pressable>
       </View>
     </View>

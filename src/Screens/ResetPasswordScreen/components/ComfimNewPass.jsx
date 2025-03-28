@@ -8,10 +8,12 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import colors from '../../../../assets/common/colorCss';
 
 const ComfirmNewPass = ({data, handleInputChange, handleResetPass}) => {
   const navigation = useNavigation();
+  const {t} = useTranslation();
   const {width} = useWindowDimensions();
   const [error, setError] = useState({name: '', email: '', password: ''});
 
@@ -19,18 +21,22 @@ const ComfirmNewPass = ({data, handleInputChange, handleResetPass}) => {
     let newError = {name: '', email: '', password: ''};
 
     if (!data.newEmail.length) {
-      newError.newEmail = 'Nhập email không được để trống';
+      newError.newEmail = t('email_required');
     } else if (!data.newEmail.endsWith('@gmail.com')) {
-      newError.newEmail = 'Email phải có đuôi @gmail.com';
-    }
-    if (!data.newPassword.length) {
-      newError.newPassword = 'Nhập mật khẩu không được để trống';
+      newError.newEmail = t('email_invalid');
     }
 
-    if (!data.cfnewPassword.length) {
-      newError.cfnewPassword = 'Vui lòng nhập lại mật khẩu';
-    } else if (data.cfnewPassword !== data.newPassword) {
-      newError.cfnewPassword = 'Xác nhận mật khẩu không chính xác';
+    if (!data.newPassword.length) {
+      newError.newPassword = t('password_required');
+    }else if (data.newPassword.length < 8){
+      newError.newPassword = t('password_invalid');
+    }
+
+    // Kiểm tra xác nhận mật khẩu
+    if (!data.cfNewPassword.length) { // Sửa ở đây
+      newError.cfNewPassword = t('cfnewPassword_required'); // Sửa ở đây
+    } else if (data.cfNewPassword !== data.newPassword) { // Sửa ở đây
+      newError.cfNewPassword = t('cfnewPassword_mismatch'); // Sửa ở đây
     }
 
     setError(newError);
@@ -43,17 +49,17 @@ const ComfirmNewPass = ({data, handleInputChange, handleResetPass}) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.txtTitle}>HỆ THỐNG QUẢN LÝ THIẾT BỊ IOT</Text>
+      <Text style={styles.txtTitle}>{t('iot_management_system')}</Text>
       <View style={styles.formLogin}>
         <View style={styles.login}>
-          <Text style={styles.txtLogin}>Đăng Kí</Text>
+          <Text style={styles.txtLogin}>{t('forgot_password')}</Text>
 
           {/* Input Name */}
           <View style={styles.edtInput}>
             <TextInput
               value={data.newEmail}
               onChangeText={text => handleInputChange('newEmail', text)}
-              placeholder="nhập email"
+              placeholder={t('enter_email')}
               style={styles.txtInput}
             />
             {error.name ? (
@@ -66,7 +72,7 @@ const ComfirmNewPass = ({data, handleInputChange, handleResetPass}) => {
             <TextInput
               value={data.newPassword}
               onChangeText={text => handleInputChange('newPassword', text)}
-              placeholder="nhập mật khẩu mới"
+              placeholder={t('enter_new_password')}
               style={styles.txtInput}
             />
             {error.email ? (
@@ -80,7 +86,7 @@ const ComfirmNewPass = ({data, handleInputChange, handleResetPass}) => {
               value={data.cfnewPassword}
               onChangeText={text => handleInputChange('cfNewPassword', text)}
               secureTextEntry
-              placeholder="nhập lại mật khẩu"
+              placeholder={t('enter_again_password')}
               style={styles.txtInput}
             />
             {error.password ? (
@@ -92,16 +98,8 @@ const ComfirmNewPass = ({data, handleInputChange, handleResetPass}) => {
         {/* Button */}
         <View style={styles.layoutbtn}>
           <Pressable style={styles.btnLogin} onPress={handleRequest}>
-            <Text style={styles.txtBtn}>Tạo Tài Khoản</Text>
+            <Text style={styles.txtBtn}>{t('send_code')}</Text>
           </Pressable>
-          <Text style={styles.txtAccNaN}>
-            Bạn đã có tài khoản?{' '}
-            <Text
-              style={styles.txtRegister}
-              onPress={() => navigation.navigate('Login')}>
-              Đăng nhập
-            </Text>
-          </Text>
         </View>
       </View>
     </View>

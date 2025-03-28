@@ -1,13 +1,6 @@
-// LanguageContext.js
 import React, {createContext, useState, useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import en from './locales/en.json';
-import vi from './locales/vn.json';
-
-const translations = {
-  en,
-  vi,
-};
+import i18n from './i18n'; // Import i18n đã cấu hình
 
 export const LanguageContext = createContext();
 
@@ -19,21 +12,20 @@ export const LanguageProvider = ({children}) => {
       const storedLanguage = await AsyncStorage.getItem('language');
       if (storedLanguage) {
         setLanguage(storedLanguage);
+        i18n.changeLanguage(storedLanguage);
       }
     };
-
     loadLanguage();
   }, []);
 
   const changeLanguage = async lang => {
-    setLanguage(lang);
     await AsyncStorage.setItem('language', lang);
+    setLanguage(lang);
+    i18n.changeLanguage(lang); // Cập nhật i18n
   };
 
-  const t = key => translations[language][key] || key;
-
   return (
-    <LanguageContext.Provider value={{t, changeLanguage}}>
+    <LanguageContext.Provider value={{language, changeLanguage}}>
       {children}
     </LanguageContext.Provider>
   );

@@ -7,6 +7,7 @@ import {
   TextInput,
 } from 'react-native';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import colors from '../../../../assets/common/colorCss';
 
 const ComfirmEmail = ({
@@ -19,6 +20,7 @@ const ComfirmEmail = ({
     handleEmail();
     handleSendCode();
   };
+  const {t} = useTranslation();
   return (
     <View style={styles.container}>
       <View style={styles.formLogin}>

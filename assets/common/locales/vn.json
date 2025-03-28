@@ -6,5 +6,66 @@
   "history": "Lịch sử",
   "statistical": "Thống Kê",
   "setting": "Cài đặt",
-  "": ""
+
+  "iot_management_system": "HỆ THỐNG QUẢN LÝ THIẾT BỊ IOT",
+  "login": "Đăng Nhập",
+  "enter_name": "Nhập tên",
+  "enter_email": "Nhập email",
+  "enter_password": "Nhập mật khẩu",
+  "enter_new_password": "Nhập mật khẩu mới",
+  "enter_again_password": "Nhập lại mật khẩu",
+  "forgot_password": "Quên mật khẩu",
+  "no_account": "Bạn chưa có tài khoản?",
+  "had_account": "Bạn đã có tài khoản?",
+  "register": "Đăng kí",
+
+  "logout": "Đăng xuất",
+
+
+  "otp_send_message": "Chúng tôi sẽ gửi mã OTP để xác nhận cho bạn.",
+  "confirm_email": "Xác nhận Email của bạn",
+  "send_code": "Gửi mã",
+  "otp_verification": "Xác minh OTP",
+  "otp_sent_message": "Đã gửi mã xác thực đến Email: ",
+  "did_not_receive_code": "Bạn không nhận được mã?",
+  "resend_code": "Gửi lại",
+  "create_account": "Tạo Tài Khoản",
+  "submit": "Gửi",
+  "invalid_otp": "Mã OTP không hợp lệ",
+  "otp_expired": "Mã OTP đã hết hạn",
+  "registration_success": "Đăng kí tài khoản thành công",
+  "verify": "Xác minh",
+
+  "email_required": "Vui lòng nhập email của bạn.",
+  "email_invalid": "Email phải có đuôi @gmail.com.",
+  "name_required": "Nhập tên không được để trống.",
+  "password_required": "Nhập mật khẩu không được để trống.",
+  "password_invalid": "Mật khẩu phải có ít nhất 8 ký tự.",
+  "cfnewPassword_required": "Vui lòng nhập lại mật khẩu",
+  "cfnewPassword_mismatch": "Xác nhận mật khẩu không chính xác",
+  
+  "otp_sent_success": "Mã OTP đã được gửi!",
+  "otp_resend_success": "Mã OTP đã được gửi lại!",
+  "registration_failed": "Đăng kí không thành công. Vui lòng thử lại.",
+
+  "alert_warning": "Cảnh báo",
+  "alert_success": "Thành công",
+  "alert_error": "Lỗi",
+  "alert_info": "Thông tin",
+  "alert_invalid_email": "Email không hợp lệ. Vui lòng thử lại.",
+  "alert_otp_sent": "Mã OTP đã được gửi đến email của bạn.",
+  "alert_account_created": "Tài khoản đã được tạo thành công.",
+  "alert_otp_verification_failed": "Xác minh OTP không thành công. Vui lòng kiểm tra và thử lại.",
+  "otp_send_error": "Lỗi không thể gửi mã OTP!",
+
+  "otp_verification_success": "Xác minh thành công!",
+  "registration_success_message": "Đăng kí tài khoản thành công",
+  "email_format_error": "Email phải kết thúc là @gmail.com",
+  "input_data_error": "Vui lòng kiểm tra lại thông tin",
+  "invalid_otp_code": "Mã OTP không hợp lệ",
+  "otp_expired_message": "Mã OTP đã hết hạn",
+  "otp_invalid_or_expired": "Mã OTP không hợp lệ hoặc đã hết hạn",
+
+
+    "password_reset_success": "Đặt lại mật khẩu thành công!"
 }

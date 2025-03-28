@@ -1,7 +1,6 @@
 export const CONFIG = {
-  // baseUrl: 'https://uat-erp.lrt.com.vn/api',
-  baseUrl: 'https://capstone-project-iot-1.onrender.com/api',
-  // baseUrl: 'http://192.168.1.31:8000/api',
+  // baseUrl: 'https://capstone-project-iot-1.onrender.com/api',
+  baseUrl: 'http://192.168.1.158:8000/api',
 };
 
 export const IMAGES = {

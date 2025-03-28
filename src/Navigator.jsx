@@ -4,9 +4,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {UserProvider, UserContext} from '../utils/UserContext';
+import {ThemeProvider} from '../assets/common/themeProvider';
+import {LanguageProvider} from '../assets/common/translation';
+import {useTranslation} from 'react-i18next';
+
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import {UserProvider, UserContext} from '../utils/UserContext';
 import OnBoardingScreen from './Screens/OnBoarding/OnBoardingScreen';
 import LoginScreen from './Screens/LoginScreen/LoginScreen';
 import TestScreen from './Screens/test';
@@ -18,6 +22,7 @@ import RegisterScreen from './Screens/Register/RegisterScreen';
 import ReportScreen from './Screens/ReportScreen/ReportScreen';
 import ReportDetail from './Screens/ReportScreen/ReportDetail';
 import ResetPasswordScreen from './Screens/ResetPasswordScreen/ResetPasswordScreen';
+import SettingScreen from './Screens/SettingScreen/SettingScreen';
 
 const Tab = createBottomTabNavigator();
 const StackNav = createNativeStackNavigator();
@@ -33,6 +38,7 @@ const HomeScreen = ({navigation}) => (
 );
 
 const DetailsScreen = ({navigation}) => {
+  const {t} = useTranslation();
   const handleGoBack = async () => {
     await AsyncStorage.removeItem('authToken');
     await navigation.navigate('Login');
@@ -40,18 +46,11 @@ const DetailsScreen = ({navigation}) => {
   };
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Đăng Xuất</Text>
+      <Text style={styles.text}>{t('logout')}</Text>
       <Button title="Go back" onPress={handleGoBack} />
     </View>
   );
 };
-
-const SettingScreen = ({navigation}) => (
-  <View style={styles.container}>
-    <Text style={styles.text}>Setting Screen</Text>
-    <Button title="Go back" onPress={() => navigation.goBack()} />
-  </View>
-);
 
 const LoadingScreen = ({navigation}) => (
   <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
@@ -72,6 +71,7 @@ const getTabBarIcon = (name, color) => {
 };
 
 function MyTabs() {
+ 
   return (
     <Tab.Navigator
       initialRouteName="Test"
@@ -125,70 +125,74 @@ function MyTabs() {
 const Navigator = () => {
   return (
     <NavigationContainer>
-      <UserProvider>
-        <StackNav.Navigator
-          initialRouteName="Loading"
-          screenOptions={{
-            headerShown: false,
-          }}>
-          <StackNav.Screen
-            name="Loading"
-            component={LoadingScreen}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
-          <StackNav.Screen
-            name="OnBoarding"
-            component={OnBoardingScreen}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
-          <StackNav.Screen
-            name="Login"
-            component={LoginScreen}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
-          <StackNav.Screen
-            name="Register"
-            component={RegisterScreen}
-            options={{animation: 'fade'}}
-          />
-          <StackNav.Screen
-            name="ResetPass"
-            component={ResetPasswordScreen}
-            options={{animation: 'fade'}}
-          />
-          <StackNav.Screen
-            name="Tabs"
-            component={MyTabs}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
-          <StackNav.Screen
-            name="Test"
-            component={TestScreen}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
-          <StackNav.Screen
-            name="DetailScreen"
-            component={DetailScreen}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
+      <ThemeProvider>
+        <LanguageProvider>
+          <UserProvider>
+            <StackNav.Navigator
+              initialRouteName="Loading"
+              screenOptions={{
+                headerShown: false,
+              }}>
+              <StackNav.Screen
+                name="Loading"
+                component={LoadingScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="OnBoarding"
+                component={OnBoardingScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="Login"
+                component={LoginScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="Register"
+                component={RegisterScreen}
+                options={{animation: 'fade'}}
+              />
+              <StackNav.Screen
+                name="ResetPass"
+                component={ResetPasswordScreen}
+                options={{animation: 'fade'}}
+              />
+              <StackNav.Screen
+                name="Tabs"
+                component={MyTabs}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="Test"
+                component={TestScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="DetailScreen"
+                component={DetailScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
 
-          <StackNav.Screen
-            name="AlarmScreen"
-            component={AlarmScreen}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
-          <StackNav.Screen
-            name="SetTimerScreen"
-            component={SetTimerScreen}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
-          <StackNav.Screen
+              <StackNav.Screen
+                name="AlarmScreen"
+                component={AlarmScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="SetTimerScreen"
+                component={SetTimerScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
             name="ReportDetail"
             component={ReportDetail}
             options={{headerShown: false, animation: 'fade_from_bottom'}}
           />
         </StackNav.Navigator>
-      </UserProvider>
+          </UserProvider>
+        </LanguageProvider>
+      </ThemeProvider>
     </NavigationContainer>
   );
 };

@@ -8,8 +8,10 @@ import {
 } from 'react-native';
 import React from 'react';
 import colors from '../../../../assets/common/colorCss';
+import { useTranslation } from 'react-i18next';
 
 const Comfirm = ({email, handleSendCode, handleInputChange, handleEmail}) => {
+  const {t} = useTranslation();
   const handlePress = () => {
     handleEmail();
     handleSendCode();
@@ -21,21 +23,21 @@ const Comfirm = ({email, handleSendCode, handleInputChange, handleEmail}) => {
           style={styles.img}
           source={require('../../../../assets/icon/ic_protect.png')}
         />
-        <Text style={styles.txtTitle}>Xác minh OTP</Text>
-        <Text style={styles.txtSub}>Chúng tôi sẽ gửi mã xác nhận đến cho bạn</Text>
+        <Text style={styles.txtTitle}>{t('otp_verification')}</Text>
+        <Text style={styles.txtSub}>{t('otp_send_message')}</Text>
         <View style={styles.layoutInput}>
-          <Text style={styles.txtform}>Xác nhận email</Text>
+          <Text style={styles.txtform}>{t('confirm_email')}</Text>
           <TextInput
             value={email}
             onChangeText={text => handleInputChange('email', text)}
-            placeholder={'Nhập Email'}
+            placeholder={t('enter_email')}
             placeholderTextColor={colors.white}
             style={[styles.txtform, styles.txtEmail]}
           />
         </View>
 
         <Pressable onPress={handlePress} style={styles.button}>
-  <Text style={styles.buttonText}>Gửi mã</Text>
+  <Text style={styles.buttonText}>{t('send_code')}</Text>
 </Pressable>
       </View>
     </View>

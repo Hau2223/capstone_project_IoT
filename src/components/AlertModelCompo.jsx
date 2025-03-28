@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Modal from 'react-native-modal';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -17,6 +18,7 @@ const AlertModelCompo = ({
   onConfirm,
   onCancel,
 }) => {
+    const {t} = useTranslation();
   const getConfig = () => {
     switch (type) {
       case 'success':

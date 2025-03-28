@@ -202,7 +202,7 @@ app.get('/sendCode/:email', async (req, res) => {
     const randomNumber = Math.floor(1000 + Math.random() * 9000);
     otpStore[email] = {
       code: String(randomNumber),
-      expires: Date.now() + 1 * 60 * 1000, // Hết hạn sau 3 phút
+      expires: Date.now() + 2 * 60 * 1000, // Hết hạn sau 3 phút
     };
 
     const transporter = nodemailer.createTransport({
@@ -284,6 +284,7 @@ app.post('/verifyOTP', (req, res) => {
 
     // Xóa mã OTP đã xác thực
     delete otpStore[email];
+    registeredUsers[email] = true; // Đánh dấu người dùng đã xác minh
     res.status(200).json({message: 'OTP verified successfully'});
   } catch (error) {
     console.error('Error verifying OTP:', error.message);
@@ -436,7 +437,7 @@ app.post('/resetPassword', async (req, res) => {
     if (!user) {
       return res.status(400).json({message: 'User not found!'});
     }
-
+    delete pendingRegistrations[email];
     res.status(200).json({message: 'Password reset successfully!'});
   } catch (err) {
     console.error('Error resetting password:', err);

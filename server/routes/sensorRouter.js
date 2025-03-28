@@ -119,7 +119,7 @@ app.get('/detailSensorBy/:id', async (req, res) => {
  *       500:
  *         description: Lỗi khi xử lý dữ liệu
  */
-app.post('/create', async (req, res) => {
+app.post('/createSennsors', async (req, res) => {
   try {
     const {type, value, status} = req.body;
 

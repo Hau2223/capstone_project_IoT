@@ -5,30 +5,32 @@ import {
   View,
   TextInput,
   Pressable,
-  useWindowDimensions,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import colors from '../../../../assets/common/colorCss';
 
 const Request = ({data, handleInputChange, handleData, handleRegister}) => {
   const navigation = useNavigation();
-  const {width} = useWindowDimensions();
+  const {t} = useTranslation();
   const [error, setError] = useState({name: '', email: '', password: ''});
 
   const handleRequest = () => {
     let newError = {name: '', email: '', password: ''};
 
     if (!data.name.length) {
-      newError.name = 'Nhập tên không được để trống';
+      newError.name = t('name_required');
     }
     if (!data.email.length) {
-      newError.email = 'Nhập email không được để trống';
+      newError.email = t('email_required');
     } else if (!data.email.endsWith('@gmail.com')) {
-      newError.email = 'Email phải có đuôi @gmail.com';
+      newError.email = t('email_invalid');
     }
 
     if (!data.password.length) {
-      newError.password = 'Nhập mật khẩu không được để trống';
+      newError.password = t('password_required');
+    } else if (data.password.length < 8) {
+      newError.password = t('password_invalid');
     }
 
     setError(newError);
@@ -42,17 +44,17 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.txtTitle}>HỆ THỐNG QUẢN LÝ THIẾT BỊ IOT</Text>
+      <Text style={styles.txtTitle}>{t('iot_management_system')}</Text>
       <View style={styles.formLogin}>
         <View style={styles.login}>
-          <Text style={styles.txtLogin}>Đăng Kí</Text>
+          <Text style={styles.txtLogin}>{t('register')}</Text>
 
           {/* Input Name */}
           <View style={styles.edtInput}>
             <TextInput
               value={data.name}
               onChangeText={text => handleInputChange('name', text)}
-              placeholder="Nhập tên"
+              placeholder={t('enter_name')}
               style={styles.txtInput}
             />
             {error.name ? (
@@ -65,7 +67,7 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
             <TextInput
               value={data.email}
               onChangeText={text => handleInputChange('email', text)}
-              placeholder="Nhập Email"
+              placeholder={t('enter_email')}
               style={styles.txtInput}
             />
             {error.email ? (
@@ -79,7 +81,7 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
               value={data.password}
               onChangeText={text => handleInputChange('password', text)}
               secureTextEntry
-              placeholder="Nhập mật khẩu"
+              placeholder={t('enter_password')}
               style={styles.txtInput}
             />
             {error.password ? (
@@ -91,14 +93,14 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
         {/* Button */}
         <View style={styles.layoutbtn}>
           <Pressable style={styles.btnLogin} onPress={handleRequest}>
-            <Text style={styles.txtBtn}>Tạo Tài Khoản</Text>
+            <Text style={styles.txtBtn}>{t('create_account')}</Text>
           </Pressable>
           <Text style={styles.txtAccNaN}>
-            Bạn đã có tài khoản?{' '}
+            {t('had_account')}{' '}
             <Text
               style={styles.txtRegister}
               onPress={() => navigation.navigate('Login')}>
-              Đăng nhập
+              {t('login')}
             </Text>
           </Text>
         </View>
@@ -145,7 +147,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.loginInput,
     borderRadius: 50,
     paddingHorizontal: 10,
-    marginBottom: 10,
+    marginBottom: 15,
   },
   txtInput: {
     maxWidth: '90%',
