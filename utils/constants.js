@@ -1,8 +1,9 @@
 export const CONFIG = {
-  // baseUrl: 'https://uat-erp.lrt.com.vn/api',
+  // baseUrl: 'https://capstone-project-iot-1.onrender.com/api',
+  baseUrl: 'http://192.168.0.241:8000/api',
 };
 
 export const IMAGES = {
-  // VEHICLE: 'https://cdn.honda.com.vn/motorbikes/August2024/h9TheYxZITC0FtJOlGmK.png',
-  // PART: 'https://uat-erp.lrt.com.vn/web/image?model=product.template&field=image_128&id=1304&unique=1727852091000',
+  BG_MOBILE: 'https://i.pinimg.com/736x/6b/1e/14/6b1e14112f9f7a42b2030f7da534d4b7.jpg',
+  BG_TABLET: 'https://i.pinimg.com/736x/44/1f/c8/441fc876392ed7e9a95bf412c04d9f54.jpg',
 };

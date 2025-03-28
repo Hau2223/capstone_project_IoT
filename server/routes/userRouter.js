@@ -4,62 +4,380 @@ const app = express();
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const passport = require('passport');
+const nodemailer = require('nodemailer');
+const bcrypt = require('bcrypt');
+
+require('dotenv').config({
+  path: './utils/config.env',
+});
+
+console.log('EMAIL_USER:', process.env.EMAIL_USER);
+console.log('EMAIL_PASS:', process.env.EMAIL_PASS);
+
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 app.use(passport.initialize());
 
-// Create a new cart
+const authenticateJWT = require('../middlewares/authMiddleware');
+const otpStore = {};
+const pendingRegistrations = {};
+const registeredUsers = {};
+
+const createToken = userId => {
+  const payload = {
+    userId: userId,
+  };
+  const token = jwt.sign(payload, 'Q$r2K6W8n!jCW%Zk');
+  return token;
+};
 /**
  * @swagger
- * /register:
+ * /api/user/login:
  *   post:
- *     summary: Register a new user
+ *     summary: Login a user (password is compared with hashed value)
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example:  # Example JSON data for testing
+ *             email: "vana@gmail.com"
+ *             password: "1"
+ *             deviceID: "12345-abcde"
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - deviceID
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *                 description: The user's password (compared with hashed value in database)
+ *               deviceID:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful, returns token
+ *         content:
+ *           application/json:
+ *             example:
+ *               data: "jwt-token-here"
+ *               status: 200
+ *       404:
+ *         description: User not found or invalid credentials
+ *       500:
+ *         description: Internal server error
+ */
+app.post('/login', async (req, res) => {
+  const {email, password, deviceID} = req.body;
+
+  if (!email || !password || !deviceID) {
+    return res.status(400).json({
+      status: 400,
+      message: 'Email, password, and deviceID are required',
+    });
+  }
+
+  try {
+    const user = await User.findOne({email});
+    if (!user) {
+      return res.status(404).json({status: 404, message: 'User not found'});
+    }
+
+    // So sánh mật khẩu
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(404).json({status: 404, message: 'Invalid password'});
+    }
+
+    // Kiểm tra nếu có người dùng khác đã đăng nhập
+    console.log(deviceID);
+    // if (user.deviceID && user.deviceID !== deviceID) {
+    //   user.token = null;
+    //   return res
+    //     .status(404)
+    //     .json({status: 404, message: 'Account is logged in', data: user.token});
+    // }
+
+    user.deviceID = deviceID;
+    const token = createToken(user); // Tạo token mới
+    user.token = token;
+    await user.save();
+
+    res.status(200).json({data: token, status: 200});
+  } catch (err) {
+    console.error('Error logging in user:', err);
+    res.status(500).json({status: 500, message: 'Internal server error'});
+  }
+});
+
+/**
+ * @swagger
+ * /api/user/profile/{id}:
+ *   get:
+ *     summary: Get information about a user
+ *     tags: [Information]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The user ID
+ *     security:
+ *       - bearerAuth: [] # Bảo mật với JWT
+ *     responses:
+ *       200:
+ *         description: User details retrieved successfully
+ *       401:
+ *         description: Missing or invalid token
+ *       403:
+ *         description: Token is invalid or expired
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+app.get('/profile/:id', async (req, res) => {
+  try {
+    const {id} = req.params;
+    // if (req.user.userId !== id) {
+    //   return res.status(403).json({message: 'Access denied'});
+    // }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({message: 'User not found'});
+    }
+    res.status(200).json({status: 200, data: user});
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({message: 'Internal server error'});
+  }
+});
+
+/**
+ * @swagger
+ * /api/user/sendCode/{email}:
+ *   get:
+ *     summary: Send a verification code via email
+ *     tags: [Authentication]
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: email
+ *         description: The recipient's email address
+ *     responses:
+ *       200:
+ *         description: Email sent successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Email sent successfully"
+ *               code: "123456"
+ *       500:
+ *         description: Failed to send email or configuration error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Failed to send email"
+ *               error: "Error description"
+ */
+app.get('/sendCode/:email', async (req, res) => {
+  const email = req.params.email;
+  if (registeredUsers[email]) {
+    return res.status(400).json({message: 'User already registered!'});
+  }
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      return res.status(500).json({message: 'Email configuration error'});
+    }
+
+    const randomNumber = Math.floor(1000 + Math.random() * 9000);
+    otpStore[email] = {
+      code: String(randomNumber),
+      expires: Date.now() + 1 * 60 * 1000, // Hết hạn sau 3 phút
+    };
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Mã xác thực của bạn',
+      text: `Mã xác thực của bạn là: ${randomNumber}`,
+    };
+
+    await transporter.sendMail(mailOptions);
+    pendingRegistrations[email] = true; // Đánh dấu email đang chờ xác thực
+
+    res.status(200).json({
+      message: 'Email sent successfully',
+      code: String(randomNumber),
+    });
+  } catch (error) {
+    console.error('Error sending email:', error.message);
+    res
+      .status(500)
+      .json({message: 'Failed to send email', error: error.message});
+  }
+});
+
+/**
+ * @swagger
+ * /api/user/verifyOTP:
+ *   post:
+ *     summary: Verify the OTP code
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/User'
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               code:
+ *                 type: string
  *     responses:
  *       200:
- *         description: User registered successfully
+ *         description: OTP verified successfully
  *       400:
- *         description: Email already exists
+ *         description: Invalid or expired OTP
  *       500:
  *         description: Internal server error
  */
-app.post('/register', (req, res) => {
-  const { name, email, password } = req.body;
-  const newUser = new User({ name, email, password });
-  newUser
-    .save()
-    .then(() => {
-      res.status(200).json({ message: 'User registered successfully!' });
-    })
-    .catch(err => {
-      if (err.code === 11000) {
-        res.status(400).json({ message: 'Email already exists!' });
-      } else {
-        console.error('Error registering user:', err);
-        res.status(500).json({ message: 'Internal server error!' });
-      }
-    });
+app.post('/verifyOTP', (req, res) => {
+  const {email, code} = req.body;
+
+  try {
+    const otpEntry = otpStore[email];
+    console.log(otpStore);
+    // Kiểm tra mã OTP
+    if (!otpEntry) {
+      return res
+        .status(400)
+        .json({message: 'OTP does not exist or is invalid'});
+    }
+
+    if (otpEntry.code !== code) {
+      return res.status(400).json({message: 'Invalid OTP code'});
+    }
+
+    if (Date.now() > otpEntry.expires) {
+      delete otpStore[email]; // Xóa mã OTP đã hết hạn
+      return res.status(400).json({message: 'OTP has expired'});
+    }
+
+    // Xóa mã OTP đã xác thực
+    delete otpStore[email];
+    res.status(200).json({message: 'OTP verified successfully'});
+  } catch (error) {
+    console.error('Error verifying OTP:', error.message);
+    res.status(500).json({message: 'Internal server error'});
+  }
 });
 
-
-const createToken = userId => {
-  const payload = {
-    userId: userId,
-  };
-  const token = jwt.sign(payload, 'Q$r2K6W8n!jCW%Zk', {expiresIn: '1h'});
-  return token;
-};
 /**
  * @swagger
- * /login:
+ * /api/user/register:
  *   post:
- *     summary: Login a user
+ *     summary: Register a new user (password will be hashed before saving)
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example:  # Dữ liệu JSON mẫu để test
+ *             name: "Nguyen van A"
+ *             email: "vana@gmail.com"
+ *             password: "1"
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *                 description: The user's password (will be hashed before storing)
+ *     responses:
+ *       200:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "User registered successfully!"
+ *               status: 200
+ *       400:
+ *         description: Email already exists or OTP not verified
+ *       500:
+ *         description: Internal server error
+ */
+app.post('/register', async (req, res) => {
+  const {name, email, password} = req.body;
+
+  if (registeredUsers[email]) {
+    return res.status(400).json({message: 'User already registered!'});
+  }
+
+  if (!pendingRegistrations[email]) {
+    return res
+      .status(400)
+      .json({message: 'Please verify your OTP before registering'});
+  }
+
+  try {
+    // Kiểm tra email đã tồn tại chưa
+    if (await User.findOne({email})) {
+      return res.status(400).json({message: 'Email already exists!'});
+    }
+
+    // Mã hóa mật khẩu
+    const saltRounds = 10; // Số vòng băm, thường là 10
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Tạo user mới với mật khẩu đã mã hóa
+    const newUser = new User({name, email, password: hashedPassword});
+    await newUser.save();
+
+    // Xóa trạng thái đăng ký
+    registeredUsers[email] = true;
+    delete pendingRegistrations[email];
+
+    return res.status(200).json({
+      message: 'User registered successfully!',
+      status: 200,
+    });
+  } catch (err) {
+    console.error('Error registering user:', err);
+    return res.status(500).json({message: 'Internal server error'});
+  }
+});
+
+/**
+ * @swagger
+ * /api/user/resetPassword:
+ *   post:
+ *     summary: Reset user password
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
@@ -68,20 +386,35 @@ const createToken = userId => {
  *           schema:
  *             type: object
  *             required:
- *               - username
- *               - password
+ *               - email
+ *               - newPassword
  *             properties:
- *               username:
+ *               email:
  *                 type: string
- *               password:
+ *                 format: email
+ *                 description: The user's registered email address
+ *               newPassword:
  *                 type: string
+ *                 description: The new password (will be hashed before storing)
  *     responses:
  *       200:
- *         description: Login successful, returns token
- *       404:
- *         description: User not found or invalid credentials
+ *         description: Password reset successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Password reset successfully!"
+ *       400:
+ *         description: User not found or invalid input
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "User not found!"
  *       500:
  *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Internal server error"
  */
 app.post('/login', (req, res) => {
   const {username, password} = req.body;
@@ -109,6 +442,33 @@ app.post('/login', (req, res) => {
       console.log('Error in finding the user', err);
       res.status(404).json({message: 'Internal server Error!'});
     });
+});
+app.post('/resetPassword', async (req, res) => {
+  const {email, newPassword} = req.body;
+
+  try {
+    if (!registeredUsers[email]) {
+      return res.status(400).json({message: 'User not found!'});
+    }
+    // Mã hóa mật khẩu mới
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    const user = await User.findOneAndUpdate(
+      {email},
+      {password: hashedPassword},
+      {new: true},
+    );
+
+    if (!user) {
+      return res.status(400).json({message: 'User not found!'});
+    }
+
+    res.status(200).json({message: 'Password reset successfully!'});
+  } catch (err) {
+    console.error('Error resetting password:', err);
+    res.status(500).json({message: 'Internal server error'});
+  }
 });
 
 app.post('/logout', (req, res) => {
