@@ -6,6 +6,9 @@ const deviceSchema = new Schema({
     type: String,
     required: true,
   },
+  name: {
+    type: String,
+  },
   time: {
     type: String,
     required: true,

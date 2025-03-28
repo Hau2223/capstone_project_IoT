@@ -80,6 +80,9 @@ app.get('/detailDeviceBy/:id_esp', async (req, res) => {
  *               id_esp:
  *                 type: string
  *                 example: "ESP123456"
+ *               name:
+ *                 type: string
+ *                 example: "Khu"
  *               time:
  *                 type: string
  *                 example: "2025-03-21T10:00:00Z"
@@ -122,7 +125,7 @@ app.get('/detailDeviceBy/:id_esp', async (req, res) => {
  */
 app.post('/createDevice', async (req, res) => {
   try {
-    const {id_esp, time, status, members, sensors, controls} = req.body;
+    const {id_esp,name, time, status, members, sensors, controls} = req.body;
 
     let device = await Device.findOne({id_esp});
 
@@ -156,6 +159,7 @@ app.post('/createDevice', async (req, res) => {
 
       device = new Device({
         id_esp,
+        name,
         time,
         status,
         members: uniqueMembers,
