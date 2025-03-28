@@ -2,6 +2,7 @@ const express = require('express');
 const Sensor = require('../models/sensorModel');
 const app = express();
 const bodyParser = require('body-parser');
+const authenticateJWT = require('../middlewares/authMiddleware');
 app.use(bodyParser.json());
 
 /**
@@ -29,10 +30,10 @@ app.use(bodyParser.json());
  *       500:
  *         description: Lỗi khi lấy dữ liệu
  */
-app.get('/detailSensor', async (req, res) => {
+app.get('/detailSensor',authenticateJWT, async (req, res) => {
   try {
     const data = await Sensor.find().sort({timestamp: -1});
-    res.json(data);
+    return res.json(data);
   } catch (error) {
     res.status(500).json({message: 'Error fetching data', error});
   }

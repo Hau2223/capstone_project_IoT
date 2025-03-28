@@ -416,33 +416,8 @@ app.post('/register', async (req, res) => {
  *             example:
  *               message: "Internal server error"
  */
-app.post('/login', (req, res) => {
-  const {username, password} = req.body;
-  
-  if (!username || !password) {
-    return res
-      .status(404)
-      .json({message: 'Email and the password are required'});
-  }
-  
-  User.findOne({email:username})
-    .then(user => {
-      if (!user) {
-        return res.status(404).json({message: 'User not found'});
-      }
-      if (user.password !== password) {
-        return res.status(404).json({message: 'Invalid Password'});
-      }
-      const token = createToken(user._id);
-      res.cookie('token', token, {httpOnly: true});
-      const type = user.type;
-      res.status(200).json({type, token, status: 200});
-    })
-    .catch(err => {
-      console.log('Error in finding the user', err);
-      res.status(404).json({message: 'Internal server Error!'});
-    });
-});
+
+
 app.post('/resetPassword', async (req, res) => {
   const {email, newPassword} = req.body;
 

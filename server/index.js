@@ -37,7 +37,6 @@ const userRou = require('./routes/userRouter');
 const deviceRou = require('./routes/deviceRouter');
 const controlRou = require('./routes/controlRouter');
 const sensorRou = require('./routes/sensorRouter');
-const { checkUser } = require('./middleware/authMiddleware');
 const scheduleRou = require('./routes/scheduleRouter');
 const reportRou = require('./routes/reportRouter');
 
@@ -52,9 +51,7 @@ app.use(
 );
 
 app.use(cors());
-// app.get("*", checkUser);
 app.use('/api/sensor', sensorRou);
-
 app.use('/api/user', userRou);
 app.use('/api/device', deviceRou);
 app.use('/api/control', controlRou);
