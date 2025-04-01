@@ -52,19 +52,6 @@ const LoginScreen = () => {
     setPassword('');
   };
 
-  // useEffect(() => {
-  //   console.log('Bắt đầu gọi API bằng axios...');
-  //   const fetchAPI = async () => {
-  //     try {
-  //       const response = await me('67851c04ad4d24acdadbb6cc');
-  //       console.log('Dữ liệu nhận được từ axios:', response?.data?._id); // response.data thay vì response.json()
-  //     } catch (error) {
-  //       console.error('Lỗi khi gọi API bằng axios:', error.message);
-  //     }
-  //   };
-  //   fetchAPI();
-  // }, []);
-
   const handleLogin = useCallback(() => {
     login({
       email,

@@ -95,10 +95,9 @@ app.get('/detailSensorBy/:id', async (req, res) => {
   }
 });
 
-
 /**
  * @swagger
- * /api/sensor/create:
+ * /api/sensor/createSensor:
  *   post:
  *     summary: Tạo dữ liệu cảm biến mới
  *     tags: [Sensors]
@@ -119,9 +118,9 @@ app.get('/detailSensorBy/:id', async (req, res) => {
  *       500:
  *         description: Lỗi khi xử lý dữ liệu
  */
-app.post('/createSennsors', async (req, res) => {
+app.post('/createSensor', async (req, res) => {
   try {
-    const {type, value, status} = req.body;
+    const {type, value} = req.body;
 
     // Kiểm tra dữ liệu đầu vào
     if (!type) {
@@ -130,16 +129,16 @@ app.post('/createSennsors', async (req, res) => {
     if (
       ![
         'moisture',
-        'light',
+        'luminosity',
         'rain',
         'temperature',
         'humidity',
-        'water_flow',
+        'stream',
       ].includes(type)
     ) {
       return res.status(400).json({
           message:
-            'Invalid sensor type, type includes ["moisture","light", "rain", "temperature", "humidity", "water_flow" ]',
+            'Invalid sensor type, type includes ["moisture","luminosity", "rain", "temperature", "humidity", "stream" ]',
         });
     }
 
@@ -204,18 +203,18 @@ app.put('/updateSensorBy/:id', async (req, res) => {
     if (
       ![
         'moisture',
-        'light',
+        'luminosity',
         'rain',
         'temperature',
         'humidity',
-        'water_flow',
+        'stream',
       ].includes(type)
     ) {
       return res
         .status(400)
         .json({
           message:
-            'Invalid sensor type, type includes ["moisture","light", "rain", "temperature", "humidity", "water_flow" ]',
+            'Invalid sensor type, type includes ["moisture","luminosity", "rain", "temperature", "humidity", "stream" ]',
         });
     }
 

@@ -39,6 +39,6 @@ export const resetPass = async params => {
   });
 };
 
-export const profile = async id => {
-  return await get(`/user/profile/${id}`);
+export const profile = async () => {
+  return await get('/user/profile');
 };

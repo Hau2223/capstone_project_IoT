@@ -1,6 +1,6 @@
 import {StyleSheet, Text, View, Image} from 'react-native';
-import React, {useState} from 'react';
-import OnOffBtn from '../../components/Button/OnOff';
+import React, {memo, useState} from 'react';
+// import OnOffBtn from '../../components/Button/OnOff';
 import {Switch} from 'react-native-paper';
 
 const DetailScreen = ({route}) => {
@@ -21,10 +21,15 @@ const DetailScreen = ({route}) => {
           <Text style={styles.textStyle}>Ánh sáng: {item.anhSang}</Text>
           <View style={styles.settingOnOff}>
             <View style={styles.frameIconLight}>
-              <Image style={styles.iconLight} source={require('../../../assets/icon/iconLight.png')} />
+              <Image
+                style={styles.iconLight}
+                source={require('../../../assets/icon/iconLight.png')}
+              />
             </View>
             <View style={styles.frameTxtLight}>
-              <Text style={styles.txtLightLevel}>Cài đặt mức sáng bật/tắt đèn</Text>
+              <Text style={styles.txtLightLevel}>
+                Cài đặt mức sáng bật/tắt đèn
+              </Text>
             </View>
           </View>
         </View>
@@ -37,7 +42,7 @@ const DetailScreen = ({route}) => {
             <View style={styles.buttonTuoiQuat}>
               <Switch
                 value={isWatering}
-                onValueChange={newValue => setIsWatering(newValue)} 
+                onValueChange={newValue => setIsWatering(newValue)}
                 trackColor={{false: 'white', true: 'white'}}
                 thumbColor={isWatering ? '#63A776' : '#ACACAC'}
                 style={{transform: [{scale: 1.5}]}}
@@ -51,7 +56,7 @@ const DetailScreen = ({route}) => {
             <View style={styles.buttonTuoiQuat}>
               <Switch
                 value={isFan}
-                onValueChange={newValue => setIsFan(newValue)} 
+                onValueChange={newValue => setIsFan(newValue)}
                 trackColor={{false: 'white', true: 'white'}}
                 thumbColor={isFan ? '#63A776' : '#ACACAC'}
                 style={{transform: [{scale: 1.5}]}}
@@ -64,7 +69,7 @@ const DetailScreen = ({route}) => {
   );
 };
 
-export default DetailScreen;
+export default memo(DetailScreen);
 
 const styles = StyleSheet.create({
   frame: {
@@ -117,21 +122,21 @@ const styles = StyleSheet.create({
   contentTuoiQuat: {
     height: '100%',
     width: '70%',
-    justifyContent:'center'
+    justifyContent: 'center',
   },
   buttonTuoiQuat: {
     height: '100%',
     width: '30%',
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft:20
+    marginLeft: 20,
   },
 
   textStyle: {
     color: '#636363',
     fontSize: 23,
-    marginTop:5,
-    marginBottom:5
+    marginTop: 5,
+    marginBottom: 5,
   },
   line: {
     height: 2,
@@ -140,28 +145,25 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     marginRight: 15,
   },
-  settingOnOff:{
-    flexDirection:'row',
-    width:'100%',
-    height:'auto',
-    alignItems:'center'
-
+  settingOnOff: {
+    flexDirection: 'row',
+    width: '100%',
+    height: 'auto',
+    alignItems: 'center',
   },
-  frameIconLight:{
-    height:25,
-    width:25,
-
+  frameIconLight: {
+    height: 25,
+    width: 25,
   },
-  iconLight:{
-    height:25,
-    width:'auto',
-    
+  iconLight: {
+    height: 25,
+    width: 'auto',
   },
-  txtLightLevel:{
+  txtLightLevel: {
     color: '#636363',
     fontSize: 18,
-    marginLeft:7,
-    color:'#5787E5',
-    textDecorationLine: 'underline'
-  }
+    marginLeft: 7,
+    // color: '#5787E5',
+    textDecorationLine: 'underline',
+  },
 });

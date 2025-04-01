@@ -146,7 +146,6 @@ app.get('/detailScheduleBy/:id', async (req, res) => {
  *                   type: string
  *                   example: "Internal server error"
  */
-
 app.post('/createSchedule', async (req, res) => {
   try {
     const {status, startTime, duration, repeat} = req.body;

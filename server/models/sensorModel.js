@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const sensorSchema = new Schema({
   type: {
     type: String,
-    enum: ['moisture', 'light', 'rain', 'temperature', 'humidity', 'water_flow'],
+    enum: ['moisture', 'luminosity', 'rain', 'temperature', 'humidity', 'stream'],
     required: true,
   },
   value: {

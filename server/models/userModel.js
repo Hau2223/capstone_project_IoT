@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -8,6 +9,11 @@ const userSchema = new mongoose.Schema({
   deviceID: {
     type: String,
     default: '',
+  },
+  gardenId: {
+    type: [String],
+    default: [],
+    ref: 'Device',
   },
   email: {
     type: String,
@@ -25,6 +31,9 @@ const userSchema = new mongoose.Schema({
     type: String,
   },
   role: {
+    type: String,
+  },
+  token: {
     type: String,
   },
 });

@@ -23,6 +23,14 @@ const controlSchema = new Schema({
     enum: ['manual', 'schedule', 'threshold'],
     default: 'manual',
   },
+  schedules: [
+    {
+      idSchedule: {
+        type: Schema.Types.ObjectId,
+        ref: 'Schedule',
+      },
+    },
+  ],
 });
 
 const Control = mongoose.model('Control', controlSchema);

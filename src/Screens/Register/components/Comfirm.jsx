@@ -6,7 +6,7 @@ import {
   Image,
   TextInput,
 } from 'react-native';
-import React from 'react';
+import React, { memo } from 'react';
 import colors from '../../../../assets/common/colorCss';
 import { useTranslation } from 'react-i18next';
 
@@ -44,7 +44,7 @@ const Comfirm = ({email, handleSendCode, handleInputChange, handleEmail}) => {
   );
 };
 
-export default Comfirm;
+export default memo(Comfirm);
 
 const styles = StyleSheet.create({
   container: {
