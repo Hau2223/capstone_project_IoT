@@ -1,10 +1,9 @@
 import {
   StyleSheet,
-  Text,
   useWindowDimensions,
   ImageBackground,
 } from 'react-native';
-import React, {useState, useCallback} from 'react';
+import React, {useState, useCallback, memo} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {IMAGES} from '../../../utils/constants';
 import HeaderCompo from '../../components/HeaderCompo';
@@ -168,7 +167,7 @@ const ResetPasswordScreen = ({route}) => {
   );
 };
 
-export default ResetPasswordScreen;
+export default memo(ResetPasswordScreen);
 
 const styles = StyleSheet.create({
   container: {

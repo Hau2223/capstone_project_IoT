@@ -7,9 +7,10 @@ import {
   FlatList,
   Alert,
 } from 'react-native';
-import React, {useState} from 'react';
-import ItemHomePage from '../components/ItemHomePage';
-import CustomAlert from '../components/CustomAlert';
+import React, {useState, useEffect, useCallback, memo} from 'react';
+import ItemHomePage from '../../components/ItemHomePage';
+import CustomAlert from '../../components/CustomAlert';
+import {profile} from '../../../services/authServices';
 
 const data = [
   {
@@ -19,7 +20,7 @@ const data = [
     doAm: '25%',
     trangThaiTuoi: 'OFF',
     quat: 'ON',
-    imageSource: require('../../assets/img/1.png'),
+    imageSource: require('../../../assets/img/1.png'),
     anhSang: '20%',
   },
   {
@@ -29,7 +30,7 @@ const data = [
     doAm: '30%',
     trangThaiTuoi: 'ON',
     quat: 'OFF',
-    imageSource: require('../../assets/img/1.png'),
+    imageSource: require('../../../assets/img/1.png'),
     anhSang: '30%',
   },
   {
@@ -39,7 +40,7 @@ const data = [
     doAm: '28%',
     trangThaiTuoi: 'OFF',
     quat: 'ON',
-    imageSource: require('../../assets/img/1.png'),
+    imageSource: require('../../../assets/img/1.png'),
     anhSang: '10%',
   },
   {
@@ -49,7 +50,7 @@ const data = [
     doAm: '35%',
     trangThaiTuoi: 'ON',
     quat: 'OFF',
-    imageSource: require('../../assets/img/1.png'),
+    imageSource: require('../../../assets/img/1.png'),
     anhSang: '20%',
   },
   {
@@ -59,7 +60,7 @@ const data = [
     doAm: '40%',
     trangThaiTuoi: 'OFF',
     quat: 'ON',
-    imageSource: require('../../assets/img/1.png'),
+    imageSource: require('../../../assets/img/1.png'),
     anhSang: '30%',
   },
   {
@@ -69,21 +70,41 @@ const data = [
     doAm: '40%',
     trangThaiTuoi: 'OFF',
     quat: 'ON',
-    imageSource: require('../../assets/img/1.png'),
+    imageSource: require('../../../assets/img/1.png'),
     anhSang: '40%',
   },
 ];
 
-const TestScreen = ({navigation}) => {
+const HomeScreen = ({navigation}) => {
   //const [name, setName] = useState("hú");
   const [modalVisible, setModalVisible] = useState(false);
   const handleGoToDetail = item => {
     navigation.navigate('DetailScreen', {item}); // Chuyển dữ liệu sang DetailItem
   };
 
+  const [userInfo, setUserInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchUserProfile = useCallback(async () => {
+    try {
+      const data = await profile();
+      setUserInfo(data.data);
+    } catch (err) {
+      setError(err.message || 'Error fetching user data');
+      Alert.alert('Error', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [error]); // Mảng phụ thuộc rỗng để không tạo ra một hàm mới mỗi lần render
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, [fetchUserProfile]); // Đưa fetchUserProfile vào mảng phụ thuộc
   const showAlert = () => {
     Alert.alert('Thông báo', 'Đây là nội dung thông báo!', [{text: 'OK'}]);
   };
+  console.log(userInfo);
 
   return (
     <View style={styles.frame}>
@@ -95,7 +116,7 @@ const TestScreen = ({navigation}) => {
           style={styles.header2}
           onPress={() => setModalVisible(true)}>
           <Image
-            source={require('../../assets/icon/canhBao.png')}
+            source={require('../../../assets/icon/canhBao.png')}
             style={styles.alertIcon}
           />
         </TouchableOpacity>
@@ -176,4 +197,4 @@ export const styles = StyleSheet.create({
   },
 });
 
-export default TestScreen;
+export default memo(HomeScreen);

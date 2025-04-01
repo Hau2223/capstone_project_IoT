@@ -1,5 +1,5 @@
 import {Pressable, StyleSheet, View, Text, Image} from 'react-native';
-import React, {useState} from 'react';
+import React, {memo, useState} from 'react';
 import {OtpInput} from 'react-native-otp-entry';
 import { useTranslation } from 'react-i18next';
 import colors from '../../../../assets/common/colorCss';
@@ -57,7 +57,7 @@ const Verification = ({email, handleVerifyOTP, handleReSendCode}) => {
   );
 };
 
-export default Verification;
+export default memo(Verification);
 
 const styles = StyleSheet.create({
   container: {

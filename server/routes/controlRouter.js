@@ -3,6 +3,7 @@ const Control = require('../models/controlModel');
 const app = express();
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 
 /**
  * @swagger
@@ -125,50 +126,85 @@ app.get('/detailControlBy/:id', async (req, res) => {
  *       required: true
  *       content:
  *         application/json:
- *           example:  # Dữ liệu JSON mẫu để test
- *             name: "light"
- *             status: true
- *             threshold_min: 0
- *             threshold_max: 100
- *             mode: "manual"
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - mode
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "light"
+ *               status:
+ *                 type: boolean
+ *                 example: false
+ *               threshold_min:
+ *                 type: number
+ *                 example: 0
+ *               threshold_max:
+ *                 type: number
+ *                 example: 100
+ *               mode:
+ *                 type: string
+ *                 enum: [manual, schedule, threshold]
+ *                 example: "manual"
+ *               schedules:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     idSchedule:
+ *                       type: string
+ *                       example: "60d5ec49b547b3d949e7c6c2"
  *     responses:
  *       201:
- *         description: Dữ liệu đã được lưu thành công
- *       200:
- *         description: Dữ liệu đã được cập nhật thành công
+ *         description: Dữ liệu điều khiển đã được tạo thành công
  *       400:
- *         description: idDevice là bắt buộc
+ *         description: Dữ liệu không hợp lệ
  *       500:
- *         description: Lỗi khi xử lý dữ liệu
+ *         description: Lỗi khi tạo dữ liệu
  */
 app.post('/createControl', async (req, res) => {
   try {
-    const {name, status, threshold_min, threshold_max, mode} = req.body;
+    const { name, status, threshold_min, threshold_max, mode, schedules } = req.body;
 
     // Kiểm tra dữ liệu đầu vào
     if (!name) {
-      return res.status(400).json({message: 'Missing required fields'});
+      return res.status(400).json({message: 'Missing required fields: name'});
+    }
+    if (
+      typeof threshold_min !== 'number' ||
+      typeof threshold_max !== 'number'
+    ) {
+      return res
+        .status(400)
+        .json({message: 'threshold_min and threshold_max must be numbers'});
     }
     if (!['manual', 'schedule', 'threshold'].includes(mode)) {
       return res.status(400).json({
         message:
-          'Invalid sensor type, mode includes ["manual","schedule","threshold"]',
+          'Invalid mode, mode includes ["manual", "schedule", "threshold"]',
       });
     }
+    const uniqueSchedules = schedules.filter(
+      (schedule, index, self) =>
+        index === self.findIndex(s => s.idSchedule === schedule.idSchedule),
+    );
 
-    // Tạo bản ghi mới
-    const newData = new Control({
+    // Tạo mới dữ liệu điều khiển
+    const newControl = new Control({
       name,
-      status: status ?? false,
+      status,
       threshold_min,
       threshold_max,
       mode,
+      schedules: uniqueSchedules, // Thêm schedules vào đối tượng
     });
 
-    await newData.save();
-    res.status(201).json({message: 'Data saved successfully', data: newData});
+    const savedControl = await newControl.save();
+    res.status(201).json({ message: 'Control data created successfully', data: savedControl });
   } catch (error) {
-    res.status(500).json({message: 'Error saving data', error: error.message});
+    res.status(500).json({ message: 'Error creating data', error: error.message });
   }
 });
 

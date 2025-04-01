@@ -1,11 +1,16 @@
-import React, {useContext} from 'react';
+import React, {memo, useContext} from 'react';
 import {View, Text, Button, StyleSheet} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {ThemeContext} from '../../../assets/common/themeProvider';
-
-const SettingScreen = () => {
+import AsyncStorage from '@react-native-async-storage/async-storage';
+const SettingScreen = ({navigation}) => {
   const {t, i18n} = useTranslation();
   const {theme, toggleTheme} = useContext(ThemeContext);
+  const handleGoBack = async () => {
+    await AsyncStorage.removeItem('authToken');
+    await navigation.navigate('Login');
+    console.log('Đăng xuất thành công');
+  };
 
   const changeLanguage = async () => {
     const newLang = i18n.language === 'en' ? 'vi' : 'en';
@@ -19,11 +24,14 @@ const SettingScreen = () => {
       </Text>
       <Button title={t('change_language')} onPress={changeLanguage} />
       <Button title={t('dark_mode')} onPress={toggleTheme} />
+
+      <Text style={styles.text}>{t('logout')}</Text>
+      <Button title="Go back" onPress={handleGoBack} />
     </View>
   );
 };
 
-export default SettingScreen;
+export default memo(SettingScreen);
 
 const styles = StyleSheet.create({
   container: {

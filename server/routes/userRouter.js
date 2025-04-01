@@ -80,30 +80,20 @@ app.post('/login', async (req, res) => {
       message: 'Email, password, and deviceID are required',
     });
   }
-
   try {
     const user = await User.findOne({email});
     if (!user) {
+      console.log('User not found:', email);
       return res.status(404).json({status: 404, message: 'User not found'});
     }
 
-    // So sánh mật khẩu
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      console.log('Invalid password for user:', email);
       return res.status(404).json({status: 404, message: 'Invalid password'});
     }
-
-    // Kiểm tra nếu có người dùng khác đã đăng nhập
-    console.log(deviceID);
-    // if (user.deviceID && user.deviceID !== deviceID) {
-    //   user.token = null;
-    //   return res
-    //     .status(404)
-    //     .json({status: 404, message: 'Account is logged in', data: user.token});
-    // }
-
     user.deviceID = deviceID;
-    const token = createToken(user); // Tạo token mới
+    const token = createToken(user._id);
     user.token = token;
     await user.save();
 
@@ -116,22 +106,33 @@ app.post('/login', async (req, res) => {
 
 /**
  * @swagger
- * /api/user/profile/{id}:
+ * /api/user/profile:
  *   get:
- *     summary: Get information about a user
+ *     summary: Get information about the logged-in user
  *     tags: [Information]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: string
- *         required: true
- *         description: The user ID
  *     security:
  *       - bearerAuth: [] # Bảo mật với JWT
  *     responses:
  *       200:
  *         description: User details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       example: "Nguyen Van A"
+ *                     email:
+ *                       type: string
+ *                       example: "vana@gmail.com"
+ *                     # Thêm các trường khác nếu cần
  *       401:
  *         description: Missing or invalid token
  *       403:
@@ -141,14 +142,14 @@ app.post('/login', async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-app.get('/profile/:id', async (req, res) => {
+app.get('/profile', authenticateJWT, async (req, res) => {
   try {
-    const {id} = req.params;
+    const userId = req.user.userId;
     // if (req.user.userId !== id) {
     //   return res.status(403).json({message: 'Access denied'});
     // }
 
-    const user = await User.findById(id);
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({message: 'User not found'});
     }
@@ -202,7 +203,7 @@ app.get('/sendCode/:email', async (req, res) => {
     const randomNumber = Math.floor(1000 + Math.random() * 9000);
     otpStore[email] = {
       code: String(randomNumber),
-      expires: Date.now() + 2 * 60 * 1000, // Hết hạn sau 3 phút
+      expires: Date.now() + 2 * 60 * 1000, // Hết hạn sau 2 phút
     };
 
     const transporter = nodemailer.createTransport({
@@ -221,7 +222,6 @@ app.get('/sendCode/:email', async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
-    pendingRegistrations[email] = true; // Đánh dấu email đang chờ xác thực
 
     res.status(200).json({
       message: 'Email sent successfully',
@@ -284,7 +284,8 @@ app.post('/verifyOTP', (req, res) => {
 
     // Xóa mã OTP đã xác thực
     delete otpStore[email];
-    registeredUsers[email] = true; // Đánh dấu người dùng đã xác minh
+    // Đánh dấu email như đã xác minh
+    pendingRegistrations[email] = true;
     res.status(200).json({message: 'OTP verified successfully'});
   } catch (error) {
     console.error('Error verifying OTP:', error.message);
@@ -441,6 +442,92 @@ app.post('/resetPassword', async (req, res) => {
     res.status(200).json({message: 'Password reset successfully!'});
   } catch (err) {
     console.error('Error resetting password:', err);
+    res.status(500).json({message: 'Internal server error'});
+  }
+});
+
+/**
+ * @swagger
+ * /api/user/logout:
+ *   post:
+ *     summary: Logout a user by invalidating their token
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+app.post('/logout', authenticateJWT, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Tìm người dùng và xóa token
+    await User.findByIdAndUpdate(userId, {token: null});
+
+    res.status(200).json({status: 200, message: 'Logout successful'});
+  } catch (error) {
+    console.error('Error logging out user:', error);
+    res.status(500).json({status: 500, message: 'Internal server error'});
+  }
+});
+
+/**
+ * @swagger
+ * /api/user/getGardenby:
+ *   get:
+ *     summary: lấy thông tin garden theo id user
+ *     tags: [Information]
+ *     security:
+ *       - bearerAuth: [] # Bảo mật với JWT
+ *     responses:
+ *       200:
+ *         description: User details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       example: "Nguyen Van A"
+ *                     email:
+ *                       type: string
+ *                       example: "vana@gmail.com"
+ *                     # Thêm các trường khác nếu cần
+ *       401:
+ *         description: Missing or invalid token
+ *       403:
+ *         description: Token is invalid or expired
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+app.get('/getGardenby', authenticateJWT, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    // if (req.user.userId !== id) {
+    //   return res.status(403).json({message: 'Access denied'});
+    // }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({message: 'User not found'});
+    }
+    res.status(200).json({status: 200, data: user.gardenId});
+  } catch (error) {
+    console.error('Error fetching user:', error);
     res.status(500).json({message: 'Internal server error'});
   }
 });
