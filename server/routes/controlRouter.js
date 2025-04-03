@@ -3,7 +3,7 @@ const Control = require('../models/controlModel');
 const app = express();
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({extended: false}));
 
 /**
  * @swagger
@@ -166,7 +166,8 @@ app.get('/detailControlBy/:id', async (req, res) => {
  */
 app.post('/createControl', async (req, res) => {
   try {
-    const { name, status, threshold_min, threshold_max, mode, schedules } = req.body;
+    const {name, status, threshold_min, threshold_max, mode, schedules} =
+      req.body;
 
     // Kiểm tra dữ liệu đầu vào
     if (!name) {
@@ -202,9 +203,13 @@ app.post('/createControl', async (req, res) => {
     });
 
     const savedControl = await newControl.save();
-    res.status(201).json({ message: 'Control data created successfully', data: savedControl });
+    res
+      .status(201)
+      .json({message: 'Control data created successfully', data: savedControl});
   } catch (error) {
-    res.status(500).json({ message: 'Error creating data', error: error.message });
+    res
+      .status(500)
+      .json({message: 'Error creating data', error: error.message});
   }
 });
 
@@ -228,15 +233,22 @@ app.post('/createControl', async (req, res) => {
  *           schema:
  *             type: object
  *             properties:
- *               type:
+ *               name:
  *                 type: string
  *                 example: "moisture"
- *               value:
- *                 type: number
- *                 example: 600
  *               status:
  *                 type: boolean
  *                 example: false
+ *               threshold_min:
+ *                 type: number
+ *                 example: 0
+ *               threshold_max:
+ *                 type: number
+ *                 example: 100
+ *               mode:
+ *                 type: string
+ *                 enum: [manual, schedule, threshold]
+ *                 example: "manual"
  *     responses:
  *       200:
  *         description: Dữ liệu đã được cập nhật thành công
@@ -248,33 +260,26 @@ app.post('/createControl', async (req, res) => {
  *         description: Lỗi khi cập nhật dữ liệu
  */
 app.put('/updateControlBy/:id', async (req, res) => {
+  const {id} = req.params;
+  const updateFields = req.body;
+
+  if (!id) {
+    return res.status(400).json({message: 'ID is required'});
+  }
+
   try {
-    const {id} = req.params;
-    const {name, status, threshold_min, threshold_max, mode} = req.body;
-
-    // Kiểm tra nếu ID không hợp lệ
-    if (!id) {
-      return res.status(400).json({message: 'ID is required'});
-    }
-    if (!['manual', 'schedule', 'threshold'].includes(mode)) {
-      return res.status(400).json({
-        message:
-          'Invalid control type, mode includes ["manual","schedule","threshold"]',
-      });
+    const controlData = await Control.findById(id);
+    if (!controlData) {
+      return res.status(404).json({message: 'Control not found'});
     }
 
-    // Tìm và cập nhật dữ liệu
-    const updatedControl = await Control.findByIdAndUpdate(
-      id,
-      {name, status, threshold_min, threshold_max, mode},
-      {new: true, runValidators: true},
-    );
+    Object.keys(updateFields).forEach(field => {
+      if (field in controlData) {
+        controlData[field] = updateFields[field];
+      }
+    });
 
-    // Kiểm tra nếu không tìm thấy cảm biến
-    if (!updatedControl) {
-      return res.status(404).json({message: 'Sensor not found'});
-    }
-
+    const updatedControl = await controlData.save();
     res
       .status(200)
       .json({message: 'Data updated successfully', data: updatedControl});

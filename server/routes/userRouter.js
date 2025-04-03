@@ -684,26 +684,22 @@ app.put('/updateGardenId', authenticateJWT, async (req, res) => {
         message: 'gardenId must be an array',
       });
     }
-
-    // Tìm và cập nhật gardenId cho người dùng
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { gardenId },
-      { new: true } // Trả về tài liệu đã được cập nhật
-    );
-
-    if (!updatedUser) {
+    // Tìm người dùng
+    const user = await User.findById(userId);
+    if (!user) {
       return res.status(404).json({
         status: 404,
         message: 'User not found',
       });
     }
 
-    // Trả về thông tin người dùng sau khi cập nhật
+    // Cập nhật gardenId mà không mất dữ liệu cũ
+    user.gardenId = [...new Set([...user.gardenId, ...gardenId])]; // Kết hợp và loại bỏ trùng lặp
+    await user.save(); // Lưu thay đổi
     res.status(200).json({
       status: 200,
       message: 'Garden ID updated successfully',
-      data: updatedUser.gardenId,
+      data: user.gardenId,
     });
   } catch (error) {
     console.error('Error updating garden ID:', error);
