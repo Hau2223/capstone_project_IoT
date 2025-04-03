@@ -106,62 +106,6 @@ app.post('/login', async (req, res) => {
 
 /**
  * @swagger
- * /api/user/profile:
- *   get:
- *     summary: Get information about the logged-in user
- *     tags: [Information]
- *     security:
- *       - bearerAuth: [] # Bảo mật với JWT
- *     responses:
- *       200:
- *         description: User details retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: integer
- *                   example: 200
- *                 data:
- *                   type: object
- *                   properties:
- *                     name:
- *                       type: string
- *                       example: "Nguyen Van A"
- *                     email:
- *                       type: string
- *                       example: "vana@gmail.com"
- *                     # Thêm các trường khác nếu cần
- *       401:
- *         description: Missing or invalid token
- *       403:
- *         description: Token is invalid or expired
- *       404:
- *         description: User not found
- *       500:
- *         description: Internal server error
- */
-app.get('/profile', authenticateJWT, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    // if (req.user.userId !== id) {
-    //   return res.status(403).json({message: 'Access denied'});
-    // }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({message: 'User not found'});
-    }
-    res.status(200).json({status: 200, data: user});
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({message: 'Internal server error'});
-  }
-});
-
-/**
- * @swagger
  * /api/user/sendCode/{email}:
  *   get:
  *     summary: Send a verification code via email
@@ -448,6 +392,62 @@ app.post('/resetPassword', async (req, res) => {
 
 /**
  * @swagger
+ * /api/user/profile:
+ *   get:
+ *     summary: Get information about the logged-in user
+ *     tags: [Information]
+ *     security:
+ *       - bearerAuth: [] # Bảo mật với JWT
+ *     responses:
+ *       200:
+ *         description: User details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       example: "Nguyen Van A"
+ *                     email:
+ *                       type: string
+ *                       example: "vana@gmail.com"
+ *                     # Thêm các trường khác nếu cần
+ *       401:
+ *         description: Missing or invalid token
+ *       403:
+ *         description: Token is invalid or expired
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+app.get('/profile', authenticateJWT, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    // if (req.user.userId !== id) {
+    //   return res.status(403).json({message: 'Access denied'});
+    // }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({message: 'User not found'});
+    }
+    res.status(200).json({status: 200, data: user});
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({message: 'Internal server error'});
+  }
+});
+
+/**
+ * @swagger
  * /api/user/logout:
  *   post:
  *     summary: Logout a user by invalidating their token
@@ -529,6 +529,188 @@ app.get('/getGardenby', authenticateJWT, async (req, res) => {
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({message: 'Internal server error'});
+  }
+});
+
+/**
+ * @swagger
+ * /api/user/updateProfile:
+ *   put:
+ *     summary: Cập nhật thông tin tài khoản người dùng
+ *     tags: [Information]
+ *     security:
+ *       - bearerAuth: [] # Bảo mật với JWT
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example:
+ *             name: "Nguyen Van B"
+ *             full_name: "Nguyễn Văn B"
+ *             avatar: "avatar_url.jpg"
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               full_name:
+ *                 type: string
+ *               avatar:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Thông tin người dùng được cập nhật thành công
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: 200
+ *               message: "Profile updated successfully"
+ *               data:
+ *                 name: "Nguyen Van B"
+ *                 email: "example@gmail.com"
+ *                 full_name: "Nguyễn Văn B"
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ *       401:
+ *         description: Không có token hoặc token không hợp lệ
+ *       404:
+ *         description: Không tìm thấy người dùng
+ *       500:
+ *         description: Lỗi server
+ */
+app.put('/updateProfile', authenticateJWT, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const {name, avatar} = req.body;
+
+    // Tạo object chứa các trường cần cập nhật
+    const updateFields = {};
+
+    // Chỉ thêm các trường có giá trị vào updateFields
+    if (name !== undefined) {
+      updateFields.name = name;
+    }
+    if (avatar !== undefined) {
+      updateFields.avatar = avatar;
+    }
+
+    // Kiểm tra nếu không có trường nào được cập nhật
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({
+        status: 400,
+        message: 'No fields to update',
+      });
+    }
+
+    // Tìm và cập nhật người dùng
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {$set: updateFields},
+      {new: true}, // Trả về tài liệu đã được cập nhật
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        status: 404,
+        message: 'User not found',
+      });
+    }
+
+    // Trả về thông tin người dùng sau khi cập nhật
+    res.status(200).json({
+      status: 200,
+      message: 'Profile updated successfully',
+      data: {
+        name: updatedUser.name,
+        email: updatedUser.email,
+        avatar: updatedUser.avatar,
+      },
+    });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    res.status(500).json({
+      status: 500,
+      message: 'Internal server error',
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/user/updateGardenId:
+ *   put:
+ *     summary: Cập nhật gardenId cho người dùng
+ *     tags: [Information]
+ *     security:
+ *       - bearerAuth: [] # Bảo mật với JWT
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               gardenId:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["60d5ec49b547b3d949e7c6c2", "60d5ec49b547b3d949e7c6c3"]
+ *     responses:
+ *       200:
+ *         description: Cập nhật gardenId thành công
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: 200
+ *               message: "Garden ID updated successfully"
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ *       401:
+ *         description: Không có token hoặc token không hợp lệ
+ *       404:
+ *         description: Không tìm thấy người dùng
+ *       500:
+ *         description: Lỗi server
+ */
+app.put('/updateGardenId', authenticateJWT, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { gardenId } = req.body;
+
+    // Kiểm tra dữ liệu đầu vào
+    if (!Array.isArray(gardenId)) {
+      return res.status(400).json({
+        status: 400,
+        message: 'gardenId must be an array',
+      });
+    }
+
+    // Tìm và cập nhật gardenId cho người dùng
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { gardenId },
+      { new: true } // Trả về tài liệu đã được cập nhật
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        status: 404,
+        message: 'User not found',
+      });
+    }
+
+    // Trả về thông tin người dùng sau khi cập nhật
+    res.status(200).json({
+      status: 200,
+      message: 'Garden ID updated successfully',
+      data: updatedUser.gardenId,
+    });
+  } catch (error) {
+    console.error('Error updating garden ID:', error);
+    res.status(500).json({
+      status: 500,
+      message: 'Internal server error',
+    });
   }
 });
 

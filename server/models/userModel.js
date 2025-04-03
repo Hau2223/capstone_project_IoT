@@ -26,15 +26,12 @@ const userSchema = new mongoose.Schema({
   },
   avatar: {
     type: String,
-  },
-  full_name: {
-    type: String,
+    default: '',
   },
   role: {
     type: String,
-  },
-  token: {
-    type: String,
+    enum: ['admin', 'user'],
+    default: 'user',
   },
 });
 
