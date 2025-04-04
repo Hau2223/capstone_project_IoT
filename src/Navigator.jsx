@@ -23,6 +23,10 @@ import {
   HomeScreen,
   DetailScreen,
   SettingScreen,
+  AccountInfoScreen,
+  ChangePasswordScreen,
+  GeneralSettingScreen,
+  LanguageSettingScreen,
 } from './Screens';
 
 import ScheduleScreen from './Screens/ScheduleScreen/ScheduleScreen';
@@ -74,7 +78,7 @@ function MyTabs() {
   const {t} = useTranslation();
   return (
     <Tab.Navigator
-      initialRouteName={t('home')}
+      initialRouteName="Home"
       screenOptions={{
         tabBarStyle: {
           backgroundColor: '#FFF',
@@ -203,6 +207,26 @@ const Navigator = () => {
               <StackNav.Screen
                 name="ReportDetail"
                 component={ReportDetail}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="AccountInfo"
+                component={AccountInfoScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="ChangePassword"
+                component={ChangePasswordScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="GeneralSetting"
+                component={AccountInfoScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="LanguageSetting"
+                component={LanguageSettingScreen}
                 options={{headerShown: false, animation: 'fade_from_bottom'}}
               />
             </StackNav.Navigator>

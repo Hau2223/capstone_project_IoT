@@ -42,3 +42,8 @@ export const resetPass = async params => {
 export const profile = async () => {
   return await get('/user/profile');
 };
+
+export const gardenId = async () => {
+  return await get('/user/getGardenby');
+};
+

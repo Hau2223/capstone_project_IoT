@@ -7,10 +7,12 @@ import {
   FlatList,
   Alert,
 } from 'react-native';
-import React, {useState, useEffect, useCallback, memo} from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import ItemHomePage from '../../components/ItemHomePage';
 import CustomAlert from '../../components/CustomAlert';
-import {profile} from '../../../services/authServices';
+import { gardenId, profile } from '../../../services/authServices';
+import { detailDevice } from '../../../services/deviceServices';
+import { detailSensor } from '../../../services/sensorServices';
 
 const data = [
   {
@@ -75,16 +77,19 @@ const data = [
   },
 ];
 
-const HomeScreen = ({navigation}) => {
-  //const [name, setName] = useState("hú");
+const HomeScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const handleGoToDetail = item => {
-    navigation.navigate('DetailScreen', {item}); // Chuyển dữ liệu sang DetailItem
+    navigation.navigate('DetailScreen', { item });
   };
 
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [garden, SetGarden] = useState(null);
+  const [garden_esp, SetGardenESP] = useState(null);
+  const [sensor, SetSensor] = useState(null);
 
   const fetchUserProfile = useCallback(async () => {
     try {
@@ -92,19 +97,50 @@ const HomeScreen = ({navigation}) => {
       setUserInfo(data.data);
     } catch (err) {
       setError(err.message || 'Error fetching user data');
-      Alert.alert('Error', error);
     } finally {
       setLoading(false);
     }
-  }, [error]); // Mảng phụ thuộc rỗng để không tạo ra một hàm mới mỗi lần render
+  }, []);
+
+  const fetchGarder = useCallback(async () => {
+    try {
+      const res = await gardenId();
+      if (res.status === 200) {
+        SetGarden(res.data);
+        const dataGarden = await Promise.all(
+          res.data.map(async id => {
+            const deviceData = await detailDevice({ id });
+            return deviceData;
+          }),
+        );
+        SetGardenESP(dataGarden);
+
+        const sensorDataList = await Promise.all(
+          dataGarden.flatMap(garden =>
+            garden.data.sensors.map(async sensor => {
+              const sensorData = await detailSensor({ id: sensor.sensorId });
+              return sensorData;
+            }),
+          ),
+        );
+
+        SetSensor(sensorDataList);
+      }
+    } catch (err) {
+      setError(err.message || 'Error fetching user data');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchUserProfile();
-  }, [fetchUserProfile]); // Đưa fetchUserProfile vào mảng phụ thuộc
+    fetchGarder();
+  }, [fetchUserProfile, fetchGarder]);
+
   const showAlert = () => {
-    Alert.alert('Thông báo', 'Đây là nội dung thông báo!', [{text: 'OK'}]);
+    Alert.alert('Thông báo', 'Đây là nội dung thông báo!', [{ text: 'OK' }]);
   };
-  console.log(userInfo);
 
   return (
     <View style={styles.frame}>
@@ -126,8 +162,43 @@ const HomeScreen = ({navigation}) => {
         />
       </View>
       <View style={styles.container}>
+        {/* {garden_esp ? (
+          <FlatList
+            data={garden_esp}
+            keyExtractor={(item) => item.data._id}
+            renderItem={({ item }) => {
+              const gardenData = item.data;
+              return (
+                <View key={gardenData._id}>
+                  <Text style={styles.textHeader}>
+                    {'Khu ' + gardenData.name}
+                  </Text>
+                  {gardenData.sensors?.map((sensorData) => {
+                    const matchedSensor =
+                      sensor && sensor.find((s) => s._id === sensorData.sensorId);
+
+                    return (
+                      <View key={sensorData.sensorId}>
+                        <Text>
+                          {matchedSensor &&
+                          matchedSensor.type === 'moisture'
+                            ? matchedSensor.value
+                            : null}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              );
+            }}
+            contentContainerStyle={styles.listContainer}
+          />
+        ) : (
+          <Text>Loading...</Text>
+        )} */}
         <FlatList
           data={data}
+          showsVerticalScrollIndicator={false}
           numColumns={2}
           keyExtractor={item => item.id}
           renderItem={({item}) => (
@@ -151,10 +222,9 @@ const HomeScreen = ({navigation}) => {
   );
 };
 
-export const styles = StyleSheet.create({
+const styles = StyleSheet.create({
   frame: {
-    height: 'auto',
-    width: '100%',
+    flex: 1,
     backgroundColor: '#EAEAEA',
   },
   header: {
@@ -185,7 +255,6 @@ export const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 230,
   },
   itemWrapper: {
     alignItems: 'center',
