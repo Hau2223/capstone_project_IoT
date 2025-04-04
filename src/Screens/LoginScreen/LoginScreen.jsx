@@ -7,6 +7,7 @@ import {
   BackHandler,
   ImageBackground,
   useWindowDimensions,
+  Image,
 } from 'react-native';
 import React, {
   useState,
@@ -287,5 +288,8 @@ const styles = StyleSheet.create({
   txtRegister: {
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  tinyLogo: {
+    resizeMode: 'cover', width: 50, height: 50
   },
 });

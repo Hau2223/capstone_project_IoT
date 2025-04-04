@@ -1,5 +1,7 @@
 {
   "lang": "vi",
+  "areaVN": "Tiếng Việt",
+  "areaEN": "Tiếng Anh",
   "hello": "Xin chào,",
   "welcome": "Chào mừng đến với Dự án của chúng tôi",
   "home": "Trang chủ",
@@ -66,6 +68,5 @@
   "otp_expired_message": "Mã OTP đã hết hạn",
   "otp_invalid_or_expired": "Mã OTP không hợp lệ hoặc đã hết hạn",
 
-
-    "password_reset_success": "Đặt lại mật khẩu thành công!"
+  "password_reset_success": "Đặt lại mật khẩu thành công!"
 }
