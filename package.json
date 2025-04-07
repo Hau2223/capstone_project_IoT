@@ -33,8 +33,7 @@
     "react-native-paper": "^5.13.1",
     "react-native-safe-area-context": "^5.0.0",
     "react-native-screens": "^4.4.0",
-    "react-native-svg": "^15.11.2",
-    "react-native-vector-icons": "^10.2.0"
+    "react-native-svg": "^15.11.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

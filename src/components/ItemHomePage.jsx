@@ -36,6 +36,11 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     borderRadius: 7,
     margin: 13,
+    borderColor:'#C96666',
+    borderWidth:2,
+    overflow: 'hidden',
+    justifyContent:'center',
+    alignItems:'center'
   },
   img: {
     height: 130,

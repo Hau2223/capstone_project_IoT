@@ -84,10 +84,16 @@ const WeekSelector = ({onSelectWeek}) => {
 
   return (
     <View style={styles.weekSelectorContainer}>
-      <Text style={styles.chartTitle}>📊 Thống kê theo tuần</Text>
-      <TouchableOpacity style={styles.button} onPress={() => setShow(true)}>
-        <Text style={styles.buttonText}>📅</Text>
-      </TouchableOpacity>
+      <View>
+        <Text style={styles.chartTitle}>📊 Thống kê theo tuần</Text>
+      </View>
+      <View>
+        <TouchableOpacity style={styles.button} onPress={() => setShow(true)}>
+          <Text style={styles.buttonText}>📅</Text>
+        </TouchableOpacity>
+      </View>
+      
+      
       {show && (
         <DateTimePicker
           value={date}
@@ -110,13 +116,17 @@ const LineChartComponent = ({data}) => {
       
       <LineChart
         data={data}
-        color="#1B3278"
+        color="green"
         thickness={3}
         showDataPoints
         dataPointRadius={4}
-        dataPointColor="#FF5733"
-        yAxisColor="#888"
-        xAxisColor="#888"
+        dataPointColor="green"
+        yAxisColor="green"
+        xAxisColor="green"
+        areaChart // Kích hoạt chế độ tô nền  
+  startFillColor="rgba(27, 120, 47, 0.4)" // Màu bắt đầu của nền  / Màu kết thúc (mờ dần)  
+  startOpacity={1} // Độ đậm phần trên nền  
+  endOpacity={0}
       />
     </View>
   );
@@ -186,7 +196,9 @@ const styles = StyleSheet.create({
     borderWidth:2
   },
   weekSelectorContainer:{
-    
+    width:'100%',
+    height:'auto',
+    backgroundColor:'green'
   },
   button: {
     backgroundColor: '#1B3278',
