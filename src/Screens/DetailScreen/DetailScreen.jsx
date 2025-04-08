@@ -2,23 +2,55 @@ import {StyleSheet, Text, View, Image} from 'react-native';
 import React, {memo, useState} from 'react';
 // import OnOffBtn from '../../components/Button/OnOff';
 import {Switch} from 'react-native-paper';
+import FastImage from 'react-native-fast-image';
+import colors from '../../../assets/common/colorCss';
 
 const DetailScreen = ({route}) => {
   const {item} = route.params;
   const [isWatering, setIsWatering] = useState(false);
   const [isFan, setIsFan] = useState(false);
 
+  const sensors = item?.data?.sensors || [];
+  const controls = item?.data?.controls || [];
+
+  // console.log("sensor", sensors);
+  // console.log("controls",controls);
+
+  const sensorMap = Object.fromEntries(sensors.map(s => [s.type, s]));
+  const controlMap = Object.fromEntries(controls.map(c => [c.name, c]));
+
+  const {
+    temperature: temperatureSensor,
+    humidity: humiditySensor,
+    luminosity: luminositySensor,
+    moisture: moistureSensor,
+    stream: streamSensor,
+  } = sensorMap;
+
+  const {
+    water: waterControl,
+    light: lightControl,
+    wind: windControl,
+  } = controlMap;
+
   return (
     <View style={styles.frame}>
       <View style={styles.img}>
-        <Image style={styles.imgStyle} source={item.imageSource} />
+        <FastImage
+          style={styles.imgStyle}
+          source={{
+            uri: item.data.img_area,
+            priority: FastImage.priority.normal,
+          }}
+          resizeMode={FastImage.resizeMode.cover}
+        />
       </View>
       <View style={styles.content}>
-        <Text style={styles.header2}>Khu {item.tenKhu}</Text>
+        <Text style={styles.header2}>{item?.data?.name_area}</Text>
         <View style={styles.content1}>
-          <Text style={styles.textStyle}>Nhiệt độ: {item.nhietDo}</Text>
-          <Text style={styles.textStyle}>Độ ẩm đất: {item.doAm}</Text>
-          <Text style={styles.textStyle}>Ánh sáng: {item.anhSang}</Text>
+          <Text style={styles.textStyle}>Nhiệt độ: {temperatureSensor?.value ?? 0}°C</Text>
+          <Text style={styles.textStyle}>Độ ẩm đất: {moistureSensor?.value ?? 0}%</Text>
+          <Text style={styles.textStyle}>Ánh sáng: {luminositySensor?.value ?? 0}%</Text>
           <View style={styles.settingOnOff}>
             <View style={styles.frameIconLight}>
               <Image
@@ -41,10 +73,10 @@ const DetailScreen = ({route}) => {
             </View>
             <View style={styles.buttonTuoiQuat}>
               <Switch
-                value={isWatering}
+                value={waterControl?.status}
                 onValueChange={newValue => setIsWatering(newValue)}
                 trackColor={{false: 'white', true: 'white'}}
-                thumbColor={isWatering ? '#63A776' : '#ACACAC'}
+                thumbColor={waterControl?.status ? colors.primary : '#ACACAC'}
                 style={{transform: [{scale: 1.5}]}}
               />
             </View>
@@ -55,10 +87,10 @@ const DetailScreen = ({route}) => {
             </View>
             <View style={styles.buttonTuoiQuat}>
               <Switch
-                value={isFan}
+                value={windControl?.status}
                 onValueChange={newValue => setIsFan(newValue)}
                 trackColor={{false: 'white', true: 'white'}}
-                thumbColor={isFan ? '#63A776' : '#ACACAC'}
+                thumbColor={windControl?.status ? colors.primary : '#ACACAC'}
                 style={{transform: [{scale: 1.5}]}}
               />
             </View>

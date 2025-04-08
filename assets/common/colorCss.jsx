@@ -1,8 +1,10 @@
 const colors = {
-  primary: '#FFDE17',
-  secondary: '#848484',
-  acticetab: '#00879C',
+  primary: '#217E54',
+  secondary: '#EAEAEA',
+  bg_dark: '#212121',
+  acticetab: '#217E54',
   inacticetab: '#515151',
+  inacticetabDark: '#F9F9F9',
   txtdefault: '#515151',
   txtBtnSetting: '#383838',
   borderColor: '#CECECE',
