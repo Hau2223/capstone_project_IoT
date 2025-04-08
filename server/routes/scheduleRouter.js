@@ -692,7 +692,7 @@ app.put('/updateSchedule/:id_esp/:scheduleId', async (req, res) => {
  *         schema:
  *           type: string
  *           example: "ESP123456"
- *       - in: query
+ *       - in: path
  *         name: scheduleId
  *         required: true
  *         description: ID của lịch trình cần xóa
@@ -709,38 +709,40 @@ app.put('/updateSchedule/:id_esp/:scheduleId', async (req, res) => {
  */
 app.delete('/delSchedule/:id_esp/:scheduleId', async (req, res) => {
   try {
-    const {scheduleId} = req.query;
-    const device = await Device.findOne({id_esp: req.params.id_esp});
+    const { id_esp, scheduleId } = req.params;
+
+    const device = await Device.findOne({ id_esp });
 
     if (!device) {
-      return res.status(404).json({message: 'Device not found'});
+      return res.status(404).json({ message: 'Device not found' });
     }
 
-    // Tìm kiếm lịch trình
-    const control = device.controls[0]; // Giả sử xóa lịch trình từ control đầu tiên
-    const scheduleIndex = control.schedules.findIndex(
-      s => s._id.toString() === scheduleId,
-    );
+    let scheduleFound = false;
+    for (const control of device.controls) {
+      const scheduleIndex = control.schedules.findIndex(
+        (s) => s._id.toString() === scheduleId
+      );
 
-    if (scheduleIndex === -1) {
-      return res.status(404).json({message: 'Schedule not found'});
+      if (scheduleIndex !== -1) {
+        control.schedules.splice(scheduleIndex, 1);
+        scheduleFound = true;
+        break;
+      }
     }
 
-    // Xóa lịch trình
-    control.schedules.splice(scheduleIndex, 1);
+    if (!scheduleFound) {
+      return res.status(404).json({ message: 'Schedule not found' });
+    }
+
     await device.save();
 
-    res
-      .status(200)
-      .json({
-        message: 'Schedule removed successfully',
-        data: control.schedules,
-      });
+    res.status(200).json({
+      message: 'Schedule removed successfully',
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({message: 'Error removing schedule', error: error.message});
+    res.status(500).json({ message: 'Error removing schedule', error: error.message });
   }
 });
+
 
 module.exports = app;
