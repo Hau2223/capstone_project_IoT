@@ -5,126 +5,46 @@ import {
   View,
   Image,
   FlatList,
+  BackHandler,
   Alert,
+  StatusBar,
+  Platform
 } from 'react-native';
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, {useState, useEffect, useCallback, memo} from 'react';
+import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 import ItemHomePage from '../../components/ItemHomePage';
 import CustomAlert from '../../components/CustomAlert';
-import { gardenId, profile } from '../../../services/authServices';
-import { detailDevice } from '../../../services/deviceServices';
-import { detailSensor } from '../../../services/sensorServices';
+import {gardenId, profile} from '../../../services/authServices';
+import {detailDevice} from '../../../services/deviceServices';
+import colors from '../../../assets/common/colorCss';
 
-const data = [
-  {
-    id: '1',
-    tenKhu: '1',
-    nhietDo: '19°C',
-    doAm: '25%',
-    trangThaiTuoi: 'OFF',
-    quat: 'ON',
-    imageSource: require('../../../assets/img/1.png'),
-    anhSang: '20%',
-  },
-  {
-    id: '2',
-    tenKhu: '2',
-    nhietDo: '21°C',
-    doAm: '30%',
-    trangThaiTuoi: 'ON',
-    quat: 'OFF',
-    imageSource: require('../../../assets/img/1.png'),
-    anhSang: '30%',
-  },
-  {
-    id: '3',
-    tenKhu: '3',
-    nhietDo: '18°C',
-    doAm: '28%',
-    trangThaiTuoi: 'OFF',
-    quat: 'ON',
-    imageSource: require('../../../assets/img/1.png'),
-    anhSang: '10%',
-  },
-  {
-    id: '4',
-    tenKhu: '4',
-    nhietDo: '20°C',
-    doAm: '35%',
-    trangThaiTuoi: 'ON',
-    quat: 'OFF',
-    imageSource: require('../../../assets/img/1.png'),
-    anhSang: '20%',
-  },
-  {
-    id: '5',
-    tenKhu: '5',
-    nhietDo: '22°C',
-    doAm: '40%',
-    trangThaiTuoi: 'OFF',
-    quat: 'ON',
-    imageSource: require('../../../assets/img/1.png'),
-    anhSang: '30%',
-  },
-  {
-    id: '6',
-    tenKhu: '6',
-    nhietDo: '22°C',
-    doAm: '40%',
-    trangThaiTuoi: 'OFF',
-    quat: 'ON',
-    imageSource: require('../../../assets/img/1.png'),
-    anhSang: '40%',
-  },
-];
-
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({navigation}) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const isFocused = useIsFocused();
   const handleGoToDetail = item => {
-    navigation.navigate('DetailScreen', { item });
+    navigation.navigate('DetailScreen', {item});
   };
 
-  const [userInfo, setUserInfo] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const [garden, SetGarden] = useState(null);
-  const [garden_esp, SetGardenESP] = useState(null);
-  const [sensor, SetSensor] = useState(null);
 
-  const fetchUserProfile = useCallback(async () => {
-    try {
-      const data = await profile();
-      setUserInfo(data.data);
-    } catch (err) {
-      setError(err.message || 'Error fetching user data');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+
 
   const fetchGarder = useCallback(async () => {
     try {
       const res = await gardenId();
       if (res.status === 200) {
-        SetGarden(res.data);
+        // SetGarden(res.data);
         const dataGarden = await Promise.all(
           res.data.map(async id => {
-            const deviceData = await detailDevice({ id });
+            const deviceData = await detailDevice({id});
             return deviceData;
           }),
         );
-        SetGardenESP(dataGarden);
-
-        const sensorDataList = await Promise.all(
-          dataGarden.flatMap(garden =>
-            garden.data.sensors.map(async sensor => {
-              const sensorData = await detailSensor({ id: sensor.sensorId });
-              return sensorData;
-            }),
-          ),
-        );
-
-        SetSensor(sensorDataList);
+        SetGarden(dataGarden);
       }
     } catch (err) {
       setError(err.message || 'Error fetching user data');
@@ -134,16 +54,43 @@ const HomeScreen = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    fetchUserProfile();
     fetchGarder();
-  }, [fetchUserProfile, fetchGarder]);
+    const interval = setInterval(() => {
+      fetchGarder();
+    }, 5000);
+  
+    return () => clearInterval(interval);
+  }, []);
 
-  const showAlert = () => {
-    Alert.alert('Thông báo', 'Đây là nội dung thông báo!', [{ text: 'OK' }]);
-  };
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        const currentRoute =
+          navigation.getState().routes[navigation.getState().index].name;
 
+        if (currentRoute === 'Home') {
+          BackHandler.exitApp(); // Thoát app nếu đang ở màn hình Home
+          return true;
+        } else {
+          navigation.goBack(); // Quay lại nếu không phải Home
+          return true;
+        }
+      };
+
+      BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+      return () =>
+        BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+    }, [navigation]),
+  );
   return (
     <View style={styles.frame}>
+      {isFocused && (
+        <StatusBar
+          backgroundColor={colors.secondary}
+          barStyle="dark-content"
+        />
+      )}
       <View style={styles.header}>
         <View style={styles.header1}>
           <Text style={styles.textHeader}>Vườn tiêu Bình Phước</Text>
@@ -162,59 +109,51 @@ const HomeScreen = ({ navigation }) => {
         />
       </View>
       <View style={styles.container}>
-        {/* {garden_esp ? (
-          <FlatList
-            data={garden_esp}
-            keyExtractor={(item) => item.data._id}
-            renderItem={({ item }) => {
-              const gardenData = item.data;
-              return (
-                <View key={gardenData._id}>
-                  <Text style={styles.textHeader}>
-                    {'Khu ' + gardenData.name}
-                  </Text>
-                  {gardenData.sensors?.map((sensorData) => {
-                    const matchedSensor =
-                      sensor && sensor.find((s) => s._id === sensorData.sensorId);
-
-                    return (
-                      <View key={sensorData.sensorId}>
-                        <Text>
-                          {matchedSensor &&
-                          matchedSensor.type === 'moisture'
-                            ? matchedSensor.value
-                            : null}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              );
-            }}
-            contentContainerStyle={styles.listContainer}
-          />
-        ) : (
-          <Text>Loading...</Text>
-        )} */}
         <FlatList
-          data={data}
+          data={garden}
           showsVerticalScrollIndicator={false}
           numColumns={2}
-          keyExtractor={item => item.id}
-          renderItem={({item}) => (
-            <View style={styles.itemWrapper}>
-              <ItemHomePage
-                tenKhu={'Khu ' + item.tenKhu}
-                nhietDo={'Nhiệt độ: ' + item.nhietDo}
-                doAm={'Độ ẩm: ' + item.doAm}
-                trangThaiTuoi={'Trạng thái tưới: ' + item.trangThaiTuoi}
-                quat={'Quạt: ' + item.quat}
-                imageSource={item.imageSource}
-                anhSang={item.anhSang}
-                onPress={() => handleGoToDetail(item)}
-              />
-            </View>
-          )}
+          keyExtractor={(item, index) => item?.data?._id || index.toString()}
+          renderItem={({item}) => {
+            const sensors = item?.data?.sensors || [];
+            const controls = item?.data?.controls || [];
+
+            const sensorMap = Object.fromEntries(sensors.map(s => [s.type, s]));
+            const controlMap = Object.fromEntries(
+              controls.map(c => [c.name, c]),
+            );
+
+            const {
+              temperature: temperatureSensor,
+              humidity: humiditySensor,
+              luminosity: luminositySensor,
+              moisture: moistureSensor,
+              stream: streamSensor,
+            } = sensorMap;
+
+            const {
+              water: waterControl,
+              light: lightControl,
+              wind: windControl,
+            } = controlMap;
+
+            return (
+              <View style={styles.itemWrapper}>
+                <ItemHomePage
+                  name_area={item?.data?.name_area}
+                  temperature={`${temperatureSensor?.value ?? 0}`}
+                  moisture={`${moistureSensor?.value ?? 0}`}
+                  water={`${
+                    waterControl?.status === true ? 'ON' : 'OFF'
+                  }`}
+                  wind={`${windControl?.status === true ? 'ON' : 'OFF'}`}
+                  img_area={item?.data?.img_area}
+                  luminosity={`${luminositySensor?.value ?? 0}%`}
+                  onPress={() => handleGoToDetail(item)}
+                />
+              </View>
+            );
+          }}
           contentContainerStyle={styles.listContainer}
         />
       </View>
@@ -259,10 +198,11 @@ const styles = StyleSheet.create({
   itemWrapper: {
     alignItems: 'center',
     width: '50%',
+    padding: 5,
   },
   listContainer: {
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    paddingHorizontal: 5,
+    paddingBottom: 10,
   },
 });
 

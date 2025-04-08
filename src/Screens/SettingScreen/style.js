@@ -4,80 +4,149 @@ import {
   verticalScale,
   moderateScale,
 } from '../../assets/common/scaleScreen';
-import colors from '../../assets/common/colorCss';
-import {fonts} from '../../assets/common/fontCss';
+import colors from '../../../assets/common/colorCss';
+import {fonts} from '../../../assets/common/fontCss';
 
 const light = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: colors.secondary,
+  },
+  profileWrapper: {
     width: '100%',
-    height: '100%',
-    backgroundColor: '#fff',
+    height: 120,
+    position: 'relative',
+    backgroundColor: colors.primary,
+    justifyContent: 'flex-end',
     alignItems: 'center',
   },
-  textTitle: {
-    color: colors.textInputMainLight,
-    fontSize: fonts.FontSize.Medium_Y, fontWeight: "bold"
-  },
-  btnsetting: {
-    flexDirection: 'row',
-    backgroundColor: colors.textInputMainLight,
-    height: scale(45),
-    width: '90%',
-    borderRadius: scale(8),
+  avatarWrapper: {
+    position: 'absolute',
+    transform: [{translateY: 75}],
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: scale(10),
   },
-  textMode: {
-    color: colors.textInputMainLight,
-    fontSize: fonts.FontSize.Medium,
-    fontWeight: '700',
+  avatar: {
+    width: 125,
+    height: 125,
+    borderRadius: 80,
+    borderWidth: 4,
+    borderColor: colors.white,
   },
-  switch: {
-    transform: [{scaleX: 1}, {scaleY: 1}],
+
+  profileName: {
+    marginTop: 5,
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.black,
   },
-  radioButton: {
-    width: '90%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+
+  body: {
+    flex: 1,
+    justifyContent: 'center',
+    top: -50,
+    paddingHorizontal: 20,
+    gap: 10,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.primary,
+    alignSelf: 'flex-start',
+  },
+
+  settingBox: {
+    width: '100%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.borderColor,
+    shadowColor: colors.black,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  optionContainer: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderColor,
+  },
+  optionText: {
+    fontSize: 20,
+    fontWeight: '500',
+    color: colors.txtBtnSetting,
   },
 });
 
 const dark = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: colors.bg_dark,
+  },
+  profileWrapper: {
     width: '100%',
-    height: '100%',
-    backgroundColor: colors.backforDark,
+    height: 120,
+    position: 'relative',
+    backgroundColor: colors.primary,
+    justifyContent: 'flex-end',
     alignItems: 'center',
   },
-  textTitle: {
-    color: colors.backforMain,
-    fontSize: fonts.FontSize.Medium_Y, fontWeight: "bold"
-  },
-  btnsetting: {
-    flexDirection: 'row',
-    backgroundColor: colors.textInputMainDark,
-    height: scale(45),
-    width: '90%',
-    borderRadius: scale(8),
+  avatarWrapper: {
+    position: 'absolute',
+    transform: [{translateY: 75}],
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: scale(10),
   },
-  textMode: {
-    color: colors.textDef,
-    fontSize: fonts.FontSize.Medium,
-    fontWeight: '700',
+  avatar: {
+    width: 125,
+    height: 125,
+    borderRadius: 80,
+    borderWidth: 4,
+    borderColor: colors.black,
   },
-  switch: {
-    transform: [{scaleX: 1}, {scaleY: 1}],
+
+  profileName: {
+    marginTop: 5,
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.white,
   },
-  radioButton: {
-    width: '90%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  body: {
+    flex: 1,
+    justifyContent: 'center',
+    top: -50,
+    paddingHorizontal: 20,
+    gap: 10,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.primary,
+    alignSelf: 'flex-start',
+  },
+
+  settingBox: {
+    width: '100%',
+    backgroundColor: colors.bg_dark,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.inacticetabDark,
+    shadowColor: colors.white,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  optionContainer: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderColor,
+  },
+  optionText: {
+    fontSize: 20,
+    fontWeight: '500',
+    color: colors.inacticetabDark,
   },
 });
 

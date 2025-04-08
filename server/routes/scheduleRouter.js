@@ -430,19 +430,27 @@ app.get('/scheduleBy/:id_esp', async (req, res) => {
 
 /**
  * @swagger
- * /api/schedule/addSchedule/{id_esp}:
+ * /api/schedule/addSchedule/{id_esp}/{name}:
  *   post:
- *     summary: Thêm lịch trình vào thiết bị
- *     description: Thêm một lịch trình mới vào thiết bị theo `id_esp`.
+ *     summary: Thêm lịch trình vào thiết bị theo tên control
+ *     description: Thêm một lịch trình mới vào thiết bị dựa trên `id_esp` và `controlName`.
  *     tags: [Schedules]
  *     parameters:
  *       - in: path
  *         name: id_esp
  *         required: true
- *         description: ID của thiết bị
+ *         description: ID của thiết bị *
  *         schema:
  *           type: string
  *           example: "ESP123456"
+ *       - in: path
+ *         name: name
+ *         required: true
+ *         description: Tên của control trong danh sách controls *
+ *         schema:
+ *           type: string
+ *           enum: ["water", "light", "wind"]
+ *           example: "water"
  *     requestBody:
  *       required: true
  *       content:
@@ -452,16 +460,20 @@ app.get('/scheduleBy/:id_esp', async (req, res) => {
  *             properties:
  *               status:
  *                 type: boolean
+ *                 description: Trạng thái bật/tắt *
  *                 example: false
  *               startTime:
  *                 type: string
- *                 format: date-time
- *                 example: "2025-03-21T10:00:00Z"
+ *                 pattern: "^((0[1-9])|(1[0-2])):([0-5]\\d)\\s?(AM|PM)$"
+ *                 description: Giờ bắt đầu theo định dạng giờ phút AM/PM *
+ *                 example: "10:30 AM"
  *               duration:
  *                 type: number
+ *                 description: Thời lượng hoạt động (phút) *
  *                 example: 60
  *               repeat:
  *                 type: array
+ *                 description: Các ngày lặp lại trong tuần *
  *                 items:
  *                   type: string
  *                   enum: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -492,7 +504,7 @@ app.get('/scheduleBy/:id_esp', async (req, res) => {
  *                         example: false
  *                       startTime:
  *                         type: string
- *                         example: "2025-03-21T10:00:00Z"
+ *                         example: "10:30 AM"
  *                       duration:
  *                         type: number
  *                         example: 60
@@ -503,7 +515,7 @@ app.get('/scheduleBy/:id_esp', async (req, res) => {
  *                           enum: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
  *                           example: "Monday"
  *       404:
- *         description: Không tìm thấy thiết bị
+ *         description: Không tìm thấy thiết bị hoặc control
  *       500:
  *         description: Lỗi khi thêm lịch trình
  *         content:
@@ -518,43 +530,36 @@ app.get('/scheduleBy/:id_esp', async (req, res) => {
  *                   type: string
  *                   example: "Detailed error message here"
  */
-app.post('/addSchedule/:id_esp', async (req, res) => {
+app.post('/addSchedule/:id_esp/:name', async (req, res) => {
   try {
-    const {status, startTime, duration, repeat} = req.body;
+    const { status, startTime, duration, repeat } = req.body;
+    const { id_esp, name } = req.params;
 
-    const device = await Device.findOne({id_esp: req.params.id_esp});
+    const device = await Device.findOne({ id_esp });
     if (!device) {
-      return res.status(404).json({message: 'Device not found'});
+      return res.status(404).json({ message: 'Device not found' });
     }
 
-    // Kiểm tra xem có ít nhất một control không
-    if (device.controls.length === 0) {
-      return res
-        .status(400)
-        .json({message: 'No controls found to add schedule'});
+    // Tìm control theo tên (không phải ID)
+    const control = device.controls.find(ctrl => ctrl.name === name);
+    if (!control) {
+      return res.status(404).json({ message: 'Control not found' });
     }
 
-    // Giả sử bạn muốn thêm lịch vào control đầu tiên
-    const control = device.controls[0];
+    // Thêm schedule mới vào control
+    control.schedules.push({ status, startTime, duration, repeat });
 
-    // Thêm schedule mới vào danh sách schedules của control
-    control.schedules.push({
-      status,
-      startTime,
-      duration,
-      repeat,
-    });
-
-    // Lưu lại thiết bị
     await device.save();
 
-    res
-      .status(200)
-      .json({message: 'Schedule added successfully', data: control.schedules});
+    res.status(200).json({
+      message: 'Schedule added successfully',
+      data: control.schedules,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({message: 'Error adding schedule', error: error.message});
+    res.status(500).json({
+      message: 'Error adding schedule',
+      error: error.message,
+    });
   }
 });
 
@@ -591,8 +596,9 @@ app.post('/addSchedule/:id_esp', async (req, res) => {
  *                 example: true
  *               startTime:
  *                 type: string
- *                 format: date-time
- *                 example: "2025-03-21T10:00:00Z"
+ *                 pattern: "^((0[1-9])|(1[0-2])):([0-5]\\d)\\s?(AM|PM)$"
+ *                 description: Giờ bắt đầu theo định dạng giờ phút AM/PM *
+ *                 example: "10:30 AM"
  *               duration:
  *                 type: number
  *                 example: 120
