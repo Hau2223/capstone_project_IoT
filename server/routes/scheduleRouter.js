@@ -638,7 +638,7 @@ app.post('/addSchedule/:id_esp/:name', async (req, res) => {
  *         schema:
  *           type: string
  *           example: "ESP123456"
- *       - in: query
+ *       - in: path
  *         name: scheduleId
  *         required: true
  *         description: ID của lịch trình cần cập nhật
@@ -698,7 +698,7 @@ app.post('/addSchedule/:id_esp/:name', async (req, res) => {
  */
 app.put('/updateSchedule/:id_esp/:scheduleId', async (req, res) => {
   try {
-    const {scheduleId} = req.query;
+    const {scheduleId} = req.params;
     const {status, startTime, duration, repeat} = req.body;
 
     const device = await Device.findOne({id_esp: req.params.id_esp});
@@ -706,7 +706,7 @@ app.put('/updateSchedule/:id_esp/:scheduleId', async (req, res) => {
       return res.status(404).json({message: 'Device not found'});
     }
 
-    const control = device.controls[0]; // Giả sử cập nhật lịch trình từ control đầu tiên
+    const control = device.controls[0];
     const scheduleIndex = control.schedules.findIndex(
       s => s._id.toString() === scheduleId,
     );
@@ -715,15 +715,10 @@ app.put('/updateSchedule/:id_esp/:scheduleId', async (req, res) => {
       return res.status(404).json({message: 'Schedule not found'});
     }
 
-    // Cập nhật lịch trình
-    control.schedules[scheduleIndex].status =
-      status !== undefined ? status : control.schedules[scheduleIndex].status;
-    control.schedules[scheduleIndex].startTime =
-      startTime || control.schedules[scheduleIndex].startTime;
-    control.schedules[scheduleIndex].duration =
-      duration || control.schedules[scheduleIndex].duration;
-    control.schedules[scheduleIndex].repeat =
-      repeat || control.schedules[scheduleIndex].repeat;
+    if (status !== undefined) control.schedules[scheduleIndex].status = status;
+    if (startTime) control.schedules[scheduleIndex].startTime = startTime;
+    if (duration) control.schedules[scheduleIndex].duration = duration;
+    if (repeat) control.schedules[scheduleIndex].repeat = repeat;
 
     await device.save();
 
