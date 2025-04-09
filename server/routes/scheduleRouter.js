@@ -409,22 +409,83 @@ app.use(bodyParser.json());
  */
 app.get('/scheduleBy/:id_esp', async (req, res) => {
   try {
-    const device = await Device.findOne({ id_esp: req.params.id_esp });
+    const device = await Device.findOne({id_esp: req.params.id_esp});
     if (!device) {
-      return res.status(404).json({ message: 'Device not found' });
+      return res.status(404).json({message: 'Device not found'});
     }
 
     // Kiểm tra xem có ít nhất một control không
     if (device.controls.length === 0) {
-      return res.status(404).json({ message: 'No controls found' });
+      return res.status(404).json({message: 'No controls found'});
     }
 
     // Lấy tất cả lịch trình từ tất cả controls
     const allSchedules = device.controls.flatMap(control => control.schedules);
 
-    res.status(200).json({ data: allSchedules });
+    res.status(200).json({data: allSchedules});
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving schedules', error: error.message });
+    res
+      .status(500)
+      .json({message: 'Error retrieving schedules', error: error.message});
+  }
+});
+
+/**
+ * @swagger
+ * /api/schedule/scheduleBy/{id_esp}/{name}:
+ *   get:
+ *     summary: Lấy danh sách lịch trình theo thiết bị và tên điều khiển
+ *     tags: [Schedules]
+ *     parameters:
+ *       - in: path
+ *         name: id_esp
+ *         required: true
+ *         description: ID của thiết bị (ESP)
+ *         schema:
+ *           type: string
+ *           example: "ESP123456"
+ *       - in: path
+ *         name: name
+ *         required: true
+ *         description: Tên của control (water, light, wind)
+ *         schema:
+ *           type: string
+ *           enum: [water, light, wind]
+ *     responses:
+ *       200:
+ *         description: Lấy lịch trình thành công
+ *       404:
+ *         description: Không tìm thấy thiết bị hoặc control
+ *       500:
+ *         description: Lỗi server
+ */
+app.get('/scheduleBy/:id_esp/:name', async (req, res) => {
+  const {id_esp, name} = req.params;
+
+  try {
+    const device = await Device.findOne({id_esp});
+
+    if (!device) {
+      return res.status(404).json({message: 'Device not found'});
+    }
+
+    // Tìm control theo tên
+    const control = device.controls.find(c => c.name === name);
+
+    if (!control) {
+      return res.status(404).json({message: `Control '${name}' not found`});
+    }
+    if (!control.schedules || control.schedules.length === 0) {
+      return res
+        .status(200)
+        .json({message: `No schedules found for control '${name}'`, data: []});
+    }
+
+    res.status(200).json({data: control.schedules});
+  } catch (error) {
+    res
+      .status(500)
+      .json({message: 'Error retrieving schedules', error: error.message});
   }
 });
 
@@ -532,22 +593,22 @@ app.get('/scheduleBy/:id_esp', async (req, res) => {
  */
 app.post('/addSchedule/:id_esp/:name', async (req, res) => {
   try {
-    const { status, startTime, duration, repeat } = req.body;
-    const { id_esp, name } = req.params;
+    const {status, startTime, duration, repeat} = req.body;
+    const {id_esp, name} = req.params;
 
-    const device = await Device.findOne({ id_esp });
+    const device = await Device.findOne({id_esp});
     if (!device) {
-      return res.status(404).json({ message: 'Device not found' });
+      return res.status(404).json({message: 'Device not found'});
     }
 
     // Tìm control theo tên (không phải ID)
     const control = device.controls.find(ctrl => ctrl.name === name);
     if (!control) {
-      return res.status(404).json({ message: 'Control not found' });
+      return res.status(404).json({message: 'Control not found'});
     }
 
     // Thêm schedule mới vào control
-    control.schedules.push({ status, startTime, duration, repeat });
+    control.schedules.push({status, startTime, duration, repeat});
 
     await device.save();
 
@@ -709,18 +770,18 @@ app.put('/updateSchedule/:id_esp/:scheduleId', async (req, res) => {
  */
 app.delete('/delSchedule/:id_esp/:scheduleId', async (req, res) => {
   try {
-    const { id_esp, scheduleId } = req.params;
+    const {id_esp, scheduleId} = req.params;
 
-    const device = await Device.findOne({ id_esp });
+    const device = await Device.findOne({id_esp});
 
     if (!device) {
-      return res.status(404).json({ message: 'Device not found' });
+      return res.status(404).json({message: 'Device not found'});
     }
 
     let scheduleFound = false;
     for (const control of device.controls) {
       const scheduleIndex = control.schedules.findIndex(
-        (s) => s._id.toString() === scheduleId
+        s => s._id.toString() === scheduleId,
       );
 
       if (scheduleIndex !== -1) {
@@ -731,7 +792,7 @@ app.delete('/delSchedule/:id_esp/:scheduleId', async (req, res) => {
     }
 
     if (!scheduleFound) {
-      return res.status(404).json({ message: 'Schedule not found' });
+      return res.status(404).json({message: 'Schedule not found'});
     }
 
     await device.save();
@@ -740,9 +801,10 @@ app.delete('/delSchedule/:id_esp/:scheduleId', async (req, res) => {
       message: 'Schedule removed successfully',
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error removing schedule', error: error.message });
+    res
+      .status(500)
+      .json({message: 'Error removing schedule', error: error.message});
   }
 });
-
 
 module.exports = app;
