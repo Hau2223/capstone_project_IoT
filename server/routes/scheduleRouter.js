@@ -1,5 +1,4 @@
 const express = require('express');
-const Schedule = require('../models/scheduleModel');
 const app = express();
 const bodyParser = require('body-parser');
 const Device = require('../models/deviceModel');
