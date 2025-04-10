@@ -13,7 +13,7 @@ const ItemHomePage = ({
   return (
     <TouchableOpacity style={styles.item} onPress={onPress}>
       <View style={styles.img}>
-        <Image style={styles.imgStyle} source={imageSource} />
+        <Image style={styles.imgStyle} source={{uri:'https://tamnguyenshop.com/Upload/Den-led-trang-tri/bong-den-soi-toc-edison%20(5)(1)%20-%20Copy.jpg'}} />
       </View>
       <View style={styles.content}>
         <Text style={styles.header2}>{tenKhu}</Text>

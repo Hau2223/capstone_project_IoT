@@ -1,127 +1,170 @@
-import React, {useContext, memo} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Pressable,
-  Image,
-} from 'react-native';
-import {Switch} from 'react-native-paper';
-import colors from '../../assets/common/colorCss';
-import IconOc from 'react-native-vector-icons/Octicons';
-import {ThemeContext} from '../../assets/common/themeProvider';
-import {LanguageContext} from '../../assets/common/translation';
-import {scale} from '../../assets/common/scaleScreen';
-import {createStyle} from './style';
-import {fonts, icons} from '../../assets/common/fontCss';
+// import React, {memo, useContext} from 'react';
+// import {View, Text, Button, StyleSheet} from 'react-native';
+// import {useTranslation} from 'react-i18next';
+// import {ThemeContext} from '../../../assets/common/themeProvider';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+// const SettingScreen = ({navigation}) => {
+//   const {t, i18n} = useTranslation();
+//   const {theme, toggleTheme} = useContext(ThemeContext);
+//   const handleGoBack = async () => {
+//     await AsyncStorage.removeItem('authToken');
+//     await navigation.navigate('Login');
+//     console.log('Đăng xuất thành công');
+//   };
 
-const SettingScreen = ({navigation}) => {
+//   const changeLanguage = async () => {
+//     const newLang = i18n.language === 'en' ? 'vi' : 'en';
+//     i18n.changeLanguage(newLang);
+//   };
+
+//   return (
+//     <View style={[styles.container, theme === 'dark' && styles.darkMode]}>
+//       <Text style={[styles.text, theme === 'dark' && styles.darkText]}>
+//         {t('setting')}
+//       </Text>
+//       <Button title={t('change_language')} onPress={changeLanguage} />
+//       <Button title={t('dark_mode')} onPress={toggleTheme} />
+
+//       <Text style={styles.text}>{t('logout')}</Text>
+//       <Button title={t('logout')} onPress={handleGoBack} />
+//     </View>
+//   );
+// };
+
+// export default memo(SettingScreen);
+
+import React, {useState, useContext, memo} from 'react';
+import {View, Text, Image, StyleSheet, TouchableOpacity} from 'react-native';
+import {useTranslation} from 'react-i18next';
+import {ThemeContext} from '../../../assets/common/themeProvider';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {IMAGES} from '../../../utils/constants';
+import colors from '../../../assets/common/colorCss';
+
+const SettingsScreen = ({navigation}) => {
+  const {t, i18n} = useTranslation();
   const {theme, toggleTheme} = useContext(ThemeContext);
-  const {t, changeLanguage, language} = useContext(LanguageContext);
-  const styles = createStyle(theme);
-
+  const changeLanguage = async () => {
+    const newLang = i18n.language === 'en' ? 'vi' : 'en';
+    i18n.changeLanguage(newLang);
+  };
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('authToken');
+    await navigation.navigate('Login');
+    console.log('Đăng xuất thành công');
+  };
   return (
     <View style={styles.container}>
-      <View
-        style={{
-          height: scale(60),
-          width: '100%',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-        <Pressable
-          style={{
-            position: 'absolute',
-            left: scale(20),
-            height: scale(40),
-            width: scale(40),
-            justifyContent: 'center',
+      <View style={styles.profileContainer}>
+        <Image
+          source={{
+            uri: IMAGES.IMAGES_H,
           }}
-          onPress={() => navigation.goBack()}>
-          <IconOc
-            name="chevron-left"
-            size={icons.IconSize.Medium}
-            color={
-              theme === 'dark' ? colors.backforMain : colors.textInputMainLight
-            }
-          />
-        </Pressable>
-        <Text style={styles.textTitle}>{t('settingChangeLan')}</Text>
+          style={styles.avatar}
+          resizeMode="cover"
+        />
+        <Text style={styles.profileName}>Nguyễn Văn A</Text>
       </View>
-      <View
-        style={{
-          width: '100%',
-          height: 'auto',
-          alignItems: 'center',
-          gap: scale(8),
-        }}>
-        <View style={styles.radioButton}>
-          <Text style={styles.textMode}>
-            {t('settingChangeAppearance')}{' '}
-            {theme === 'dark'
-              ? t('settingAppearanceMode2')
-              : t('settingAppearanceMode1')}
-          </Text>
-          <Switch
-            value={theme === 'dark'}
-            onValueChange={toggleTheme}
-            trackColor={{
-              false: colors.modeAppearanceFalse,
-              true: colors.modeAppearanceTrue,
-            }}
-            thumbColor={
-              theme === 'dark' ? colors.backforMain : colors.modeAppearance3
-            }
-            // ios_backgroundColor="#3e3e3e"
-            style={styles.switch}
-          />
-        </View>
 
-        <Pressable
-          style={styles.btnsetting}
-          onPress={() => navigation.navigate('ChangeLan')}>
-          <Text
-            style={{
-              color: colors.textDef,
-              fontSize: fonts.FontSize.Medium_X,
-              fontWeight: '600',
-            }}>
-            {t('settingChangeLan')}
-          </Text>
-          <IconOc
-            name="chevron-right"
-            size={icons.IconSize.Medium}
-            color={colors.textDef}
-          />
-        </Pressable>
+      {/* Danh sách cài đặt */}
+      <Text style={styles.sectionTitle}>Cài đặt</Text>
+      <View style={styles.settingBox}>
+        <TouchableOpacity
+          style={styles.optionContainer}
+          onPress={() => navigation.navigate('AccountInfo')}>
+          <Text style={styles.optionText}>Cài đặt chung</Text>
+        </TouchableOpacity>
 
-        <Pressable
-          style={styles.btnsetting}
-          onPress={() => navigation.navigate('AccountSetting')}>
-          <Text
-            style={{
-              color: colors.textDef,
-              fontSize: fonts.FontSize.Medium_X,
-              fontWeight: '600',
-            }}>
-            {t('settingAccount')}
+        <TouchableOpacity
+          style={styles.optionContainer}
+          onPress={() => navigation.navigate('ChangePassword')}>
+          <Text style={styles.optionText}>Thông tin tài khoản</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.optionContainer}
+          onPress={() => navigation.navigate('GeneralSetting')}>
+          <Text style={styles.optionText}>Đổi mật khẩu</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.optionContainer}
+          onPress={() => navigation.navigate('LanguageSetting')}>
+          <Text style={styles.optionText}>Ngôn ngữ</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={handleLogout}
+          style={[styles.optionContainer, {borderBottomWidth: 0}]}>
+          <Text style={[styles.optionText, {color: colors.red}]}>
+            Đăng xuất
           </Text>
-          <IconOc
-            name="chevron-right"
-            size={icons.IconSize.Medium}
-            color={colors.textDef}
-          />
-        </Pressable>
+        </TouchableOpacity>
       </View>
-      {/* <TouchableOpacity style={{backgroundColor: colors.boxchat, height: scale(55), width: scale(55), borderRadius: scale(30), position: "absolute", bottom: scale(100), right: scale(15),
-                alignItems: "center", justifyContent: "center"}}>
-                <Image style={{ width: scale(35), height: scale(35), resizeMode: 'cover',}}
-                    source={ require('../../assets/icons/i-chat.png')}/>
-            </TouchableOpacity> */}
     </View>
   );
 };
 
-export default memo(SettingScreen);
+export default memo(SettingsScreen);
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#E5E5E5',
+    paddingTop: 30,
+    alignItems: 'center',
+    gap: 10,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.black,
+    marginBottom: 10,
+  },
+
+  profileContainer: {
+    alignItems: 'center',
+    gap: 10,
+  },
+  avatar: {
+    width: 120,
+    height: 120,
+    borderWidth: 3,
+    borderColor: colors.white,
+    borderRadius: 80,
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.txtdefault,
+  },
+
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.black,
+    alignSelf: 'flex-start',
+    marginHorizontal: 20,
+  },
+
+  settingBox: {
+    width: '90%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  optionContainer: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderColor,
+  },
+  optionText: {
+    fontSize: 18,
+    color: colors.txtBtnSetting,
+  },
+});

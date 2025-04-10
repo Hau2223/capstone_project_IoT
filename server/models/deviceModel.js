@@ -6,17 +6,21 @@ const deviceSchema = new Schema({
     type: String,
     required: true,
   },
-  time: {
+  name_area: {
     type: String,
-    required: true,
+    default: '',
   },
-  status: {
-    type: Boolean,
-    default: false,
+  img_area: {
+    type: String,
+    default: 'https://static.vinwonders.com/production/LzmCCdos-vuon-tieu-phu-quoc-1.jpg',
   },
-  timestamp: {
+  update_at: {
     type: Date,
-    default: Date.now,
+    default: '',
+  },
+  create_at: {
+    type: Date,
+    default: '',
   },
   members: [
     {
@@ -34,18 +38,77 @@ const deviceSchema = new Schema({
   ],
   sensors: [
     {
-      sensorId: {
-        type: Schema.Types.ObjectId,
-        ref: 'Sensor',
+      type: {
+        type: String,
+        enum: [
+          'moisture',
+          'luminosity',
+          'rain',
+          'temperature',
+          'humidity',
+          'stream',
+        ],
+        default: 'moisture',
+      },
+      value: {
+        type: Number,
+        default: 0,
       },
     },
   ],
   controls: [
     {
-      controlId: {
-        type: Schema.Types.ObjectId,
-        ref: 'Control',
+      name: {
+        type: String,
+        default: null,
+        // required: true,
       },
+      status: {
+        type: Boolean,
+        default: false,
+      },
+      threshold_min: {
+        type: Number,
+        default: 0,
+      },
+      threshold_max: {
+        type: Number,
+        default: 100,
+      },
+      mode: {
+        type: String,
+        enum: ['manual', 'schedule', 'threshold'],
+        default: 'manual',
+      },
+      schedules: [
+        {
+          status: {
+            type: Boolean,
+            default: false,
+          },
+          startTime: {
+            type: Date,
+            default: Date.now,
+          },
+          duration: {
+            type: Number,
+            default: 0,
+          },
+          repeat: {
+            type: [String],
+            enum: [
+              'Monday',
+              'Tuesday',
+              'Wednesday',
+              'Thursday',
+              'Friday',
+              'Saturday',
+              'Sunday',
+            ],
+            default: 'Monday',
+          },
+        },
+      ],
     },
   ],
 });

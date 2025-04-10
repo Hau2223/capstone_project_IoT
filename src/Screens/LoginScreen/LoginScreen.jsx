@@ -7,6 +7,7 @@ import {
   BackHandler,
   ImageBackground,
   useWindowDimensions,
+  Image,
 } from 'react-native';
 import React, {
   useState,
@@ -24,6 +25,7 @@ import {login} from '../../../services/authServices';
 import {UserContext} from '../../../utils/UserContext';
 import colors from '../../../assets/common/colorCss';
 import {IMAGES} from '../../../utils/constants';
+import {useTranslation} from 'react-i18next';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -39,6 +41,7 @@ const LoginScreen = () => {
   const {setUserToken} = useContext(UserContext);
   const textInputUserRef = useRef(null);
   const textInputPassRef = useRef(null);
+  const {t} = useTranslation();
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -49,19 +52,6 @@ const LoginScreen = () => {
   const toggleDelPasVisible = () => {
     setPassword('');
   };
-
-  // useEffect(() => {
-  //   console.log('Bắt đầu gọi API bằng axios...');
-  //   const fetchAPI = async () => {
-  //     try {
-  //       const response = await me('67851c04ad4d24acdadbb6cc');
-  //       console.log('Dữ liệu nhận được từ axios:', response?.data?._id); // response.data thay vì response.json()
-  //     } catch (error) {
-  //       console.error('Lỗi khi gọi API bằng axios:', error.message);
-  //     }
-  //   };
-  //   fetchAPI();
-  // }, []);
 
   const handleLogin = useCallback(() => {
     login({
@@ -75,7 +65,11 @@ const LoginScreen = () => {
         } else if (response?.data) {
           const token = response.data;
           setShowInfoAlert(false);
-          AsyncStorage.setItem('authToken', token);
+
+          AsyncStorage.setItem('authToken', token)
+            .then(() => console.log('Token đã được lưu:', token))
+            .catch(err => console.log('Lỗi lưu token:', err));
+
           token && setUserToken(token);
           navigation.navigate('Tabs');
         }
@@ -116,10 +110,10 @@ const LoginScreen = () => {
     <ImageBackground
       source={{uri: isTablet ? IMAGES.BG_TABLET : IMAGES.BG_MOBILE}}
       style={styles.container}>
-      <Text style={styles.txtTitle}>HỆ THỐNG QUẢN LÝ THIẾT BỊ IOT</Text>
+      <Text style={styles.txtTitle}>{t('iot_management_system')}</Text>
       <View style={styles.formLogin}>
         <View style={styles.login}>
-          <Text style={styles.txtLogin}>Đăng Nhập</Text>
+          <Text style={styles.txtLogin}>{t('login')}</Text>
           <View
             style={styles.edtInput}
             onTouchStart={() => {
@@ -133,7 +127,7 @@ const LoginScreen = () => {
               onChangeText={text => setEmail(text)}
               onFocus={() => setFocusedFieldPhone('phone')}
               onBlur={() => setFocusedFieldPhone(null)}
-              placeholder={'Nhập Email'}
+              placeholder={t('enter_email')}
               placeholderTextColor={colors.loginTxt}
               style={styles.txtInput}
             />
@@ -163,9 +157,9 @@ const LoginScreen = () => {
               onFocus={() => setFocusedFieldPass('password')}
               onBlur={() => setFocusedFieldPass(null)}
               secureTextEntry={!showPassword}
-              placeholder={'Nhập mật khẩu'}
+              placeholder={t('enter_password')}
               placeholderTextColor={colors.loginTxt}
-              passwordRules="required: lower; required: upper; required: digit; max-consecutive: 2; minlength: 8;"
+              passwordRules="required: minlength: 8;"
               style={styles.txtInput}
             />
             <View style={styles.iconPass}>
@@ -186,24 +180,24 @@ const LoginScreen = () => {
               />
             </View>
           </View>
-            <Text
-              style={styles.txtForget}
-              onPress={() => {
-                navigation.navigate('ResetPass', {email});
-              }}>
-              Quên mật khẩu
-            </Text>
+          <Text
+            style={styles.txtForget}
+            onPress={() => {
+              navigation.navigate('ResetPass', {email});
+            }}>
+            {t('forgot_password')}
+          </Text>
         </View>
         <View style={styles.layoutbtn}>
           <Pressable style={styles.btnLogin} onPress={handleLogin}>
-            <Text style={styles.txtBtn}>Đăng Nhập</Text>
+            <Text style={styles.txtBtn}>{t('login')}</Text>
           </Pressable>
           <Text style={styles.txtAccNaN}>
-            Bạn chưa có tài khoản?{' '}
+            {t('no_account')}{' '}
             <Text
               style={styles.txtRegister}
               onPress={() => navigation.navigate('Register')}>
-              Đăng kí
+              {t('register')}
             </Text>
           </Text>
         </View>
@@ -294,5 +288,8 @@ const styles = StyleSheet.create({
   txtRegister: {
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  tinyLogo: {
+    resizeMode: 'cover', width: 50, height: 50
   },
 });

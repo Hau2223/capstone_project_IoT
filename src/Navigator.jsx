@@ -1,57 +1,52 @@
-import {Button, StyleSheet, Text, View, ActivityIndicator} from 'react-native';
-import React, {useContext, useEffect, useState} from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  Button,
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
+import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import {UserProvider} from '../utils/UserContext';
+import {ThemeProvider} from '../assets/common/themeProvider';
+import {LanguageProvider} from '../assets/common/translation';
+import {useTranslation} from 'react-i18next';
 
-import {UserProvider, UserContext} from '../utils/UserContext';
-import OnBoardingScreen from './Screens/OnBoarding/OnBoardingScreen';
-import LoginScreen from './Screens/LoginScreen/LoginScreen';
-import TestScreen from './Screens/test';
-import DetailScreen from './Screens/DetailScreen/DetailScreen';
+import {
+  OnBoardingScreen,
+  LoginScreen,
+  RegisterScreen,
+  ResetPasswordScreen,
+  HomeScreen,
+  DetailScreen,
+  SettingScreen,
+  AccountInfoScreen,
+  ChangePasswordScreen,
+  GeneralSettingScreen,
+  LanguageSettingScreen,
+} from './Screens';
+
 import ScheduleScreen from './Screens/ScheduleScreen/ScheduleScreen';
+import DevicesListScreen from './Screens/ScheduleScreen/DevicesListScreen';
 import AlarmScreen from './Screens/ScheduleScreen/AlarmScreen';
 import SetTimerScreen from './Screens/ScheduleScreen/SetTimerScreen';
-import RegisterScreen from './Screens/Register/RegisterScreen';
 import ReportScreen from './Screens/ReportScreen/ReportScreen';
 import ReportDetail from './Screens/ReportScreen/ReportDetail';
-import ResetPasswordScreen from './Screens/ResetPasswordScreen/ResetPasswordScreen';
+import colors from '../assets/common/colorCss';
 
 const Tab = createBottomTabNavigator();
 const StackNav = createNativeStackNavigator();
 
-const HomeScreen = ({navigation}) => (
-  <View style={styles.container}>
-    <Text style={styles.text}>Home Screen</Text>
-    <Button
-      title="Go to Details"
-      onPress={() => navigation.navigate('Details')}
-    />
-  </View>
-);
-
 const DetailsScreen = ({navigation}) => {
-  const handleGoBack = async () => {
-    await AsyncStorage.removeItem('authToken');
-    await navigation.navigate('Login');
-    console.log('Đăng xuất thành công');
-  };
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Đăng Xuất</Text>
-      <Button title="Go back" onPress={handleGoBack} />
+      <Button title="Go back" />
     </View>
   );
 };
-
-const SettingScreen = ({navigation}) => (
-  <View style={styles.container}>
-    <Text style={styles.text}>Setting Screen</Text>
-    <Button title="Go back" onPress={() => navigation.goBack()} />
-  </View>
-);
 
 const LoadingScreen = ({navigation}) => (
   <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
@@ -62,53 +57,59 @@ const LoadingScreen = ({navigation}) => (
 // Hàm lấy icon
 const getTabBarIcon = (name, color) => {
   const icons = {
-    Home: 'home-outline',
-    Detail: 'information-circle-outline',
-    Setting: 'settings-outline',
+    Home: require('../assets/icon/ic_home.png'),
+    Statics: require('../assets/icon/ic_statics.png'),
+    Reports: require('../assets/icon/ic_reports.png'),
+    Setting: require('../assets/icon/ic_setting.png'),
   };
   return (
-    <Ionicons name={icons[name] || 'help-outline'} size={24} color={color} />
+    <Image
+      source={icons[name] || require('../assets/icon/ic_home.png')}
+      style={{
+        width: 25,
+        height: 25,
+        tintColor: color ? colors.acticetab : colors.inacticetab,
+      }}
+      resizeMode="contain"
+    />
   );
 };
 
 function MyTabs() {
+  const {t} = useTranslation();
   return (
     <Tab.Navigator
-      initialRouteName="Test"
+      initialRouteName="Home"
       screenOptions={{
         tabBarStyle: {
           backgroundColor: '#FFF',
-          position: 'absolute',
+          height: 55,
           borderTopWidth: 0,
           elevation: 0,
         },
+        // tabBarItemStyle: {
+        //   alignItems: 'center',
+        //   justifyContent: 'center',
+        //   backgroundColor: 'red',
+        // },
         tabBarActiveBackgroundColor: 'transparent',
-        tabBarActiveTintColor: 'tomato',
-        tabBarInactiveTintColor: '#000',
+        tabBarInactiveBackgroundColor: 'transparent',
+        headerShadowVisible: false,
+        tabBarActiveTintColor: colors.acticetab,
+        tabBarInactiveTintColor: colors.inacticetab,
         tabBarHideOnKeyboard: true,
+        tabBarLabelStyle: {
+          fontSize: 14,
+          // textAlign: 'center',
+        },
       }}>
       <Tab.Screen
-        name="Test"
-        component={TestScreen}
+        name="Home"
+        component={HomeScreen}
         options={{
           headerShown: false,
-          tabBarIcon: ({color}) => getTabBarIcon('Home', color),
-        }}
-      />
-      <Tab.Screen
-        name="DetailsScreen"
-        component={DetailsScreen}
-        options={{
-          headerShown: false,
-          tabBarIcon: ({color}) => getTabBarIcon('Detail', color),
-        }}
-      />
-      <Tab.Screen
-        name="ReportScreen"
-        component={ReportScreen}
-        options={{
-          headerShown: false,
-          tabBarIcon: ({color}) => getTabBarIcon('Setting', color),
+          tabBarLabel: t('home'),
+          tabBarIcon: ({focused}) => getTabBarIcon('Home', focused),
         }}
       />
       <Tab.Screen
@@ -116,7 +117,27 @@ function MyTabs() {
         component={ScheduleScreen}
         options={{
           headerShown: false,
-          tabBarIcon: ({color}) => getTabBarIcon('Detail', color),
+          // tabBarBadge: 48,
+          tabBarLabel: t('history'),
+          tabBarIcon: ({focused}) => getTabBarIcon('Statics', focused),
+        }}
+      />
+      <Tab.Screen
+        name="ReportScreen"
+        component={ReportScreen}
+        options={{
+          headerShown: false,
+          tabBarLabel: t('statistical'),
+          tabBarIcon: ({focused}) => getTabBarIcon('Reports', focused),
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingScreen}
+        options={{
+          headerShown: false,
+          tabBarLabel: t('setting'),
+          tabBarIcon: ({focused}) => getTabBarIcon('Setting', focused),
         }}
       />
     </Tab.Navigator>
@@ -125,70 +146,104 @@ function MyTabs() {
 const Navigator = () => {
   return (
     <NavigationContainer>
-      <UserProvider>
-        <StackNav.Navigator
-          initialRouteName="Loading"
-          screenOptions={{
-            headerShown: false,
-          }}>
-          <StackNav.Screen
-            name="Loading"
-            component={LoadingScreen}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
-          <StackNav.Screen
-            name="OnBoarding"
-            component={OnBoardingScreen}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
-          <StackNav.Screen
-            name="Login"
-            component={LoginScreen}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
-          <StackNav.Screen
-            name="Register"
-            component={RegisterScreen}
-            options={{animation: 'fade'}}
-          />
-          <StackNav.Screen
-            name="ResetPass"
-            component={ResetPasswordScreen}
-            options={{animation: 'fade'}}
-          />
-          <StackNav.Screen
-            name="Tabs"
-            component={MyTabs}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
-          <StackNav.Screen
-            name="Test"
-            component={TestScreen}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
-          <StackNav.Screen
-            name="DetailScreen"
-            component={DetailScreen}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
+      <ThemeProvider>
+        <LanguageProvider>
+          <UserProvider>
+            <StackNav.Navigator
+              initialRouteName="Loading"
+              screenOptions={{
+                headerShown: false,
+              }}>
+              <StackNav.Screen
+                name="Loading"
+                component={LoadingScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="OnBoarding"
+                component={OnBoardingScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="Login"
+                component={LoginScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="Register"
+                component={RegisterScreen}
+                options={{headerShown: false, animation: 'fade'}}
+              />
+              <StackNav.Screen
+                name="ResetPass"
+                component={ResetPasswordScreen}
+                options={{animation: 'fade'}}
+              />
+              <StackNav.Screen
+                name="Tabs"
+                component={MyTabs}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              {/* <StackNav.Screen
+                name="Test"
+                component={TestScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              /> */}
+              <StackNav.Screen
+                name="DetailScreen"
+                component={DetailScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
 
-          <StackNav.Screen
-            name="AlarmScreen"
-            component={AlarmScreen}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
-          <StackNav.Screen
-            name="SetTimerScreen"
-            component={SetTimerScreen}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
-          <StackNav.Screen
-            name="ReportDetail"
-            component={ReportDetail}
-            options={{headerShown: false, animation: 'fade_from_bottom'}}
-          />
-        </StackNav.Navigator>
-      </UserProvider>
+              <StackNav.Screen
+                name="ScheduleScreen"
+                component={ScheduleScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="DevicesListScreen"
+                component={DevicesListScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="AlarmScreen"
+                component={AlarmScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="SetTimerScreen"
+                component={SetTimerScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="ReportDetail"
+                component={ReportDetail}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="AccountInfo"
+                component={AccountInfoScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="ChangePassword"
+                component={ChangePasswordScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="GeneralSetting"
+                component={AccountInfoScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="LanguageSetting"
+                component={LanguageSettingScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+            </StackNav.Navigator>
+          </UserProvider>
+        </LanguageProvider>
+      </ThemeProvider>
     </NavigationContainer>
   );
 };
@@ -200,7 +255,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'tomato',
   },
   text: {fontSize: 24, fontWeight: 'bold'},
 });

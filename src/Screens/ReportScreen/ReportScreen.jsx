@@ -73,7 +73,7 @@ const ReportScreen = ({navigation}) => {
     <View style={styles.frame}>
       <View style={styles.header}>
         <View style={styles.header1}>
-          <Text style={styles.textHeader}>Báo cáo và thống kê</Text>
+          <Text style={styles.textHeader}>Phân tích dữ liệu</Text>
         </View>
       </View>
       <View style={styles.container}>

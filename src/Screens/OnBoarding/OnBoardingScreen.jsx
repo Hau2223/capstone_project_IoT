@@ -1,11 +1,11 @@
-import {View, StyleSheet, Pressable, Text} from 'react-native';
-import React from 'react';
+import { View, StyleSheet, Pressable, Text } from 'react-native';
+import React, { memo } from 'react';
 import Onboarding from 'react-native-onboarding-swiper';
 import LottieView from 'lottie-react-native';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function OnBoardingScreen() {
+const OnBoardingScreen = () => {
   const navigation = useNavigation();
 
   const handleDone = () => {
@@ -13,7 +13,7 @@ export default function OnBoardingScreen() {
     AsyncStorage.setItem('onboarded', '1');
   };
 
-  const btnDone = ({...props}) => {
+  const btnDone = ({ ...props }) => {
     return (
       <Pressable style={styles.btnDone} {...props}>
         <Text style={styles.txtDone}>Done</Text>
@@ -21,13 +21,14 @@ export default function OnBoardingScreen() {
     );
   };
 
-  const handleDots = ({selected}) => {
+  const handleDots = ({ selected }) => {
     return (
       <View
         style={[
           styles.dots_ctn,
           selected ? styles.selectedBorder : styles.selectedBorder2,
-        ]}>
+        ]}
+      >
         <View
           style={[
             styles.innerCircle,
@@ -97,7 +98,7 @@ export default function OnBoardingScreen() {
       />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -121,7 +122,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
   },
-  // Dots componets for swiper
+  // Dots components for swiper
   dots_ctn: {
     width: 15,
     height: 15,
@@ -150,3 +151,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#fecaca',
   },
 });
+
+export default memo(OnBoardingScreen);

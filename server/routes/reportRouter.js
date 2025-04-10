@@ -6,12 +6,12 @@ app.use(bodyParser.json());
 
 /**
  * @swagger
- * /api/report/detailReportBy:
+ * /api/report/detailReport/{deviceId}:
  *   get:
- *     summary: Lấy tất cả báo cáo của thiết bị
+ *     summary: Lấy thông tin báo cáo theo deviceId
  *     tags: [Reports]
  *     parameters:
- *       - in: query
+ *       - in: path
  *         name: deviceId
  *         required: true
  *         schema:
@@ -26,14 +26,8 @@ app.use(bodyParser.json());
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Report'
- *       400:
- *         description: Thiếu deviceId
- *         content:
- *           application/json:
- *             example:
- *               message: "Missing device ID"
  *       404:
- *         description: Không tìm thấy báo cáo cho thiết bị này
+ *         description: Không tìm thấy báo cáo nào cho thiết bị
  *         content:
  *           application/json:
  *             example:
@@ -45,25 +39,21 @@ app.use(bodyParser.json());
  *             example:
  *               message: "Error fetching data"
  */
-app.get('/detailReportBy', async (req, res) => {
+app.get('/detailReport/:deviceId', async (req, res) => {
   try {
-    const {deviceId} = req.query;
-    if (!deviceId) {
-      return res.status(400).json({message: 'Missing device ID'});
-    }
-    // Find all reports with the given deviceId
-    const reports = await Report.find({deviceId});
+    const { deviceId } = req.params;
+    const reports = await Report.find({ deviceId });
 
-    if (reports.length === 0) {
-      return res
-        .status(404)
-        .json({message: 'No reports found for this device'});
+    if (!reports.length) {
+      return res.status(404).json({ message: 'No reports found for this device' });
     }
-    res.status(200).json(reports); // Return an array of reports
+
+    res.status(200).json(reports);
   } catch (error) {
-    res.status(500).json({message: 'Error fetching data', error});
+    res.status(500).json({ message: 'Error fetching data', error });
   }
 });
+
 
 /**
  * @swagger

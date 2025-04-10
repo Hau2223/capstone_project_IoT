@@ -1,190 +1,31 @@
 const express = require('express');
-const Control = require('../models/controlModel');
 const app = express();
 const bodyParser = require('body-parser');
+const Device = require('../models/deviceModel');
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: false}));
 
 /**
  * @swagger
- * /api/control/detailControl:
- *   get:
- *     summary: Lấy danh sách dữ liệu điều khiển
- *     tags: [Controls]
- *     responses:
- *       200:
- *         description: Trả về danh sách dữ liệu điều khiển
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   name:
- *                     type: string
- *                     example: "light"
- *                   status:
- *                     type: boolean
- *                     example: false
- *                   threshold_min:
- *                     type: number
- *                     example: 0
- *                   threshold_max:
- *                     type: number
- *                     example: 100
- *                   mode:
- *                     type: string
- *                     example: manual
- *       500:
- *         description: Lỗi khi lấy dữ liệu
- */
-app.get('/detailControl', async (req, res) => {
-  try {
-    const data = await Control.find().sort({timestamp: -1});
-    res.json(data);
-  } catch (error) {
-    res.status(500).json({message: 'Error fetching data', error});
-  }
-});
-
-/**
- * @swagger
- * /api/control/detailControlBy/{id}:
- *   get:
- *     summary: Lấy dữ liệu điều khiển theo ID
- *     tags: [Controls]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID của điều khiển cần lấy dữ liệu
- *     responses:
- *       200:
- *         description: Trả về dữ liệu điều khiển
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 name:
- *                   type: string
- *                   example: "light"
- *                 status:
- *                   type: boolean
- *                   example: false
- *                 threshold_min:
- *                   type: number
- *                   example: 0
- *                 threshold_max:
- *                   type: number
- *                   example: 100
- *                 mode:
- *                   type: string
- *                   example: "manual"
- *       400:
- *         description: ID không hợp lệ
- *       404:
- *         description: Không tìm thấy dữ liệu
- *       500:
- *         description: Lỗi khi lấy dữ liệu
- */
-app.get('/detailControlBy/:id', async (req, res) => {
-  try {
-    const {id} = req.params;
-
-    // Kiểm tra nếu ID không hợp lệ
-    if (!id) {
-      return res.status(400).json({message: 'ID is required'});
-    }
-
-    // Tìm dữ liệu theo ID
-    const controlData = await Control.findById(id);
-
-    // Kiểm tra nếu không tìm thấy dữ liệu
-    if (!controlData) {
-      return res.status(404).json({message: 'Control data not found'});
-    }
-
-    res.status(200).json(controlData);
-  } catch (error) {
-    res
-      .status(500)
-      .json({message: 'Error fetching data', error: error.message});
-  }
-});
-
-/**
- * @swagger
- * /api/control/createControl:
- *   post:
- *     summary: Tạo dữ liệu điều khiển mới
- *     tags: [Controls]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           example:  # Dữ liệu JSON mẫu để test
- *             name: "light"
- *             status: true
- *             threshold_min: 0
- *             threshold_max: 100
- *             mode: "manual"
- *     responses:
- *       201:
- *         description: Dữ liệu đã được lưu thành công
- *       200:
- *         description: Dữ liệu đã được cập nhật thành công
- *       400:
- *         description: idDevice là bắt buộc
- *       500:
- *         description: Lỗi khi xử lý dữ liệu
- */
-app.post('/createControl', async (req, res) => {
-  try {
-    const {name, status, threshold_min, threshold_max, mode} = req.body;
-
-    // Kiểm tra dữ liệu đầu vào
-    if (!name) {
-      return res.status(400).json({message: 'Missing required fields'});
-    }
-    if (!['manual', 'schedule', 'threshold'].includes(mode)) {
-      return res.status(400).json({
-        message:
-          'Invalid sensor type, mode includes ["manual","schedule","threshold"]',
-      });
-    }
-
-    // Tạo bản ghi mới
-    const newData = new Control({
-      name,
-      status: status ?? false,
-      threshold_min,
-      threshold_max,
-      mode,
-    });
-
-    await newData.save();
-    res.status(201).json({message: 'Data saved successfully', data: newData});
-  } catch (error) {
-    res.status(500).json({message: 'Error saving data', error: error.message});
-  }
-});
-
-/**
- * @swagger
- * /api/control/updateControlBy/{id}:
+ * /api/control/updateControl/{id_esp}/{controlId}:
  *   put:
- *     summary: Cập nhật dữ liệu điều khiển
+ *     summary: Cập nhật control theo ID
  *     tags: [Controls]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: id_esp
  *         required: true
+ *         description: ID của thiết bị
  *         schema:
  *           type: string
- *         description: ID của điều khiển cần cập nhật
+ *           example: "ESP123456"
+ *       - in: path
+ *         name: controlId
+ *         required: true
+ *         description: ID của control cần cập nhật
+ *         schema:
+ *           type: string
+ *           example: "67ef7f21a7feea8813df4363"
  *     requestBody:
  *       required: true
  *       content:
@@ -192,60 +33,174 @@ app.post('/createControl', async (req, res) => {
  *           schema:
  *             type: object
  *             properties:
- *               type:
+ *               name:
  *                 type: string
- *                 example: "moisture"
- *               value:
- *                 type: number
- *                 example: 600
+ *                 example: "light"
  *               status:
  *                 type: boolean
- *                 example: false
+ *                 example: true
+ *               threshold_min:
+ *                 type: number
+ *                 example: 10
+ *               threshold_max:
+ *                 type: number
+ *                 example: 90
+ *               mode:
+ *                 type: string
+ *                 enum: ["manual", "schedule", "threshold"]
+ *                 example: "threshold"
  *     responses:
  *       200:
- *         description: Dữ liệu đã được cập nhật thành công
- *       400:
- *         description: ID không hợp lệ hoặc dữ liệu không hợp lệ
+ *         description: Cập nhật control thành công
  *       404:
- *         description: Không tìm thấy điều khiển
+ *         description: Thiết bị hoặc control không tìm thấy
  *       500:
- *         description: Lỗi khi cập nhật dữ liệu
+ *         description: Lỗi máy chủ
  */
-app.put('/updateControlBy/:id', async (req, res) => {
+app.put('/updateControl/:id_esp/:controlId', async (req, res) => {
   try {
-    const {id} = req.params;
+    const {id_esp, controlId} = req.params;
     const {name, status, threshold_min, threshold_max, mode} = req.body;
 
-    // Kiểm tra nếu ID không hợp lệ
-    if (!id) {
-      return res.status(400).json({message: 'ID is required'});
-    }
-    if (!['manual', 'schedule', 'threshold'].includes(mode)) {
-      return res.status(400).json({
-        message:
-          'Invalid control type, mode includes ["manual","schedule","threshold"]',
-      });
+    const device = await Device.findOne({id_esp});
+    if (!device) {
+      return res.status(404).json({message: 'Device not found'});
     }
 
-    // Tìm và cập nhật dữ liệu
-    const updatedControl = await Control.findByIdAndUpdate(
-      id,
-      {name, status, threshold_min, threshold_max, mode},
-      {new: true, runValidators: true},
-    );
-
-    // Kiểm tra nếu không tìm thấy cảm biến
-    if (!updatedControl) {
-      return res.status(404).json({message: 'Sensor not found'});
+    const control = device.controls.find(c => c._id.toString() === controlId);
+    if (!control) {
+      return res.status(404).json({message: 'Control not found'});
     }
 
+    // Cập nhật control
+    if (name) {
+      control.name = name;
+    }
+    if (status !== undefined) {
+      control.status = status;
+    }
+    if (threshold_min !== undefined) {
+      control.threshold_min = threshold_min;
+    }
+    if (threshold_max !== undefined) {
+      control.threshold_max = threshold_max;
+    }
+    if (mode) {
+      control.mode = mode;
+    }
+    await device.save();
     res
       .status(200)
-      .json({message: 'Data updated successfully', data: updatedControl});
+      .json({message: 'Control updated successfully', data: control});
   } catch (error) {
     res
       .status(500)
-      .json({message: 'Error updating data', error: error.message});
+      .json({message: 'Error updating control', error: error.message});
+  }
+});
+
+/**
+ * @swagger
+ * /api/control/updateControls/{id_esp}:
+ *   put:
+ *     summary: Cập nhật nhiều control theo ID thiết bị
+ *     tags: [Controls]
+ *     parameters:
+ *       - in: path
+ *         name: id_esp
+ *         required: true
+ *         description: ID của thiết bị
+ *         schema:
+ *           type: string
+ *           example: "ESP123456"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 controlId:
+ *                   type: string
+ *                   example: "67ef7f21a7feea8813df4365"
+ *                 name:
+ *                   type: string
+ *                   example: "New Control Name"
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 threshold_min:
+ *                   type: number
+ *                   example: 10
+ *                 threshold_max:
+ *                   type: number
+ *                   example: 90
+ *                 mode:
+ *                   type: string
+ *                   enum: ["manual", "schedule", "threshold"]
+ *                   example: "schedule"
+ *     responses:
+ *       200:
+ *         description: Cập nhật các control thành công
+ *       404:
+ *         description: Thiết bị không tìm thấy hoặc một trong các control không tìm thấy
+ *       500:
+ *         description: Lỗi máy chủ
+ */
+app.put('/updateControls/:id_esp', async (req, res) => {
+  try {
+    const {id_esp} = req.params;
+    const controlsToUpdate = req.body;
+
+    const device = await Device.findOne({id_esp});
+    if (!device) {
+      return res.status(404).json({message: 'Device not found'});
+    }
+
+    const updatedControls = [];
+
+    for (const controlData of controlsToUpdate) {
+      const {controlId, name, status, threshold_min, threshold_max, mode} =
+        controlData;
+
+      const control = device.controls.find(c => c._id.toString() === controlId);
+      if (!control) {
+        return res
+          .status(404)
+          .json({message: `Control with ID ${controlId} not found`});
+      }
+
+      // Cập nhật control
+      if (name) {
+        control.name = name;
+      }
+      if (status !== undefined) {
+        control.status = status;
+      }
+      if (threshold_min !== undefined) {
+        control.threshold_min = threshold_min;
+      }
+      if (threshold_max !== undefined) {
+        control.threshold_max = threshold_max;
+      }
+      if (mode) {
+        control.mode = mode;
+      }
+
+      updatedControls.push(control);
+    }
+
+    await device.save();
+
+    res
+      .status(200)
+      .json({message: 'Controls updated successfully', data: updatedControls});
+  } catch (error) {
+    res
+      .status(500)
+      .json({message: 'Error updating controls', error: error.message});
   }
 });
 
