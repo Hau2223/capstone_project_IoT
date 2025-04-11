@@ -3,20 +3,21 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/userModel');
 const bcrypt = require('bcrypt'); // <- Đã có
 const path = require('path');
+const { URLIMG } = require('./constants');
 
 require('dotenv').config({
-  path: path.join(process.cwd(), '/etc/secrets/config.env'),
+  path: './etc/secrets/config.env',
 });
 
-console.log('GOOGLE_CLIENT_ID', process.env.GOOGLE_CLIENT_ID);
-console.log('GOOGLE_CLIENT_SECRET', process.env.GOOGLE_CLIENT_SECRET);
+console.log('GOOGLE_CLIENT_ID',process.env.GOOGLE_CLIENT_ID);
+console.log('GOOGLE_CLIENT_SECRET',process.env.GOOGLE_CLIENT_SECRET);
 
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: '/api/user/google/callback',
+      callbackURL: `${URLIMG.urlUser}/google/callback`,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
