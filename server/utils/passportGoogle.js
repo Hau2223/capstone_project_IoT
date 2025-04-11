@@ -2,12 +2,14 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/userModel');
 const bcrypt = require('bcrypt'); // <- Đã có
+const path = require('path');
+
 require('dotenv').config({
-  path: './etc/secrets/config.env',
+  path: path.join(process.cwd(), '/etc/secrets/config.env'),
 });
 
-console.log('GOOGLE_CLIENT_ID',process.env.GOOGLE_CLIENT_ID);
-console.log('GOOGLE_CLIENT_SECRET',process.env.GOOGLE_CLIENT_SECRET);
+console.log('GOOGLE_CLIENT_ID', process.env.GOOGLE_CLIENT_ID);
+console.log('GOOGLE_CLIENT_SECRET', process.env.GOOGLE_CLIENT_SECRET);
 
 passport.use(
   new GoogleStrategy(
@@ -39,8 +41,8 @@ passport.use(
       } catch (err) {
         return done(err, null);
       }
-    }
-  )
+    },
+  ),
 );
 
 module.exports = passport;
