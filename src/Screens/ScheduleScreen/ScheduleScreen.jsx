@@ -3,6 +3,8 @@ import React from 'react';
 import ItemSortSchedule from '../../components/ItemSortSchedule';
 
 const screenWidth = Dimensions.get('window').width;
+const itemSpacing = 20;
+const itemWidth = (screenWidth - itemSpacing * 3) / 2;
 
 const data = [
   {
@@ -20,6 +22,12 @@ const data = [
     id: '3',
     soLuong: '2',
     iconImg: require('../../../assets/icon/iconLightYellow.png'),
+  },
+  {
+    id: '4',
+    soLuong: '5',
+    iconImg: require('../../../assets/icon/iconLightYellow.png'),
+
   },
   {
     id: '4',
@@ -48,7 +56,7 @@ const ScheduleScreen = ({navigation}) => {
               numColumns={2}
               keyExtractor={item => item.id}
               renderItem={({item}) => (
-                <View style={styles.itemWrapper}>
+                <View style={[styles.itemWrapper, { width: itemWidth }]}>
                   <ItemSortSchedule
                     content={item.soLuong}
                     img={item.iconImg}
@@ -85,11 +93,8 @@ export const styles = StyleSheet.create({
     marginLeft: 20,
   },
   container: {
-    height: 'auto',
-    width: '100%',
-    flexDirection: "column",
-    marginBottom: 180,
     backgroundColor: '#EAEAEA',
+    paddingTop: 20,
     alignItems: 'center',
   },
 
@@ -99,13 +104,10 @@ export const styles = StyleSheet.create({
   },
 
   listContainer: {
-    paddingHorizontal: 0,
-    paddingVertical: 20,
-  },
-  listContainer: {
+    paddingBottom: 180,
   },
   itemWrapper: {
     marginBottom: 20,
-    width: screenWidth / 2 - 20,
+    marginHorizontal: 10,
   },
 });

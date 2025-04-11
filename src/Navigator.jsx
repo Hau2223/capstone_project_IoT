@@ -6,12 +6,12 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
-import React from 'react';
+import React, {useContext} from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {UserProvider} from '../utils/UserContext';
-import {ThemeProvider} from '../assets/common/themeProvider';
+import {ThemeContext, ThemeProvider} from '../assets/common/themeProvider';
 import {LanguageProvider} from '../assets/common/translation';
 import {useTranslation} from 'react-i18next';
 
@@ -55,7 +55,7 @@ const LoadingScreen = ({navigation}) => (
 );
 
 // Hàm lấy icon
-const getTabBarIcon = (name, color) => {
+const getTabBarIcon = (name, focused, theme) => {
   const icons = {
     Home: require('../assets/icon/ic_home.png'),
     Statics: require('../assets/icon/ic_statics.png'),
@@ -68,7 +68,11 @@ const getTabBarIcon = (name, color) => {
       style={{
         width: 25,
         height: 25,
-        tintColor: color ? colors.acticetab : colors.inacticetab,
+        tintColor: focused
+        ? colors.acticetab
+        : theme === 'dark'
+        ? colors.inacticetabDark
+        : colors.inacticetab
       }}
       resizeMode="contain"
     />
@@ -77,12 +81,13 @@ const getTabBarIcon = (name, color) => {
 
 function MyTabs() {
   const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
   return (
     <Tab.Navigator
       initialRouteName="Home"
       screenOptions={{
         tabBarStyle: {
-          backgroundColor: '#FFF',
+          backgroundColor: theme === 'dark' ? colors.bg_dark : colors.white,
           height: 55,
           borderTopWidth: 0,
           elevation: 0,
@@ -96,11 +101,10 @@ function MyTabs() {
         tabBarInactiveBackgroundColor: 'transparent',
         headerShadowVisible: false,
         tabBarActiveTintColor: colors.acticetab,
-        tabBarInactiveTintColor: colors.inacticetab,
+        tabBarInactiveTintColor: theme === 'dark' ? colors.inacticetabDark : colors.inacticetab,
         tabBarHideOnKeyboard: true,
         tabBarLabelStyle: {
           fontSize: 14,
-          // textAlign: 'center',
         },
       }}>
       <Tab.Screen
@@ -109,7 +113,7 @@ function MyTabs() {
         options={{
           headerShown: false,
           tabBarLabel: t('home'),
-          tabBarIcon: ({focused}) => getTabBarIcon('Home', focused),
+          tabBarIcon: ({focused}) => getTabBarIcon('Home', focused, theme),
         }}
       />
       <Tab.Screen
@@ -118,8 +122,8 @@ function MyTabs() {
         options={{
           headerShown: false,
           // tabBarBadge: 48,
-          tabBarLabel: t('history'),
-          tabBarIcon: ({focused}) => getTabBarIcon('Statics', focused),
+          tabBarLabel: t('wateringSchedule'),
+          tabBarIcon: ({focused}) => getTabBarIcon('Statics', focused, theme),
         }}
       />
       <Tab.Screen
@@ -128,7 +132,7 @@ function MyTabs() {
         options={{
           headerShown: false,
           tabBarLabel: t('statistical'),
-          tabBarIcon: ({focused}) => getTabBarIcon('Reports', focused),
+          tabBarIcon: ({focused}) => getTabBarIcon('Reports', focused, theme),
         }}
       />
       <Tab.Screen
@@ -137,7 +141,7 @@ function MyTabs() {
         options={{
           headerShown: false,
           tabBarLabel: t('setting'),
-          tabBarIcon: ({focused}) => getTabBarIcon('Setting', focused),
+          tabBarIcon: ({focused}) => getTabBarIcon('Setting', focused, theme),
         }}
       />
     </Tab.Navigator>

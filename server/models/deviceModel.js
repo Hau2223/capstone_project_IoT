@@ -60,6 +60,7 @@ const deviceSchema = new Schema({
     {
       name: {
         type: String,
+        enum: ["water", "light", "wind"],
         default: null,
         // required: true,
       },
@@ -87,9 +88,17 @@ const deviceSchema = new Schema({
             default: false,
           },
           startTime: {
-            type: Date,
-            default: Date.now,
-          },
+            type: String, // Thay vì Date
+            default: () => {
+              const now = new Date();
+              const hour = now.getHours();
+              const minute = now.getMinutes();
+              const ampm = hour >= 12 ? 'PM' : 'AM';
+              const formattedHour = (hour % 12 || 12).toString().padStart(2, '0');
+              const formattedMinute = minute.toString().padStart(2, '0');
+              return `${formattedHour}:${formattedMinute} ${ampm}`;
+            },
+          },          
           duration: {
             type: Number,
             default: 0,
