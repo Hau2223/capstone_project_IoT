@@ -59,45 +59,68 @@ app.use(bodyParser.urlencoded({extended: false}));
  */
 app.put('/updateControl/:id_esp/:controlId', async (req, res) => {
   try {
-    const {id_esp, controlId} = req.params;
-    const {name, status, threshold_min, threshold_max, mode} = req.body;
+    const { id_esp, controlId } = req.params;
+    const { name, status, threshold_min, threshold_max, mode } = req.body;
 
-    const device = await Device.findOne({id_esp});
+    const device = await Device.findOne({ id_esp });
     if (!device) {
-      return res.status(404).json({message: 'Device not found'});
+      return res.status(404).json({ message: 'Device not found' });
     }
 
     const control = device.controls.find(c => c._id.toString() === controlId);
     if (!control) {
-      return res.status(404).json({message: 'Control not found'});
+      return res.status(404).json({ message: 'Control not found' });
+    }
+
+    // Validate threshold logic
+    if (
+      threshold_min !== undefined &&
+      threshold_max !== undefined &&
+      threshold_min > threshold_max
+    ) {
+      return res.status(400).json({
+        message: 'threshold_min must be less than or equal to threshold_max',
+      });
+    }
+    if (
+      threshold_min !== undefined &&
+      threshold_max === undefined &&
+      threshold_min > control.threshold_max
+    ) {
+      return res.status(400).json({
+        message: 'threshold_min must be less than or equal to threshold_max',
+      });
+    }
+    if (
+      threshold_max !== undefined &&
+      threshold_min === undefined &&
+      threshold_max < control.threshold_min
+    ) {
+      return res.status(400).json({
+        message: 'threshold_max must be greater than or equal to threshold_min',
+      });
     }
 
     // Cập nhật control
-    if (name) {
-      control.name = name;
-    }
-    if (status !== undefined) {
-      control.status = status;
-    }
-    if (threshold_min !== undefined) {
-      control.threshold_min = threshold_min;
-    }
-    if (threshold_max !== undefined) {
-      control.threshold_max = threshold_max;
-    }
-    if (mode) {
-      control.mode = mode;
-    }
+    if (name) control.name = name;
+    if (status !== undefined) control.status = status;
+    if (threshold_min !== undefined) control.threshold_min = threshold_min;
+    if (threshold_max !== undefined) control.threshold_max = threshold_max;
+    if (mode) control.mode = mode;
+
     await device.save();
-    res
-      .status(200)
-      .json({message: 'Control updated successfully', data: control});
+    res.status(200).json({
+      message: 'Control updated successfully',
+      data: control,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({message: 'Error updating control', error: error.message});
+    res.status(500).json({
+      message: 'Error updating control',
+      error: error.message,
+    });
   }
 });
+
 
 /**
  * @swagger
@@ -127,7 +150,8 @@ app.put('/updateControl/:id_esp/:controlId', async (req, res) => {
  *                   example: "67ef7f21a7feea8813df4365"
  *                 name:
  *                   type: string
- *                   example: "New Control Name"
+ *                   enum: ['water', 'light', 'wind']
+ *                   example: "water"
  *                 status:
  *                   type: boolean
  *                   example: true
@@ -151,57 +175,59 @@ app.put('/updateControl/:id_esp/:controlId', async (req, res) => {
  */
 app.put('/updateControls/:id_esp', async (req, res) => {
   try {
-    const {id_esp} = req.params;
+    const { id_esp } = req.params;
     const controlsToUpdate = req.body;
 
-    const device = await Device.findOne({id_esp});
+    const device = await Device.findOne({ id_esp });
     if (!device) {
-      return res.status(404).json({message: 'Device not found'});
+      return res.status(404).json({ message: 'Device not found' });
     }
 
     const updatedControls = [];
 
     for (const controlData of controlsToUpdate) {
-      const {controlId, name, status, threshold_min, threshold_max, mode} =
+      const { controlId, name, status, threshold_min, threshold_max, mode } =
         controlData;
 
       const control = device.controls.find(c => c._id.toString() === controlId);
       if (!control) {
-        return res
-          .status(404)
-          .json({message: `Control with ID ${controlId} not found`});
+        return res.status(404).json({
+          message: `Control with ID ${controlId} not found`,
+        });
+      }
+
+      // Validate threshold logic
+      const newThresholdMin = threshold_min !== undefined ? threshold_min : control.threshold_min;
+      const newThresholdMax = threshold_max !== undefined ? threshold_max : control.threshold_max;
+
+      if (newThresholdMin > newThresholdMax) {
+        return res.status(400).json({
+          message: `threshold_min must be less than or equal to threshold_max for control ID ${controlId}`,
+        });
       }
 
       // Cập nhật control
-      if (name) {
-        control.name = name;
-      }
-      if (status !== undefined) {
-        control.status = status;
-      }
-      if (threshold_min !== undefined) {
-        control.threshold_min = threshold_min;
-      }
-      if (threshold_max !== undefined) {
-        control.threshold_max = threshold_max;
-      }
-      if (mode) {
-        control.mode = mode;
-      }
+      if (name) control.name = name;
+      if (status !== undefined) control.status = status;
+      if (threshold_min !== undefined) control.threshold_min = threshold_min;
+      if (threshold_max !== undefined) control.threshold_max = threshold_max;
+      if (mode) control.mode = mode;
 
       updatedControls.push(control);
     }
 
     await device.save();
-
-    res
-      .status(200)
-      .json({message: 'Controls updated successfully', data: updatedControls});
+    res.status(200).json({
+      message: 'Controls updated successfully',
+      data: updatedControls,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({message: 'Error updating controls', error: error.message});
+    res.status(500).json({
+      message: 'Error updating controls',
+      error: error.message,
+    });
   }
 });
+
 
 module.exports = app;

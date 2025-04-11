@@ -114,19 +114,19 @@ const SettingsScreen = ({navigation}) => {
         <View style={styles.settingBox}>
           <TouchableOpacity
             style={styles.optionContainer}
-            onPress={() => navigation.navigate('AccountInfo')}>
+            onPress={() => navigation.navigate('GeneralSetting')}>
             <Text style={styles.optionText}>Cài đặt chung</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.optionContainer}
-            onPress={() => navigation.navigate('ChangePassword')}>
+            onPress={() => navigation.navigate('AccountInfo', {userInfo})}>
             <Text style={styles.optionText}>Thông tin tài khoản</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.optionContainer}
-            onPress={() => navigation.navigate('GeneralSetting')}>
+            onPress={() => navigation.navigate('ChangePassword')}>
             <Text style={styles.optionText}>Đổi mật khẩu</Text>
           </TouchableOpacity>
           <TouchableOpacity

@@ -12,7 +12,8 @@ const deviceSchema = new Schema({
   },
   img_area: {
     type: String,
-    default: 'https://static.vinwonders.com/production/LzmCCdos-vuon-tieu-phu-quoc-1.jpg',
+    default:
+      'https://static.vinwonders.com/production/LzmCCdos-vuon-tieu-phu-quoc-1.jpg',
   },
   update_at: {
     type: Date,
@@ -60,7 +61,7 @@ const deviceSchema = new Schema({
     {
       name: {
         type: String,
-        enum: ["water", "light", "wind"],
+        enum: ['water', 'light', 'wind'],
         default: null,
         // required: true,
       },
@@ -71,11 +72,16 @@ const deviceSchema = new Schema({
       threshold_min: {
         type: Number,
         default: 0,
+        min: 0,
+        max: 100,
       },
       threshold_max: {
         type: Number,
         default: 100,
+        min: 0,
+        max: 100,
       },
+
       mode: {
         type: String,
         enum: ['manual', 'schedule', 'threshold'],
@@ -94,11 +100,13 @@ const deviceSchema = new Schema({
               const hour = now.getHours();
               const minute = now.getMinutes();
               const ampm = hour >= 12 ? 'PM' : 'AM';
-              const formattedHour = (hour % 12 || 12).toString().padStart(2, '0');
+              const formattedHour = (hour % 12 || 12)
+                .toString()
+                .padStart(2, '0');
               const formattedMinute = minute.toString().padStart(2, '0');
               return `${formattedHour}:${formattedMinute} ${ampm}`;
             },
-          },          
+          },
           duration: {
             type: Number,
             default: 0,

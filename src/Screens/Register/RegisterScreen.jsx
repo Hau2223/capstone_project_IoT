@@ -1,7 +1,7 @@
 import {StyleSheet, ImageBackground, useWindowDimensions} from 'react-native';
 import React, {useState, useCallback, memo} from 'react';
 import {useNavigation} from '@react-navigation/native';
-import { useTranslation } from 'react-i18next';
+import {useTranslation} from 'react-i18next';
 import {IMAGES} from '../../../utils/constants';
 import HeaderCompo from '../../components/HeaderCompo';
 import Request from './components/Request';
@@ -81,7 +81,10 @@ const RegisterScreen = () => {
     sendOTPEmail({email: data.email})
       .then(response => {
         console.log('Mã OTP đã gửi:', response);
-        setStep('verifyOTP');
+        if (response.message === 'Email sent successfully') {
+          setStep('verifyOTP');
+        }
+
         // showAlert('success', 'Mã OTP đã được gửi!');
       })
       .catch(error => {
@@ -125,7 +128,7 @@ const RegisterScreen = () => {
         if (err.response.data.message === 'Invalid OTP code') {
           showAlert(t('alert_warning'), t('invalid_otp_code'));
         } else if (err.response.data.message === 'OTP has expired') {
-          showAlert(t('alert_warning'),  t('otp_expired_message'));
+          showAlert(t('alert_warning'), t('otp_expired_message'));
         } else {
           showAlert(t('alert_error'), t('otp_invalid_or_expired'));
         }
