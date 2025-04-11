@@ -9,9 +9,10 @@ const bcrypt = require('bcrypt');
 const passportGoogle = require('../utils/passportGoogle');
 const upload = require('../middlewares/uploadImgMiddleware');
 const URLIMG = require('../utils/constants').URLIMG;
+const path = require('path');
 
 require('dotenv').config({
-  path: './etc/secrets/config.env',
+  path: path.join(process.cwd(), '/etc/secrets/config.env'),
 });
 
 app.use(bodyParser.urlencoded({extended: false}));
@@ -176,7 +177,11 @@ app.get('/sendCode/:email', async (req, res) => {
     console.error('Error sending email:', error.message);
     res
       .status(500)
-      .json({status: 500, message: 'Failed to send email', error: error.message});
+      .json({
+        status: 500,
+        message: 'Failed to send email',
+        error: error.message,
+      });
   }
 });
 
@@ -231,10 +236,10 @@ app.post('/verifyOTP', (req, res) => {
     delete otpStore[email];
     // Đánh dấu email như đã xác minh
     pendingRegistrations[email] = true;
-    res.status(200).json({status: 200,message: 'OTP verified successfully'});
+    res.status(200).json({status: 200, message: 'OTP verified successfully'});
   } catch (error) {
     console.error('Error verifying OTP:', error.message);
-    res.status(500).json({status: 500,message: 'Internal server error'});
+    res.status(500).json({status: 500, message: 'Internal server error'});
   }
 });
 
