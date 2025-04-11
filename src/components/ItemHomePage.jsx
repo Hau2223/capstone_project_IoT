@@ -67,6 +67,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     flexDirection: 'column',
     borderRadius: 7,
+    
+    margin: 13,
+    borderColor:'#C96666',
+    borderWidth:2,
+    overflow: 'hidden',
+    justifyContent:'center',
+    alignItems:'center'
+  },
+  img: {
+    height: 130,
+    width: 180,
     overflow: 'hidden', // Giúp ảnh và content bo tròn theo borderRadius
   },
   imgStyle: {

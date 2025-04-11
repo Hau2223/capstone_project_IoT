@@ -14,6 +14,10 @@ import React, {useState, useEffect, useCallback, memo} from 'react';
 import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 import ItemHomePage from '../../components/ItemHomePage';
 import CustomAlert from '../../components/CustomAlert';
+
+import { detailSensor } from '../../../services/sensorServices';
+import { FaThermometerHalf, FaTint, FaLightbulb, FaWind } from 'react-icons/fa';
+import { MdWaterDrop } from 'react-icons/md';
 import {gardenId, profile} from '../../../services/authServices';
 import {detailDevice} from '../../../services/deviceServices';
 import colors from '../../../assets/common/colorCss';
@@ -194,6 +198,7 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom:80
   },
   itemWrapper: {
     alignItems: 'center',

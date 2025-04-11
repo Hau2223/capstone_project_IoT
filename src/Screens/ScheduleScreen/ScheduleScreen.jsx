@@ -1,79 +1,75 @@
-import {Image, StyleSheet, Text, View, FlatList} from 'react-native';
+import { StyleSheet, Text, View,FlatList, Dimensions } from 'react-native';
 import React from 'react';
-import ItemSchedule from '../../components/ItemSchedule';
+import ItemSortSchedule from '../../components/ItemSortSchedule';
+
+const screenWidth = Dimensions.get('window').width;
+const itemSpacing = 20;
+const itemWidth = (screenWidth - itemSpacing * 3) / 2;
+
+const data = [
+  {
+    id: '1',
+    soLuong: '2',
+    iconImg: require('../../../assets/icon/iconLightYellow.png'),
+  },
+  {
+    id: '2',
+    soLuong: '5',
+    iconImg: require('../../../assets/icon/iconLightYellow.png'),
+
+  },
+  {
+    id: '3',
+    soLuong: '2',
+    iconImg: require('../../../assets/icon/iconLightYellow.png'),
+  },
+  {
+    id: '4',
+    soLuong: '5',
+    iconImg: require('../../../assets/icon/iconLightYellow.png'),
+
+  },
+  {
+    id: '4',
+    soLuong: '5',
+    iconImg: require('../../../assets/icon/iconLightYellow.png'),
+
+  },
+];
 
 const ScheduleScreen = ({navigation}) => {
-  const data = [
-    {
-      id: '1',
-      tenKhu: 'Khu 1',
-      textBtnSchedule: 'Nhiệt độ: 19°C',
-      trangThaiTuoi: 'Trạng thái tưới: OFF',
-      imageSource: require('../../../assets/img/1.png'),
-    },
-    {
-      id: '2',
-      tenKhu: 'Khu 2',
-      trangThaiTuoi: 'Trạng thái tưới: ON',
-      imageSource: require('../../../assets/img/1.png'),
-    },
-    {
-      id: '3',
-      tenKhu: 'Khu 3',
-      trangThaiTuoi: 'Trạng thái tưới: OFF',
-      imageSource: require('../../../assets/img/1.png'),
-    },
-    {
-      id: '4',
-      tenKhu: 'Khu 4',
-      trangThaiTuoi: 'Trạng thái tưới: ON',
-      imageSource: require('../../../assets/img/1.png'),
-    },
-    {
-      id: '5',
-      tenKhu: 'Khu 5',
-      trangThaiTuoi: 'Trạng thái tưới: OFF',
-      imageSource: require('../../../assets/img/1.png'),
-    },
-    {
-      id: '6',
-      tenKhu: 'Khu 6',
-      trangThaiTuoi: 'Trạng thái tưới: OFF',
-      imageSource: require('../../../assets/img/1.png'),
-    },
-  ];
 
-  const handleGoToAlarm = item => {
-    navigation.navigate('AlarmScreen', {item});
+  const handleGoToListDevices = item => {
+    navigation.navigate('DevicesListScreen', {item});
   };
   return (
     <View>
-      <View style={styles.header}>
-        <View style={styles.header1}>
-          <Text style={styles.textHeader}>Vườn tiêu Bình Phước</Text>
-        </View>
-      </View>
-      <View style={styles.container}>
-        <FlatList
-          showsVerticalScrollIndicator={false}
-          data={data}
-          numColumns={1}
-          keyExtractor={item => item.id}
-          renderItem={({item}) => (
-            <View style={styles.itemWrapper}>
-              <ItemSchedule
-                tenKhu={item.tenKhu}
-                trangThaiTuoi={item.trangThaiTuoi}
-                imageSource={item.imageSource}
-                onPress={() => handleGoToAlarm(item)}
-              />
+          <View style={styles.header}>
+            <View style={styles.header1}>
+              <Text style={styles.textHeader}>Vườn tiêu Bình Phước</Text>
             </View>
-          )}
-          nestedScrollEnabled={true}
-          contentContainerStyle={styles.listContainer}
-        />
-      </View>
-    </View>
+          </View>
+          <View style={styles.container}>
+            <FlatList
+              showsVerticalScrollIndicator={false}
+              data={data}
+              numColumns={2}
+              keyExtractor={item => item.id}
+              renderItem={({item}) => (
+                <View style={[styles.itemWrapper, { width: itemWidth }]}>
+                  <ItemSortSchedule
+                    content={item.soLuong}
+                    img={item.iconImg}
+                    onPress={() => handleGoToListDevices(item)}
+                  />
+                </View>
+              )}
+              nestedScrollEnabled={true}
+              contentContainerStyle={styles.listContainer}
+            />
+
+          </View>
+        </View>
   );
 };
 
@@ -97,18 +93,21 @@ export const styles = StyleSheet.create({
     marginLeft: 20,
   },
   container: {
-    height: 'auto',
-    width: '100%',
-    flexDirection: "column",
-    marginBottom: 230,
+    backgroundColor: '#EAEAEA',
+    paddingTop: 20,
+    alignItems: 'center',
   },
+
   itemWrapper: {
     alignItems: 'center',
     width: '100%',
   },
 
   listContainer: {
-    paddingHorizontal: 0,
-    paddingVertical: 10,
+    paddingBottom: 180,
+  },
+  itemWrapper: {
+    marginBottom: 20,
+    marginHorizontal: 10,
   },
 });
