@@ -18,6 +18,7 @@ const colors = {
   txtForget: '#2567EA',
   InputOTP: '#D5CBF2',
   reSendOTP: '#12589E',
+  bg_setting: '#F0F4F3'
 };
 
 export default colors;

@@ -3,6 +3,8 @@ const Device = require('../models/deviceModel');
 const app = express();
 const bodyParser = require('body-parser');
 const User = require('../models/userModel');
+const upload = require('../middlewares/uploadImgMiddleware');
+const URLIMG = require('../utils/constants').URLIMG;
 
 app.use(bodyParser.json());
 
@@ -21,11 +23,13 @@ app.use(bodyParser.json());
 app.get('/detailDevice', async (req, res) => {
   try {
     const devices = await Device.find();
-    res.status(200).json({data: devices});
+    res.status(200).json({status: 200, data: devices});
   } catch (error) {
-    res
-      .status(500)
-      .json({message: 'Error retrieving devices', error: error.message});
+    res.status(500).json({
+      status: 200,
+      message: 'Error retrieving devices',
+      error: error.message,
+    });
   }
 });
 
@@ -133,25 +137,31 @@ app.get('/membersBy/:id_esp', async (req, res) => {
  */
 app.get('/membersDetail/:id_esp', async (req, res) => {
   try {
-    const device = await Device.findOne({ id_esp: req.params.id_esp });
+    const device = await Device.findOne({id_esp: req.params.id_esp});
 
     if (!device) {
-      return res.status(404).json({ message: 'Device not found' });
+      return res.status(404).json({message: 'Device not found'});
     }
     const membersInfo = await Promise.all(
-      device.members.map(async (member) => {
+      device.members.map(async member => {
         const user = await User.findById(member.userId);
         return {
           name: user ? user.name : 'Unknown',
           role: member.role,
         };
-      })
+      }),
     );
 
     // Trả về tên và role của các User
-    res.json({ members: membersInfo });
+    res.status(200).json({
+      status: 200,
+      message: 'Lấy danh sách thành viên thành công',
+      data: membersInfo,
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res
+      .status(500)
+      .json({status: 500, message: 'Server error', error: error.message});
   }
 });
 
@@ -238,13 +248,17 @@ app.post('/createDevice', async (req, res) => {
     }
 
     await device.save();
-    res
-      .status(200)
-      .json({message: 'Device created/updated successfully', data: device});
+    res.status(200).json({
+      status: 200,
+      message: 'Device created/updated successfully',
+      data: device,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({message: 'Error processing device', error: error.message});
+    res.status(500).json({
+      status: 500,
+      message: 'Error processing device',
+      error: error.message,
+    });
   }
 });
 
@@ -292,25 +306,25 @@ app.post('/createDevice', async (req, res) => {
  */
 app.post('/addMember/:id_esp', async (req, res) => {
   try {
-    const { id_esp } = req.params;
-    const { userId, role } = req.body;
+    const {id_esp} = req.params;
+    const {userId, role} = req.body;
 
     if (!userId || !role) {
-      return res.status(400).json({ message: 'userId and role are required' });
+      return res.status(400).json({message: 'userId and role are required'});
     }
 
     if (!['owner', 'member'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role' });
+      return res.status(400).json({message: 'Invalid role'});
     }
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({message: 'User not found'});
     }
 
-    const device = await Device.findOne({ id_esp });
+    const device = await Device.findOne({id_esp});
     if (!device) {
-      return res.status(404).json({ message: 'Device not found' });
+      return res.status(404).json({message: 'Device not found'});
     }
 
     // Clean invalid members
@@ -318,7 +332,7 @@ app.post('/addMember/:id_esp', async (req, res) => {
 
     const isExist = device.members.some(m => m.userId.toString() === userId);
     if (isExist) {
-      return res.status(400).json({ message: 'Member already exists' });
+      return res.status(400).json({message: 'Member already exists'});
     }
 
     // Kiểm tra xem đã có owner chưa
@@ -330,11 +344,12 @@ app.post('/addMember/:id_esp', async (req, res) => {
     if (role === 'owner' && ownerExists) {
       // Nếu đã có owner, chuyển role về member
       finalRole = 'member';
-      notice = 'Owner already exists. Role changed to member and added successfully';
+      notice =
+        'Owner already exists. Role changed to member and added successfully';
     }
 
     // Thêm user vào thiết bị với role đã xác định
-    device.members.push({ userId, role: finalRole });
+    device.members.push({userId, role: finalRole});
 
     // Thêm id_esp vào gardenId của user nếu chưa có
     if (!user.gardenId.includes(id_esp)) {
@@ -344,6 +359,7 @@ app.post('/addMember/:id_esp', async (req, res) => {
     await Promise.all([device.save(), user.save()]);
 
     return res.status(200).json({
+      status: 200,
       message: notice,
       data: {
         members: device.members,
@@ -353,6 +369,7 @@ app.post('/addMember/:id_esp', async (req, res) => {
   } catch (error) {
     console.error('Error adding member:', error);
     return res.status(500).json({
+      status: 500,
       message: 'Failed to add member',
       error: error.message,
     });
@@ -443,13 +460,17 @@ app.put('/updateDevice/:id_esp', async (req, res) => {
     device.controls = controls || device.controls;
 
     await device.save();
-    res
-      .status(200)
-      .json({message: 'Device updated successfully', data: device});
+    res.status(200).json({
+      status: 200,
+      message: 'Device updated successfully',
+      data: device,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({message: 'Error updating device', error: error.message});
+    res.status(500).json({
+      status: 500,
+      message: 'Error updating device',
+      error: error.message,
+    });
   }
 });
 
@@ -488,19 +509,20 @@ app.put('/updateDevice/:id_esp', async (req, res) => {
  */
 app.patch('/updateName/:id_esp', async (req, res) => {
   try {
-    const { id_esp } = req.params;
-    const { name_area } = req.body;
+    const {id_esp} = req.params;
+    const {name_area} = req.body;
 
-    const device = await Device.findOne({ id_esp });
+    const device = await Device.findOne({id_esp});
 
     if (!device) {
-      return res.status(404).json({ message: 'Device not found' });
+      return res.status(404).json({message: 'Device not found'});
     }
 
     device.name_area = name_area;
     await device.save();
 
     res.status(200).json({
+      status: 200,
       message: 'Garden name updated successfully',
       data: {
         id_esp: device.id_esp,
@@ -509,6 +531,7 @@ app.patch('/updateName/:id_esp', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
+      status: 500,
       message: 'Error updating garden name',
       error: error.message,
     });
@@ -547,23 +570,23 @@ app.patch('/updateName/:id_esp', async (req, res) => {
  */
 app.delete('/delMember/:id_esp/:userId', async (req, res) => {
   try {
-    const { id_esp, userId } = req.params;
+    const {id_esp, userId} = req.params;
 
-    const device = await Device.findOne({ id_esp });
+    const device = await Device.findOne({id_esp});
     if (!device) {
-      return res.status(404).json({ message: 'Device not found' });
+      return res.status(404).json({message: 'Device not found'});
     }
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({message: 'User not found'});
     }
 
     const memberIndex = device.members.findIndex(
       m => m.userId.toString() === userId,
     );
     if (memberIndex === -1) {
-      return res.status(404).json({ message: 'Member not found' });
+      return res.status(404).json({message: 'Member not found'});
     }
 
     // Remove member from device
@@ -575,6 +598,7 @@ app.delete('/delMember/:id_esp/:userId', async (req, res) => {
     await Promise.all([device.save(), user.save()]);
 
     res.status(200).json({
+      status: 200,
       message: 'Member removed successfully',
       data: {
         members: device.members,
@@ -583,6 +607,7 @@ app.delete('/delMember/:id_esp/:userId', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
+      status: 500,
       message: 'Error removing member',
       error: error.message,
     });
@@ -616,16 +641,109 @@ app.delete('/delDeviceBy/:id_esp', async (req, res) => {
     if (!device) {
       return res.status(404).json({message: 'Device not found'});
     }
-    res
-      .status(200)
-      .json({message: 'Device deleted successfully', data: device});
+    res.status(200).json({
+      status: 200,
+      message: 'Device deleted successfully',
+      data: device,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({message: 'Error deleting device', error: error.message});
+    res.status(500).json({
+      status: 500,
+      message: 'Error deleting device',
+      error: error.message,
+    });
   }
 });
 
+app.use('/uploads', express.static('uploads'));
 
+/**
+ * @swagger
+ * /api/device/upload-img/{id_esp}:
+ *   put:
+ *     summary: Upload hoặc cập nhật hình ảnh khu vực (img_area) cho thiết bị theo id_esp
+ *     tags: [Devices]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id_esp
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Mã id_esp của thiết bị
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               img_area:
+ *                 type: string
+ *                 format: binary
+ *                 description: Ảnh đại diện khu vực thiết bị (tối đa 5MB)
+ *     responses:
+ *       200:
+ *         description: Cập nhật ảnh thành công
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Device image updated"
+ *               img_area: "/uploads/example.jpg"
+ *       400:
+ *         description: Lỗi khi không có ảnh hoặc quá dung lượng
+ *       404:
+ *         description: Không tìm thấy thiết bị
+ *       500:
+ *         description: Lỗi server
+ */
+app.put(
+  '/upload-img/:id_esp',
+  (req, res, next) => {
+    upload.single('img_area')(req, res, function (err) {
+      if (err) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res
+            .status(400)
+            .json({message: 'Ảnh vượt quá dung lượng tối đa 5MB'});
+        }
+        return res.status(400).json({message: err.message});
+      }
+      next();
+    });
+  },
+  async (req, res) => {
+    try {
+      const id_esp = req.params.id_esp;
+      const filePath = req.file ? `/uploads/${req.file.filename}` : null;
+
+      if (!filePath) {
+        return res.status(400).json({message: 'No image uploaded'});
+      }
+
+      // 🔍 Tìm thiết bị theo id_esp
+      const updatedDevice = await Device.findOneAndUpdate(
+        {id_esp},
+        {img_area: URLIMG.urlDevice + filePath},
+        {new: true},
+      );
+
+      if (!updatedDevice) {
+        return res.status(404).json({message: 'Device not found'});
+      }
+
+      res.status(200).json({
+        message: 'Device image updated',
+        img_area: updatedDevice.img_area,
+      });
+    } catch (err) {
+      res.status(500).json({
+        message: 'Error uploading image for device',
+        error: err.message,
+      });
+    }
+  },
+);
 
 module.exports = app;

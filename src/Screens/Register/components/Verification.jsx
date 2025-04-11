@@ -1,12 +1,34 @@
 import {Pressable, StyleSheet, View, Text, Image} from 'react-native';
-import React, {memo, useState} from 'react';
+import React, {memo, useState, useEffect} from 'react';
 import {OtpInput} from 'react-native-otp-entry';
-import { useTranslation } from 'react-i18next';
+import {useTranslation} from 'react-i18next';
 import colors from '../../../../assets/common/colorCss';
 
 const Verification = ({email, handleVerifyOTP, handleReSendCode}) => {
   const {t} = useTranslation();
   const [otp, setOtp] = useState('');
+  const [timer, setTimer] = useState(120); // 2 phút = 120 giây
+
+  useEffect(() => {
+    if (timer === 0) return;
+
+    const interval = setInterval(() => {
+      setTimer(prev => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timer]);
+
+  const handleResend = () => {
+    setTimer(120);
+    handleReSendCode();
+  };
+
+  const formatTime = seconds => {
+    const min = String(Math.floor(seconds / 60)).padStart(2, '0');
+    const sec = String(seconds % 60).padStart(2, '0');
+    return `${min}:${sec}`;
+  };
 
   return (
     <View style={styles.container}>
@@ -23,7 +45,6 @@ const Verification = ({email, handleVerifyOTP, handleReSendCode}) => {
         <OtpInput
           numberOfDigits={4}
           onTextChange={text => setOtp(text)}
-          // focusColor={colors.loginInput}
           disabled={false}
           textInputProps={{
             accessibilityLabel: 'One-Time Password',
@@ -43,12 +64,20 @@ const Verification = ({email, handleVerifyOTP, handleReSendCode}) => {
             },
           }}
         />
-        <Text style={styles.txtNaNOtp}>
-          {t('did_not_receive_code')}{' '}
-          <Text style={styles.reSendOTP} onPress={() => handleReSendCode()}>
-            {t('resend_code')}
+
+        {timer > 0 ? (
+          <Text style={styles.txtNaNOtp}>
+            {t('did_not_receive_code')} ({formatTime(timer)})
           </Text>
-        </Text>
+        ) : (
+          <Text style={styles.txtNaNOtp}>
+            {t('did_not_receive_code')}{' '}
+            <Text style={styles.reSendOTP} onPress={handleResend}>
+              {t('resend_code')}
+            </Text>
+          </Text>
+        )}
+
         <Pressable onPress={() => handleVerifyOTP(otp)} style={styles.button}>
           <Text style={styles.buttonText}>{t('verify')}</Text>
         </Pressable>
@@ -58,6 +87,7 @@ const Verification = ({email, handleVerifyOTP, handleReSendCode}) => {
 };
 
 export default memo(Verification);
+
 
 const styles = StyleSheet.create({
   container: {

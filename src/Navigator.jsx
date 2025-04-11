@@ -236,7 +236,7 @@ const Navigator = () => {
               />
               <StackNav.Screen
                 name="GeneralSetting"
-                component={AccountInfoScreen}
+                component={GeneralSettingScreen}
                 options={{headerShown: false, animation: 'fade_from_bottom'}}
               />
               <StackNav.Screen

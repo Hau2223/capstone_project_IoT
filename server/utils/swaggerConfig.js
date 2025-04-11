@@ -1,4 +1,5 @@
 const swaggerJsDoc = require('swagger-jsdoc');
+const CONFIGURL = require('./constants').CONFIGURL;
 
 const options = {
   definition: {
@@ -33,10 +34,11 @@ const options = {
     ],
     servers: [
       {
-        url: 'https://capstone-project-iot-1.onrender.com',
+        url: CONFIGURL.url,
         // //https://capstone-project-iot-1.onrender.com
         // //http://localhost:8000
         // //http://192.168.1.5:8000
+        // //http://127.0.0.1:8000
       },
     ],
   },

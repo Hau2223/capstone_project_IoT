@@ -6,13 +6,13 @@ const bodyParser = require('body-parser');
 const passport = require('passport');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
+const passportGoogle = require('../utils/passportGoogle');
+const upload = require('../middlewares/uploadImgMiddleware');
+const URLIMG = require('../utils/constants').URLIMG;
 
 require('dotenv').config({
-  path: './utils/config.env',
+  path: './etc/secrets/config.env',
 });
-
-console.log('EMAIL_USER:', process.env.EMAIL_USER);
-console.log('EMAIL_PASS:', process.env.EMAIL_PASS);
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
@@ -93,8 +93,8 @@ app.post('/login', async (req, res) => {
       return res.status(404).json({status: 404, message: 'Invalid password'});
     }
     user.deviceID = deviceID;
+    user.status = 'active';
     const token = createToken(user._id);
-    user.token = token;
     await user.save();
 
     res.status(200).json({data: token, status: 200});
@@ -169,13 +169,14 @@ app.get('/sendCode/:email', async (req, res) => {
 
     res.status(200).json({
       message: 'Email sent successfully',
+      status: 200,
       code: String(randomNumber),
     });
   } catch (error) {
     console.error('Error sending email:', error.message);
     res
       .status(500)
-      .json({message: 'Failed to send email', error: error.message});
+      .json({status: 500, message: 'Failed to send email', error: error.message});
   }
 });
 
@@ -230,10 +231,10 @@ app.post('/verifyOTP', (req, res) => {
     delete otpStore[email];
     // Đánh dấu email như đã xác minh
     pendingRegistrations[email] = true;
-    res.status(200).json({message: 'OTP verified successfully'});
+    res.status(200).json({status: 200,message: 'OTP verified successfully'});
   } catch (error) {
     console.error('Error verifying OTP:', error.message);
-    res.status(500).json({message: 'Internal server error'});
+    res.status(500).json({status: 500,message: 'Internal server error'});
   }
 });
 
@@ -315,7 +316,9 @@ app.post('/register', async (req, res) => {
     });
   } catch (err) {
     console.error('Error registering user:', err);
-    return res.status(500).json({message: 'Internal server error'});
+    return res
+      .status(500)
+      .json({status: 500, message: 'Internal server error' + err});
   }
 });
 
@@ -435,7 +438,9 @@ app.get('/profile', authenticateJWT, async (req, res) => {
     //   return res.status(403).json({message: 'Access denied'});
     // }
 
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).select(
+      'name email avatar deviceID gardenId gender status phone address dob role',
+    );
     if (!user) {
       return res.status(404).json({message: 'User not found'});
     }
@@ -528,7 +533,7 @@ app.get('/getGardenby', authenticateJWT, async (req, res) => {
     res.status(200).json({status: 200, data: user.gardenId});
   } catch (error) {
     console.error('Error fetching user:', error);
-    res.status(500).json({message: 'Internal server error'});
+    res.status(500).json({status: 500, message: 'Internal server error'});
   }
 });
 
@@ -675,7 +680,7 @@ app.put('/updateProfile', authenticateJWT, async (req, res) => {
 app.put('/updateGardenId', authenticateJWT, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { gardenId } = req.body;
+    const {gardenId} = req.body;
 
     // Kiểm tra dữ liệu đầu vào
     if (!Array.isArray(gardenId)) {
@@ -708,6 +713,192 @@ app.put('/updateGardenId', authenticateJWT, async (req, res) => {
       message: 'Internal server error',
     });
   }
+});
+
+/**
+ * @swagger
+ * /api/user/changePassword:
+ *   put:
+ *     summary: Thay đổi mật khẩu của người dùng (hoặc đặt lần đầu nếu chưa có)
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: [] # Cần JWT token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 description: Mật khẩu hiện tại (nếu đã có)
+ *               newPassword:
+ *                 type: string
+ *                 description: Mật khẩu mới muốn đặt
+ *           example:
+ *             currentPassword: "1234567890"   # Có thể bỏ qua nếu user đăng nhập bằng Google chưa từng đặt mật khẩu
+ *             newPassword: "12345678"
+ *     responses:
+ *       200:
+ *         description: Mật khẩu được đổi thành công
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Password changed successfully"
+ *       401:
+ *         description: Mật khẩu hiện tại không chính xác hoặc chưa đăng nhập
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Current password is incorrect"
+ *       500:
+ *         description: Lỗi máy chủ
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Internal server error"
+ */
+app.put('/changePassword', authenticateJWT, async (req, res) => {
+  const {currentPassword, newPassword} = req.body;
+
+  const user = await User.findById(req.user.userId).select('+password');
+
+  // Trường hợp user chưa có mật khẩu → cho phép đặt trực tiếp
+  if (!user.password) {
+    user.password = newPassword;
+    await user.save();
+    return res
+      .status(200)
+      .json({status: 200, message: 'Password set successfully'});
+  }
+
+  // Nếu user có mật khẩu → cần xác thực mật khẩu cũ
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+  if (!isMatch) {
+    return res.status(401).json({message: 'Current password is incorrect'});
+  }
+
+  user.password = newPassword;
+  await user.save();
+  res.status(200).json({status: 200, message: 'Password changed successfully'});
+});
+
+app.use('/uploads', express.static('uploads'));
+
+/**
+ * @swagger
+ * /api/user/avatar:
+ *   put:
+ *     summary: Upload hoặc cập nhật ảnh đại diện của người dùng
+ *     tags: [Information]
+ *     security:
+ *       - bearerAuth: []  # Yêu cầu token JWT
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               avatar:
+ *                 type: string
+ *                 format: binary
+ *                 description: File hình ảnh avatar
+ *     responses:
+ *       200:
+ *         description: Ảnh đại diện được cập nhật thành công
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Avatar updated"
+ *               avatar: "/uploads/1683729332829.jpg"
+ *       400:
+ *         description: Không có ảnh được tải lên
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "No image uploaded"
+ *       500:
+ *         description: Có lỗi trong quá trình upload
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Error uploading avatar"
+ *               error: "Chi tiết lỗi"
+ */
+app.put(
+  '/avatar',
+  authenticateJWT,
+  (req, res, next) => {
+    upload.single('avatar')(req, res, function (err) {
+      if (err) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res
+            .status(400)
+            .json({message: 'Ảnh vượt quá dung lượng tối đa 5MB'});
+        }
+        return res.status(400).json({message: err.message});
+      }
+      next();
+    });
+  },
+  async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const filePath = req.file ? `/uploads/${req.file.filename}` : null;
+
+      if (!filePath) {
+        return res.status(400).json({message: 'No image uploaded'});
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        {avatar: URLIMG.urlUser + filePath},
+        {new: true},
+      );
+
+      res.status(200).json({
+        status: 200,
+        message: 'Avatar updated',
+        avatar: updatedUser.avatar,
+      });
+    } catch (err) {
+      res.status(500).json({
+        status: 500,
+        message: 'Error uploading avatar',
+        error: err.message,
+      });
+    }
+  },
+);
+
+app.get(
+  '/google',
+  passport.authenticate('google', {scope: ['profile', 'email']}),
+);
+
+app.get(
+  '/google/callback',
+  passport.authenticate('google', {session: false}),
+  (req, res) => {
+    const token = jwt.sign({userId: req.user._id}, 'Q$r2K6W8n!jCW%Zk');
+    res.redirect(`${CONFIGURL.url}/api/user/show-token?token=${token}`); // để gửi về ứng dụng di động
+  },
+);
+//https://capstone-project-iot-1.onrender.com
+
+app.get('/show-token', (req, res) => {
+  const token = req.query.token;
+  res.send(`
+    <html>
+      <body style="font-family: sans-serif; text-align: center; margin-top: 50px;">
+        <h2>🎉 Đăng nhập bằng Google thành công!</h2>
+        <p><strong>Token của bạn:</strong></p>
+        <textarea rows="6" cols="80" readonly>${token}</textarea>
+      </body>
+    </html>
+  `);
 });
 
 module.exports = app;
