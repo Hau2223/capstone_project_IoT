@@ -30,6 +30,7 @@ import {
 } from './Screens';
 
 import ScheduleScreen from './Screens/ScheduleScreen/ScheduleScreen';
+import DevicesListScreen from './Screens/ScheduleScreen/DevicesListScreen';
 import AlarmScreen from './Screens/ScheduleScreen/AlarmScreen';
 import SetTimerScreen from './Screens/ScheduleScreen/SetTimerScreen';
 import ReportScreen from './Screens/ReportScreen/ReportScreen';
@@ -198,6 +199,16 @@ const Navigator = () => {
                 options={{headerShown: false, animation: 'fade_from_bottom'}}
               />
 
+              <StackNav.Screen
+                name="ScheduleScreen"
+                component={ScheduleScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="DevicesListScreen"
+                component={DevicesListScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
               <StackNav.Screen
                 name="AlarmScreen"
                 component={AlarmScreen}
