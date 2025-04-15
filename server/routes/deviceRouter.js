@@ -309,12 +309,8 @@ app.post('/addMember/:id_esp', async (req, res) => {
     const {id_esp} = req.params;
     const {userId, role} = req.body;
 
-    if (!userId || !role) {
-      return res.status(400).json({message: 'userId and role are required'});
-    }
-
-    if (!['owner', 'member'].includes(role)) {
-      return res.status(400).json({message: 'Invalid role'});
+    if (!userId) {
+      return res.status(400).json({message: 'userId is required'});
     }
 
     const user = await User.findById(userId);
@@ -335,20 +331,22 @@ app.post('/addMember/:id_esp', async (req, res) => {
       return res.status(400).json({message: 'Member already exists'});
     }
 
-    // Kiểm tra xem đã có owner chưa
     const ownerExists = device.members.some(m => m.role === 'owner');
-    let finalRole = role;
-
+    let finalRole = role || 'member';
     let notice = 'Member added successfully';
 
-    if (role === 'owner' && ownerExists) {
-      // Nếu đã có owner, chuyển role về member
+    // Nếu chưa có member nào → luôn là owner
+    if (device.members.length === 0) {
+      finalRole = 'owner';
+      notice = 'First member added as owner';
+    } else if (finalRole === 'owner' && ownerExists) {
+      // Nếu đã có owner rồi → không cho thêm owner
       finalRole = 'member';
       notice =
         'Owner already exists. Role changed to member and added successfully';
     }
 
-    // Thêm user vào thiết bị với role đã xác định
+    // Thêm user vào thiết bị
     device.members.push({userId, role: finalRole});
 
     // Thêm id_esp vào gardenId của user nếu chưa có
@@ -375,6 +373,7 @@ app.post('/addMember/:id_esp', async (req, res) => {
     });
   }
 });
+
 
 /**
  * @swagger
