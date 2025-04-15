@@ -943,36 +943,6 @@ app.get('/show-token', (req, res) => {
   `);
 });
 
-app.post('/google-login', async (req, res) => {
-  const {idToken} = req.body;
-  try {
-    const ticket = await client.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-    const {email, name, picture} = payload;
-
-    const user = await User.findOne({email});
-
-    if (!user) {
-      const hashedPassword = await bcrypt.hash('google_auth', 10);
-      user = new User({
-        email,
-        name,
-        avatar: picture,
-        password: hashedPassword,
-      });
-      await user.save();
-    }
-    const token = jwt.sign({userId: user._id}, process.env.JWT_SECRET);
-    res.status(200).json({token});
-  } catch (err) {
-    console.error('Google login error:', err);
-    res.status(401).json({message: 'Invalid Google token'});
-  }
-});
 
 
 module.exports = app;
