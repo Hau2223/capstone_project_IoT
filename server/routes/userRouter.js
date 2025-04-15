@@ -945,7 +945,6 @@ app.get('/show-token', (req, res) => {
 
 app.post('/google-login', async (req, res) => {
   const {idToken} = req.body;
-
   try {
     const ticket = await client.verifyIdToken({
       idToken,
@@ -955,7 +954,7 @@ app.post('/google-login', async (req, res) => {
     const payload = ticket.getPayload();
     const {email, name, picture} = payload;
 
-    let user = await User.findOne({email});
+    const user = await User.findOne({email});
 
     if (!user) {
       const hashedPassword = await bcrypt.hash('google_auth', 10);
@@ -967,7 +966,6 @@ app.post('/google-login', async (req, res) => {
       });
       await user.save();
     }
-
     const token = jwt.sign({userId: user._id}, process.env.JWT_SECRET);
     res.status(200).json({token});
   } catch (err) {
