@@ -26,7 +26,8 @@ const HomeScreen = ({navigation}) => {
   const [modalVisible, setModalVisible] = useState(false);
   const isFocused = useIsFocused();
   const handleGoToDetail = item => {
-    navigation.navigate('DetailScreen', {item});
+    const deviceId = item?.data?.id_esp;
+    navigation.navigate('DetailScreen', {item,deviceId});
   };
 
 
@@ -153,7 +154,7 @@ const HomeScreen = ({navigation}) => {
                   wind={`${windControl?.status === true ? 'ON' : 'OFF'}`}
                   img_area={item?.data?.img_area}
                   luminosity={`${luminositySensor?.value ?? 0}%`}
-                  onPress={() => handleGoToDetail(item)}
+                  onPress={() => handleGoToDetail(item,item?.data?._id)}
                 />
               </View>
             );

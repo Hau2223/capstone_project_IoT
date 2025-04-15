@@ -1,4 +1,4 @@
-import {StyleSheet, Text, View, Image, ScrollView} from 'react-native';
+import {StyleSheet, Text, View, FlatList, ScrollView} from 'react-native';
 import React, {memo, useState, useEffect, useCallback} from 'react';
 // import OnOffBtn from '../../components/Button/OnOff';
 import {Switch} from 'react-native-paper';
@@ -10,6 +10,7 @@ import {gardenId} from '../../../services/authServices';
 
 const DetailScreen = ({route}) => {
   const {item} = route.params;
+  const {deviceId} = route.params;
   const [isWatering, setIsWatering] = useState(false);
   const [isFan, setIsFan] = useState(false);
   const [member, setMember] = useState(null);
@@ -46,40 +47,43 @@ const DetailScreen = ({route}) => {
 
   const fetchUserProfile = useCallback(async () => {
     try {
-      const data = await gardenId(); // trả về mảng ID
-      const ids = data?.data || []; // ['ESP001', 'ESP002', ...]
-      console.log('ID:', ids);
-      
-
-      const allMembers = await Promise.all(
-        ids.map(async id => {
-          const res = await memberId({ id });
-          return res.members; // hoặc res tùy API trả về
-        })
-      );
-
-      setUserInfo(allMembers);
+      const data = await gardenId();
+      const ids = data?.data || [];
+      // console.log('IDs:', ids);
+      // console.log('deviceId:', deviceId);
+    
+      if (!ids.includes(deviceId)) {
+        setError(`Device ID "${deviceId}" không hợp lệ hoặc không tồn tại trong danh sách`);
+        setLoading(false);
+        return;
+      }
+  
+      const res = await memberId({ id: deviceId });
+      setUserInfo(res.data);
     } catch (err) {
+      console.error('Error fetching user profile:', err);
       setError(err.message || 'Error fetching user data');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [deviceId]);
+  
+  
 
   useEffect(() => {
+    console.log('Current deviceId:', deviceId);
     fetchUserProfile();
     const interval = setInterval(() => {
       fetchUserProfile();
     }, 5000);
-
+  
     return () => clearInterval(interval);
-  }, []);
-  console.log('userInfo', userInfo);
+  }, [deviceId]);  // Lắng nghe sự thay đổi của deviceId
+
 
 
   const names = userInfo?.flat()?.map(member => member.name).join(', ');
   const roles = userInfo?.flat()?.map(member => member.role).join(', ');
-
   
 
   // useEffect(() => {
@@ -136,56 +140,7 @@ const DetailScreen = ({route}) => {
         <FrameItem2
           style={styles.containerFrame}
           valueStatus={lightControl?.status}></FrameItem2>
-        <FrameItem3 header3={'THÀNH VIÊN'} nameUser={names} role={roles} ></FrameItem3>
-        {/* <View style={styles.content1}>
-            <Text style={styles.textStyle}>Nhiệt độ: {temperatureSensor?.value ?? 0}°C</Text>
-            <Text style={styles.textStyle}>Độ ẩm đất: {moistureSensor?.value ?? 0}%</Text>
-            <Text style={styles.textStyle}>Ánh sáng: {luminositySensor?.value ?? 0}%</Text>
-            <View style={styles.settingOnOff}>
-              <View style={styles.frameIconLight}>
-                <Image
-                  style={styles.iconLight}
-                  source={require('../../../assets/icon/iconLight.png')}
-                />
-              </View>
-              <View style={styles.frameTxtLight}>
-                <Text style={styles.txtLightLevel}>
-                  Cài đặt mức sáng bật/tắt đèn
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View style={styles.line} />
-          <View style={styles.content2}>
-            <View style={styles.frameTuoiQuat}>
-              <View style={styles.contentTuoiQuat}>
-                <Text style={styles.textStyle}>Trạng thái tưới</Text>
-              </View>
-              <View style={styles.buttonTuoiQuat}>
-                <Switch
-                  value={waterControl?.status}
-                  onValueChange={newValue => setIsWatering(newValue)}
-                  trackColor={{false: 'white', true: 'white'}}
-                  thumbColor={waterControl?.status ? colors.primary : '#ACACAC'}
-                  style={{transform: [{scale: 1.5}]}}
-                />
-              </View>
-            </View>
-            <View style={styles.frameTuoiQuat}>
-              <View style={styles.contentTuoiQuat}>
-                <Text style={styles.textStyle}>Trạng thái quạt</Text>
-              </View>
-              <View style={styles.buttonTuoiQuat}>
-                <Switch
-                  value={windControl?.status}
-                  onValueChange={newValue => setIsFan(newValue)}
-                  trackColor={{false: 'white', true: 'white'}}
-                  thumbColor={windControl?.status ? colors.primary : '#ACACAC'}
-                  style={{transform: [{scale: 1.5}]}}
-                />
-              </View>
-            </View>
-          </View> */}
+        <FrameItem3 header3={'THÀNH VIÊN'} users={userInfo?.flat() || []} />
       </ScrollView>
     </View>
   );
@@ -299,20 +254,23 @@ const StatusComponent = ({nameIcon, colorIcon, txtStatus, valueStatus}) => {
   );
 };
 
-const FrameItem3 = ({header3,nameUser,role}) => {
+const FrameItem3 = ({ header3, users = [] }) => {
   return (
     <View style={styles.containerFrame}>
       <Header3 header3={header3} />
-      <UserComponent
-        nameIcon={'account-circle'}
-        colorIcon={'#D9D9D9'}
-        txtUser={nameUser}
-        txtRole={role}></UserComponent>
-      <UserComponent
-        nameIcon={'account-circle'}
-        colorIcon={'#D9D9D9'}
-        txtUser={'Peter'}
-        txtRole={'HCM'}></UserComponent>
+      <FlatList
+        data={users}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) => (
+          <UserComponent
+            nameIcon={'account-circle'}
+            colorIcon={'#D9D9D9'}
+            txtUser={item.name}
+            txtRole={item.role}
+          />
+        )}
+        scrollEnabled={false}
+      />
     </View>
   );
 };
@@ -448,6 +406,7 @@ const styles = StyleSheet.create({
     borderColor: '#E8E8E8',
     paddingHorizontal: 15,
     paddingVertical: 50,
+    
   },
   textHeader3: {
     textAlign: 'center',
@@ -468,7 +427,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#E8E8E8',
-    paddingVertical: 10,
+    paddingVertical: 20,
   },
   iconContent: {
     width: '15%',
