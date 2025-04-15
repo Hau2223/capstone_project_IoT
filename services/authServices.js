@@ -8,6 +8,14 @@ export const login = async params => {
   });
 };
 
+export const loginGoogle = async params => {
+  console.log(params.idToken);
+  return await post('/user/google-login',{
+    idToken: params.idToken
+  });
+};
+
+
 export const signUp = async params => {
   return await post('/user/register', {
     name: params.name,

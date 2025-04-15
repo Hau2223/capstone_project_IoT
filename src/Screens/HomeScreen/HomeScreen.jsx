@@ -8,16 +8,16 @@ import {
   BackHandler,
   Alert,
   StatusBar,
-  Platform
+  Platform,
 } from 'react-native';
 import React, {useState, useEffect, useCallback, memo} from 'react';
 import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 import ItemHomePage from '../../components/ItemHomePage';
 import CustomAlert from '../../components/CustomAlert';
 
-import { detailSensor } from '../../../services/sensorServices';
-import { FaThermometerHalf, FaTint, FaLightbulb, FaWind } from 'react-icons/fa';
-import { MdWaterDrop } from 'react-icons/md';
+import {detailSensor} from '../../../services/sensorServices';
+import {FaThermometerHalf, FaTint, FaLightbulb, FaWind} from 'react-icons/fa';
+import {MdWaterDrop} from 'react-icons/md';
 import {gardenId, profile} from '../../../services/authServices';
 import {detailDevice} from '../../../services/deviceServices';
 import colors from '../../../assets/common/colorCss';
@@ -29,13 +29,10 @@ const HomeScreen = ({navigation}) => {
     navigation.navigate('DetailScreen', {item});
   };
 
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const [garden, SetGarden] = useState(null);
-
-
 
   const fetchGarder = useCallback(async () => {
     try {
@@ -62,7 +59,7 @@ const HomeScreen = ({navigation}) => {
     const interval = setInterval(() => {
       fetchGarder();
     }, 5000);
-  
+
     return () => clearInterval(interval);
   }, []);
 
@@ -90,10 +87,7 @@ const HomeScreen = ({navigation}) => {
   return (
     <View style={styles.frame}>
       {isFocused && (
-        <StatusBar
-          backgroundColor={colors.secondary}
-          barStyle="dark-content"
-        />
+        <StatusBar backgroundColor={colors.secondary} barStyle="dark-content" />
       )}
       <View style={styles.header}>
         <View style={styles.header1}>
@@ -147,9 +141,7 @@ const HomeScreen = ({navigation}) => {
                   name_area={item?.data?.name_area}
                   temperature={`${temperatureSensor?.value ?? 0}`}
                   moisture={`${moistureSensor?.value ?? 0}`}
-                  water={`${
-                    waterControl?.status === true ? 'ON' : 'OFF'
-                  }`}
+                  water={`${waterControl?.status === true ? 'ON' : 'OFF'}`}
                   wind={`${windControl?.status === true ? 'ON' : 'OFF'}`}
                   img_area={item?.data?.img_area}
                   luminosity={`${luminositySensor?.value ?? 0}%`}
@@ -198,7 +190,7 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom:80
+    marginBottom: 80,
   },
   itemWrapper: {
     alignItems: 'center',

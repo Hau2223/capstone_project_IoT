@@ -3,13 +3,13 @@ import React from 'react';
 import IconOni from 'react-native-vector-icons/Ionicons';
 import colors from '../../assets/common/colorCss';
 
-const HeaderCompo = ({name, isPress}) => {
+const HeaderCompo = ({name, isPress, color}) => {
   return (
     <View style={styles.container}>
       <IconOni
         name="chevron-back"
         size={24}
-        color={colors.black}
+        color={color}
         style={styles.iconHeader}
         onPress={isPress}
       />
