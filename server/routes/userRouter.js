@@ -10,11 +10,12 @@ const passportGoogle = require('../utils/passportGoogle');
 const upload = require('../middlewares/uploadImgMiddleware');
 const URLIMG = require('../utils/constants').URLIMG;
 const path = require('path');
+const {OAuth2Client} = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 require('dotenv').config({
-  path: path.join(process.cwd(), '/etc/secrets/config.env'),
+  path: './etc/secrets/config.env',
 });
-
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 app.use(passport.initialize());
@@ -28,7 +29,7 @@ const createToken = userId => {
   const payload = {
     userId: userId,
   };
-  const token = jwt.sign(payload, 'Q$r2K6W8n!jCW%Zk');
+  const token = jwt.sign(payload, process.env.JWT_SECRET);
   return token;
 };
 /**
@@ -43,7 +44,7 @@ const createToken = userId => {
  *         application/json:
  *           example:  # Example JSON data for testing
  *             email: "vana@gmail.com"
- *             password: "1"
+ *             password: "12345678"
  *             deviceID: "12345-abcde"
  *           schema:
  *             type: object
@@ -84,13 +85,13 @@ app.post('/login', async (req, res) => {
   try {
     const user = await User.findOne({email});
     if (!user) {
-      console.log('User not found:', email);
+      // console.log('User not found:', email);
       return res.status(404).json({status: 404, message: 'User not found'});
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log('Invalid password for user:', email);
+      // console.log('Invalid password for user:', email);
       return res.status(404).json({status: 404, message: 'Invalid password'});
     }
     user.deviceID = deviceID;
@@ -137,9 +138,6 @@ app.post('/login', async (req, res) => {
  */
 app.get('/sendCode/:email', async (req, res) => {
   const email = req.params.email;
-  if (registeredUsers[email]) {
-    return res.status(400).json({message: 'User already registered!'});
-  }
   try {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       return res.status(500).json({message: 'Email configuration error'});
@@ -175,13 +173,11 @@ app.get('/sendCode/:email', async (req, res) => {
     });
   } catch (error) {
     console.error('Error sending email:', error.message);
-    res
-      .status(500)
-      .json({
-        status: 500,
-        message: 'Failed to send email',
-        error: error.message,
-      });
+    res.status(500).json({
+      status: 500,
+      message: 'Failed to send email',
+      error: error.message,
+    });
   }
 });
 
@@ -254,9 +250,9 @@ app.post('/verifyOTP', (req, res) => {
  *       content:
  *         application/json:
  *           example:  # Dữ liệu JSON mẫu để test
- *             name: "Nguyen van A"
+ *             name: "Nguyen Van A"
  *             email: "vana@gmail.com"
- *             password: "1"
+ *             password: "12345678"
  *           schema:
  *             type: object
  *             required:
@@ -268,9 +264,11 @@ app.post('/verifyOTP', (req, res) => {
  *                 type: string
  *               email:
  *                 type: string
+ *                 format: email
  *               password:
  *                 type: string
- *                 description: The user's password (will be hashed before storing)
+ *                 description: The user's password (must be at least 8 characters)
+ *                 minLength: 8
  *     responses:
  *       200:
  *         description: User registered successfully
@@ -280,15 +278,20 @@ app.post('/verifyOTP', (req, res) => {
  *               message: "User registered successfully!"
  *               status: 200
  *       400:
- *         description: Email already exists or OTP not verified
+ *         description: Email already exists, OTP not verified, or password too short
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Password must be at least 8 characters long"
  *       500:
  *         description: Internal server error
  */
 app.post('/register', async (req, res) => {
   const {name, email, password} = req.body;
-
-  if (registeredUsers[email]) {
-    return res.status(400).json({message: 'User already registered!'});
+  if (!password || password.length < 8) {
+    return res.status(400).json({
+      message: 'Password must be at least 8 characters long',
+    });
   }
 
   if (!pendingRegistrations[email]) {
@@ -304,8 +307,7 @@ app.post('/register', async (req, res) => {
     }
 
     // Mã hóa mật khẩu
-    const saltRounds = 10; // Số vòng băm, thường là 10
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Tạo user mới với mật khẩu đã mã hóa
     const newUser = new User({name, email, password: hashedPassword});
@@ -331,7 +333,7 @@ app.post('/register', async (req, res) => {
  * @swagger
  * /api/user/resetPassword:
  *   post:
- *     summary: Reset user password
+ *     summary: Đặt lại mật khẩu người dùng bằng email
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
@@ -346,25 +348,29 @@ app.post('/register', async (req, res) => {
  *               email:
  *                 type: string
  *                 format: email
- *                 description: The user's registered email address
+ *                 description: Địa chỉ email đã đăng ký của người dùng
  *               newPassword:
  *                 type: string
- *                 description: The new password (will be hashed before storing)
+ *                 minLength: 8
+ *                 description: Mật khẩu mới (sẽ được mã hóa trước khi lưu)
+ *           example:
+ *             email: "vana@gmail.com"
+ *             newPassword: "newpassword123"
  *     responses:
  *       200:
- *         description: Password reset successfully
+ *         description: Mật khẩu được đặt lại thành công
  *         content:
  *           application/json:
  *             example:
  *               message: "Password reset successfully!"
  *       400:
- *         description: User not found or invalid input
+ *         description: Dữ liệu không hợp lệ hoặc người dùng không tồn tại
  *         content:
  *           application/json:
  *             example:
  *               message: "User not found!"
  *       500:
- *         description: Internal server error
+ *         description: Lỗi máy chủ
  *         content:
  *           application/json:
  *             example:
@@ -374,23 +380,19 @@ app.post('/resetPassword', async (req, res) => {
   const {email, newPassword} = req.body;
 
   try {
-    if (!registeredUsers[email]) {
-      return res.status(400).json({message: 'User not found!'});
-    }
-    // Mã hóa mật khẩu mới
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-
-    const user = await User.findOneAndUpdate(
-      {email},
-      {password: hashedPassword},
-      {new: true},
-    );
-
+    const user = await User.findOne({email});
     if (!user) {
       return res.status(400).json({message: 'User not found!'});
     }
-    delete pendingRegistrations[email];
+    if (!email || !newPassword || newPassword.length < 8) {
+      return res.status(400).json({
+        message: 'new password (at least 8 characters) are required',
+      });
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
     res.status(200).json({message: 'Password reset successfully!'});
   } catch (err) {
     console.error('Error resetting password:', err);
@@ -724,10 +726,10 @@ app.put('/updateGardenId', authenticateJWT, async (req, res) => {
  * @swagger
  * /api/user/changePassword:
  *   put:
- *     summary: Thay đổi mật khẩu của người dùng (hoặc đặt lần đầu nếu chưa có)
+ *     summary: Thay đổi mật khẩu người dùng (hoặc đặt lần đầu nếu chưa có)
  *     tags: [Authentication]
  *     security:
- *       - bearerAuth: [] # Cần JWT token
+ *       - bearerAuth: []  # Yêu cầu JWT token
  *     requestBody:
  *       required: true
  *       content:
@@ -737,26 +739,42 @@ app.put('/updateGardenId', authenticateJWT, async (req, res) => {
  *             properties:
  *               currentPassword:
  *                 type: string
- *                 description: Mật khẩu hiện tại (nếu đã có)
+ *                 description: Mật khẩu hiện tại của người dùng (nếu đã có)
  *               newPassword:
  *                 type: string
- *                 description: Mật khẩu mới muốn đặt
+ *                 minLength: 8
+ *                 description: Mật khẩu mới muốn đặt (tối thiểu 8 ký tự)
+ *             required:
+ *               - newPassword
  *           example:
- *             currentPassword: "1234567890"   # Có thể bỏ qua nếu user đăng nhập bằng Google chưa từng đặt mật khẩu
- *             newPassword: "12345678"
+ *             currentPassword: "1234567890"
+ *             newPassword: "newpassword123"
  *     responses:
  *       200:
- *         description: Mật khẩu được đổi thành công
+ *         description: Mật khẩu được đổi/đặt thành công
  *         content:
  *           application/json:
  *             example:
+ *               status: 200
  *               message: "Password changed successfully"
+ *       400:
+ *         description: Mật khẩu mới không hợp lệ
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Password must be at least 8 characters long"
  *       401:
- *         description: Mật khẩu hiện tại không chính xác hoặc chưa đăng nhập
+ *         description: Mật khẩu hiện tại không đúng
  *         content:
  *           application/json:
  *             example:
  *               message: "Current password is incorrect"
+ *       404:
+ *         description: Không tìm thấy người dùng
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "User not found"
  *       500:
  *         description: Lỗi máy chủ
  *         content:
@@ -767,26 +785,45 @@ app.put('/updateGardenId', authenticateJWT, async (req, res) => {
 app.put('/changePassword', authenticateJWT, async (req, res) => {
   const {currentPassword, newPassword} = req.body;
 
-  const user = await User.findById(req.user.userId).select('+password');
+  try {
+    const user = await User.findById(req.user.userId).select('+password');
 
-  // Trường hợp user chưa có mật khẩu → cho phép đặt trực tiếp
-  if (!user.password) {
-    user.password = newPassword;
+    if (!user) {
+      return res.status(404).json({message: 'User not found'});
+    }
+    if (!newPassword || newPassword.length < 8) {
+      return res.status(400).json({
+        message: 'Password must be at least 8 characters long',
+      });
+    }
+
+    // Nếu user chưa có mật khẩu → đặt mật khẩu mới (đã mã hóa)
+    if (!user.password) {
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+      await user.save();
+      return res
+        .status(200)
+        .json({status: 200, message: 'Password set successfully'});
+    }
+
+    // Nếu user có mật khẩu → xác thực mật khẩu cũ
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({message: 'Current password is incorrect'});
+    }
+
+    // Đặt mật khẩu mới (đã mã hóa)
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
     await user.save();
-    return res
+    res
       .status(200)
-      .json({status: 200, message: 'Password set successfully'});
+      .json({status: 200, message: 'Password changed successfully'});
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({message: 'Internal server error'});
   }
-
-  // Nếu user có mật khẩu → cần xác thực mật khẩu cũ
-  const isMatch = await bcrypt.compare(currentPassword, user.password);
-  if (!isMatch) {
-    return res.status(401).json({message: 'Current password is incorrect'});
-  }
-
-  user.password = newPassword;
-  await user.save();
-  res.status(200).json({status: 200, message: 'Password changed successfully'});
 });
 
 app.use('/uploads', express.static('uploads'));
@@ -887,7 +924,7 @@ app.get(
   '/google/callback',
   passport.authenticate('google', {session: false}),
   (req, res) => {
-    const token = jwt.sign({userId: req.user._id}, 'Q$r2K6W8n!jCW%Zk');
+    const token = jwt.sign({userId: req.user._id}, process.env.JWT_SECRET);
     res.redirect(`${CONFIGURL.url}/api/user/show-token?token=${token}`); // để gửi về ứng dụng di động
   },
 );
@@ -905,5 +942,7 @@ app.get('/show-token', (req, res) => {
     </html>
   `);
 });
+
+
 
 module.exports = app;

@@ -13,11 +13,13 @@
 
   "iot_management_system": "HỆ THỐNG QUẢN LÝ THIẾT BỊ IOT",
   "login": "Đăng Nhập",
+  "loginGoogle": "Đăng Nhập với Google",
   "enter_name": "Nhập tên",
   "enter_email": "Nhập email",
   "enter_password": "Nhập mật khẩu",
   "enter_new_password": "Nhập mật khẩu mới",
   "enter_again_password": "Nhập lại mật khẩu",
+  "login_failed_message": "Email hoặc mật khẩu không chính xác",
   "forgot_password": "Quên mật khẩu",
   "no_account": "Bạn chưa có tài khoản?",
   "had_account": "Bạn đã có tài khoản?",
@@ -46,7 +48,7 @@
   "password_required": "Nhập mật khẩu không được để trống.",
   "password_invalid": "Mật khẩu phải có ít nhất 8 ký tự.",
   "cfnewPassword_required": "Vui lòng nhập lại mật khẩu",
-  "cfnewPassword_mismatch": "Xác nhận mật khẩu không chính xác",
+  "cfnewPassword_mismatch": "Mật khẩu nhập lại không khớp",
   
   "otp_sent_success": "Mã OTP đã được gửi!",
   "otp_resend_success": "Mã OTP đã được gửi lại!",
@@ -56,6 +58,7 @@
   "alert_success": "Thành công",
   "alert_error": "Lỗi",
   "alert_info": "Thông tin",
+  "alert_loading": "Đang tải",
   "alert_invalid_email": "Email không hợp lệ. Vui lòng thử lại.",
   "alert_otp_sent": "Mã OTP đã được gửi đến email của bạn.",
   "alert_account_created": "Tài khoản đã được tạo thành công.",
@@ -70,5 +73,11 @@
   "otp_expired_message": "Mã OTP đã hết hạn",
   "otp_invalid_or_expired": "Mã OTP không hợp lệ hoặc đã hết hạn",
 
-  "password_reset_success": "Đặt lại mật khẩu thành công!"
+  "password_reset_success": "Đặt lại mật khẩu thành công!",
+  "password_reset_failed": "Đặt lại mặt khẩu không thành công!",
+  "email_confirmation_note": "Chúng tôi sẽ gửi mã xác nhận đến cho bạn",
+
+
+
+  "": ""
 }

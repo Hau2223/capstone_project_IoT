@@ -12,13 +12,24 @@ const colors = {
   black: '#000',
   green: 'green',
   red: 'red',
-  loginInput: '#F5F5F5',
+  loginform: '#E6EFC9',
+  loginTit: '#186C32',
+
   loginTxt: '#8F8F8F',
   loginBtn: '#8359E3',
-  txtForget: '#2567EA',
+  
+  loginbtnGG: '#D83E36',
+  txtLoginWith: '#787878',
+  txtForget: '#379F45',
   InputOTP: '#D5CBF2',
   reSendOTP: '#12589E',
-  bg_setting: '#F0F4F3'
+  bg_setting: '#F0F4F3',
+
+  liner_light1: '#74C174',
+  liner_light2: '#217E54',
+  liner_dark1: '#74C174',
+  liner_dark2: '#217E54',
+
 };
 
 export default colors;

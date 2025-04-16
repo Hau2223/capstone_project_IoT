@@ -1,12 +1,11 @@
 import {
-  StyleSheet,
   Text,
   View,
   TextInput,
   Pressable,
   BackHandler,
-  ImageBackground,
-  useWindowDimensions,
+  SafeAreaView,
+  StatusBar,
   Image,
 } from 'react-native';
 import React, {
@@ -19,18 +18,23 @@ import React, {
 } from 'react';
 import IconOni from 'react-native-vector-icons/Ionicons';
 import DeviceInfo from 'react-native-device-info';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useIsFocused} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {login} from '../../../services/authServices';
+import {login, loginGoogle} from '../../../services/authServices';
 import {UserContext} from '../../../utils/UserContext';
+import LinearGradient from 'react-native-linear-gradient';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+
 import colors from '../../../assets/common/colorCss';
-import {IMAGES} from '../../../utils/constants';
 import {useTranslation} from 'react-i18next';
+import {ThemeContext} from '../../../assets/common/themeProvider';
+import {createStyle} from './style';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
-  const {width} = useWindowDimensions();
-  const isTablet = width >= 720;
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
   const deviceId = DeviceInfo.getDeviceId();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -39,10 +43,9 @@ const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showInfoAlert, setShowInfoAlert] = useState(false);
   const {setUserToken} = useContext(UserContext);
+  const isFocused = useIsFocused();
   const textInputUserRef = useRef(null);
   const textInputPassRef = useRef(null);
-  const {t} = useTranslation();
-
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -54,15 +57,14 @@ const LoginScreen = () => {
   };
 
   const handleLogin = useCallback(() => {
-    login({
-      email,
-      password,
-      deviceId,
-    })
+    if (!email || !password) {
+      setShowInfoAlert(true);
+      console.log('Email và mật khẩu không được để trống');
+      return;
+    }
+    login({email, password, deviceId})
       .then(response => {
-        if (response?.status === 404) {
-          setShowInfoAlert(true);
-        } else if (response?.data) {
+        if (response?.data) {
           const token = response.data;
           setShowInfoAlert(false);
 
@@ -70,16 +72,47 @@ const LoginScreen = () => {
             .then(() => console.log('Token đã được lưu:', token))
             .catch(err => console.log('Lỗi lưu token:', err));
 
-          token && setUserToken(token);
+          setUserToken(token);
           navigation.navigate('Tabs');
+        } else {
+          console.log('Không nhận được token từ response', response);
+          setShowInfoAlert(true);
         }
-        console.log('Response:', response);
       })
       .catch(err => {
+        const errMsg = err.response?.data?.message || err.message;
+
+        if (errMsg === 'User not found') {
+          console.log('Tài khoản không tồn tại');
+        } else if (errMsg === 'Invalid password') {
+          console.log('Sai mật khẩu');
+        } else {
+          console.log('Lỗi không xác định:', errMsg);
+        }
+
         setShowInfoAlert(true);
-        console.log('Login Error', err.response?.data || err.message);
       });
   }, [email, password, deviceId, setUserToken, navigation]);
+
+  const handleGoogleLogin = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+    const userInfo = await GoogleSignin.signIn();
+    const idToken = userInfo.idToken;
+    console.log(idToken);
+    
+
+    const response = await loginGoogle( { idToken });
+
+    const token = response.data.token;
+
+    await AsyncStorage.setItem('authToken', token);
+    setUserToken(token);
+    navigation.navigate('Tabs');
+    } catch (error) {
+      console.error('Google Sign-in error', error);
+    }
+  };
 
   const shouldExitApp = React.useCallback(() => {
     const currentRoute =
@@ -105,12 +138,23 @@ const LoginScreen = () => {
 
     return () => subscription.remove();
   }, [navigation, shouldExitApp]);
-
+  console.log(theme);
   return (
-    <ImageBackground
-      source={{uri: isTablet ? IMAGES.BG_TABLET : IMAGES.BG_MOBILE}}
+    <LinearGradient
+      colors={[colors.liner_light1, colors.liner_light2]}
       style={styles.container}>
-      <Text style={styles.txtTitle}>{t('iot_management_system')}</Text>
+      {isFocused && (
+        <StatusBar
+          backgroundColor={colors.liner_light1}
+          barStyle={'light-content'}
+        />
+      )}
+
+      <Image
+        source={require('../../../assets/icon/ic_logo.png')}
+        style={styles.imgLogo}
+      />
+      <Text style={styles.txtTitle}>GreenSprout</Text>
       <View style={styles.formLogin}>
         <View style={styles.login}>
           <Text style={styles.txtLogin}>{t('login')}</Text>
@@ -173,13 +217,18 @@ const LoginScreen = () => {
                 </Pressable>
               )}
               <IconOni
-                name={showPassword ? 'eye-sharp' : 'eye-off-sharp'}
+                name={showPassword ? 'eye-off-sharp' : 'eye-sharp'}
                 color={colors.loginTxt}
                 size={20}
                 onPress={togglePasswordVisibility}
               />
             </View>
           </View>
+          {showInfoAlert && (
+            <Text style={{color: 'red', fontSize: 12}}>
+              {t('login_failed_message')}
+            </Text>
+          )}
           <Text
             style={styles.txtForget}
             onPress={() => {
@@ -189,9 +238,25 @@ const LoginScreen = () => {
           </Text>
         </View>
         <View style={styles.layoutbtn}>
-          <Pressable style={styles.btnLogin} onPress={handleLogin}>
-            <Text style={styles.txtBtn}>{t('login')}</Text>
+          <LinearGradient
+            colors={[colors.liner_light1, colors.liner_light2]}
+            start={{x: 0, y: 1}}
+            end={{x: 1, y: 0}}
+            locations={[0, 0.6]}
+            style={styles.btnLogin} // Bạn vẫn giữ styles.btnLogin để định dạng kích thước, padding, border radius, v.v.
+          >
+            <Pressable onPress={handleLogin}>
+              <Text style={styles.txtBtn}>{t('login')}</Text>
+            </Pressable>
+          </LinearGradient>
+          <View style={styles.wrapperManual}>
+            <Text style={styles.textManual}>Hoặc đăng kí với</Text>
+          </View>
+
+          <Pressable oonPress={handleGoogleLogin} style={styles.btnGoogle}>
+            <Text style={styles.txtGoogle}>{t('loginGoogle')}</Text>
           </Pressable>
+
           <Text style={styles.txtAccNaN}>
             {t('no_account')}{' '}
             <Text
@@ -202,94 +267,8 @@ const LoginScreen = () => {
           </Text>
         </View>
       </View>
-    </ImageBackground>
+    </LinearGradient>
   );
 };
 
 export default memo(LoginScreen);
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  formLogin: {
-    width: '80%',
-    backgroundColor: colors.white,
-    borderRadius: 39,
-    alignItems: 'center',
-  },
-  txtTitle: {
-    fontSize: 24,
-    color: colors.white,
-    fontWeight: 'bold',
-    maxWidth: '70%',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  login: {
-    marginVertical: 20,
-    width: '80%',
-    backgroundColor: colors.white,
-    gap: 18,
-  },
-  txtLogin: {
-    fontSize: 34,
-    color: colors.black,
-    fontWeight: 'bold',
-  },
-  txtForget: {
-    fontStyle: 'italic',
-    color: colors.txtForget,
-    alignSelf: 'flex-start',
-  },
-  edtInput: {
-    width: '100%',
-    height: 36,
-    backgroundColor: colors.loginInput,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderRadius: 50,
-    paddingHorizontal: 10,
-  },
-  txtInput: {
-    maxWidth: '90%',
-  },
-  iconPass: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-
-  layoutbtn: {
-    width: '100%',
-    paddingBottom: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-  },
-  btnLogin: {
-    width: '80%',
-    height: 36,
-    backgroundColor: colors.loginBtn,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 30,
-  },
-  txtBtn: {
-    color: colors.white,
-    fontSize: 17,
-  },
-  txtAccNaN: {
-    fontSize: 13,
-    color: colors.black,
-  },
-  txtRegister: {
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  tinyLogo: {
-    resizeMode: 'cover', width: 50, height: 50
-  },
-});
