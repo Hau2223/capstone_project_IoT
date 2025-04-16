@@ -6,17 +6,16 @@ import { getAllDevices } from '../../../services/deviceServices';
 const DevicesListScreen = ({ navigation, route }) => {
   const controlName = route.params?.controlName
   const [devices, setDevices] = useState([]);
-  const idUser = route.params?.idUser || '67f9ff224c36c6ad57e60434'; // Giả định idUser, thay bằng logic thực tế của bạn
+  const idUser = route.params?.idUser || '67f9ff224c36c6ad57e60434'; //thay id User từ API vào đây nhé
 
   useEffect(() => {
     const fetchDevices = async () => {
       try {
         const res = await getAllDevices();
-        const allDevices = res?.data || []; // Giả sử API trả về mảng trong `data`
+        const allDevices = res?.data || [];
 
         console.log('Tất cả thiết bị từ API:', allDevices);
 
-        // 🔍 Lọc thiết bị theo idUser, controlName và schedules không rỗng
         const filteredDevices = allDevices
           .filter(device =>
             device.members?.some(member => member.userId === idUser) &&

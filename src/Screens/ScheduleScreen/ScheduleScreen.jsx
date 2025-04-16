@@ -17,7 +17,6 @@ const ScheduleScreen = ({ navigation, route }) => {
   const [error, setError] = useState(null);
   const [idUser, setIdUser] = useState(null);
 
-  // Lấy idUser từ AsyncStorage
   const loadIdUser = useCallback(async () => {
     try {
       const userData = await AsyncStorage.getItem('user');
@@ -33,18 +32,16 @@ const ScheduleScreen = ({ navigation, route }) => {
     }
   }, [route.params?.idUser]);
 
-  // Hàm lấy dữ liệu thiết bị và đếm số khu vực có lịch trình
   const fetchScheduleCounts = useCallback(async () => {
-    if (!idUser) return; // Chờ idUser được tải
+    if (!idUser) return; //
 
     try {
-      setError(null); // Reset error
+      setError(null);
       const response = await getAllDevices();
       const allDevices = response?.data || [];
 
       console.log('Tất cả thiết bị từ API:', allDevices);
 
-      // Đếm số thiết bị có schedules không rỗng cho mỗi danh mục
       const counts = {
         water: 0,
         light: 0,
@@ -73,7 +70,6 @@ const ScheduleScreen = ({ navigation, route }) => {
           });
         });
 
-      // Xóa các mảng tạm để tránh lưu trữ dư thừa
       delete counts.waterMarked;
       delete counts.lightMarked;
       delete counts.windMarked;
@@ -91,37 +87,34 @@ const ScheduleScreen = ({ navigation, route }) => {
     }
   }, [idUser]);
 
-  // Gọi API lần đầu và mỗi 5 giây
   useEffect(() => {
-    loadIdUser(); // Tải idUser trước
+    loadIdUser();
   }, [loadIdUser]);
 
   useEffect(() => {
     if (idUser) {
-      fetchScheduleCounts(); // Gọi lần đầu khi có idUser
+      fetchScheduleCounts();
       const interval = setInterval(() => {
-        fetchScheduleCounts(); // Mỗi 5 giây
+        fetchScheduleCounts();
       }, 5000);
       return () => clearInterval(interval);
     }
   }, [idUser, fetchScheduleCounts]);
 
-  // Hàm xử lý khi click vào item
   const handleGoToListDevices = controlName => {
     navigation.navigate('DevicesListScreen', {
-      controlName, // Truyền water, light, hoặc wind
+      controlName,
       idUser,
     });
   };
 
-  // Icon tương ứng với từng control
   const getIconForControl = name => {
     try {
       switch (name) {
         case 'light':
           return require('../../../assets/icon/iconLightYellow.png');
         case 'water':
-          return require('../../../assets/icon/iconWaring.png'); // Nên thay bằng iconWater.png
+          return require('../../../assets/icon/iconWaring.png');
         case 'wind':
           return require('../../../assets/icon/iconFan.png');
         default:
@@ -133,7 +126,6 @@ const ScheduleScreen = ({ navigation, route }) => {
     }
   };
 
-  // Danh sách control để hiển thị
   const controlItems = [
     { name: 'water', label: 'Lịch tưới' },
     { name: 'light', label: 'Lịch đèn' },

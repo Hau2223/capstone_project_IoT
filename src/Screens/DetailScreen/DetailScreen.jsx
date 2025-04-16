@@ -1,5 +1,5 @@
-import {StyleSheet, Text, View, FlatList, ScrollView} from 'react-native';
-import React, {memo, useState, useEffect, useCallback} from 'react';
+import {StyleSheet, Text, View, FlatList, ScrollView, Animated} from 'react-native';
+import React, {memo, useState, useEffect, useCallback, useRef} from 'react';
 // import OnOffBtn from '../../components/Button/OnOff';
 import {Switch} from 'react-native-paper';
 import FastImage from 'react-native-fast-image';
@@ -14,6 +14,7 @@ const DetailScreen = ({route}) => {
   const [isWatering, setIsWatering] = useState(false);
   const [isFan, setIsFan] = useState(false);
   const [member, setMember] = useState(null);
+  const scrollY = useRef(new Animated.Value(1)).current;
 
   const sensors = item?.data?.sensors || [];
   const controls = item?.data?.controls || [];
@@ -112,10 +113,35 @@ const DetailScreen = ({route}) => {
   //   console.log("item", item);
   // }
   // );
+
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [350, 200],
+    extrapolate: 'clamp',
+  });
+
+  const imageHeight = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [263, 150],
+    extrapolate: 'clamp',
+  });
+
+  const headerFontSize = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [32, 24],
+    extrapolate: 'clamp',
+  });
+
+  const headerMarginTop = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [10, 5],
+    extrapolate: 'clamp',
+  });
+
   return (
     <View style={styles.frame}>
-      <View style={styles.container1}>
-        <View style={styles.img}>
+      <Animated.View style={[styles.container1, { height: headerHeight }]}>
+        <Animated.View style={[styles.img, { height: imageHeight }]}>
           <FastImage
             style={styles.imgStyle}
             source={{
@@ -124,12 +150,27 @@ const DetailScreen = ({route}) => {
             }}
             resizeMode={FastImage.resizeMode.cover}
           />
-          <Text style={styles.header2}>{item?.data?.name_area}</Text>
-        </View>
-      </View>
-      <ScrollView
+        </Animated.View>
+        <Animated.Text 
+          style={[
+            styles.header2, 
+            { 
+              fontSize: headerFontSize,
+              marginTop: headerMarginTop
+            }
+          ]}>
+          {item?.data?.name_area}
+        </Animated.Text>
+      </Animated.View>
+      <Animated.ScrollView
         showsVerticalScrollIndicator={false}
-        style={styles.ScrollView}>
+        style={styles.ScrollView}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false },
+        )}
+        scrollEventThrottle={8}
+        bounces={false}>
         <FrameItem1
           txtTemp={temperatureSensor?.value ?? 0}
           txtMoisture={moistureSensor?.value ?? 0}
@@ -141,7 +182,7 @@ const DetailScreen = ({route}) => {
           style={styles.containerFrame}
           valueStatus={lightControl?.status}></FrameItem2>
         <FrameItem3 header3={'THÀNH VIÊN'} users={userInfo?.flat() || []} />
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 };
@@ -297,25 +338,25 @@ const styles = StyleSheet.create({
   frame: {
     height: '100%',
     width: '100%',
-    backgroundColor: 'white',
+    backgroundColor: '#F5F5F5',
     alignItems: 'center',
   },
   container1: {
-    height: 350,
     width: '100%',
     alignItems: 'center',
-    backgroundColor: '#F2F2F2',
+    backgroundColor: 'white',
+    overflow: 'hidden',
   },
   img: {
-    height: 263,
     width: '95%',
     borderRadius: 5,
     marginTop: 10,
+    overflow: 'hidden',
   },
   ScrollView: {
     height: 'auto',
     width: '95%',
-    backgroundColor: 'white',
+    backgroundColor: '#F5F5F5',
     marginHorizontal: 20,
     marginTop: 10,
   },
@@ -327,10 +368,15 @@ const styles = StyleSheet.create({
   },
   header2: {
     color: '#206477',
-    fontSize: 32,
     fontWeight: 'bold',
-    marginVertical: 10,
+    marginTop: 10,
     marginLeft: 10,
+    position: 'absolute',
+    bottom: 20,
+    left: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    padding: 10,
+    borderRadius: 8,
   },
   content1: {
     height: 'auto',
@@ -406,6 +452,7 @@ const styles = StyleSheet.create({
     borderColor: '#E8E8E8',
     paddingHorizontal: 15,
     paddingVertical: 50,
+    backgroundColor: 'white',
     
   },
   textHeader3: {

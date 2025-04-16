@@ -3,7 +3,6 @@ import {
   StyleSheet,
   Text,
   View,
-  Image,
   FlatList,
   BackHandler,
   Alert,
@@ -14,6 +13,7 @@ import React, {useState, useEffect, useCallback, memo} from 'react';
 import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 import ItemHomePage from '../../components/ItemHomePage';
 import CustomAlert from '../../components/CustomAlert';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 import { detailSensor } from '../../../services/sensorServices';
 import { FaThermometerHalf, FaTint, FaLightbulb, FaWind } from 'react-icons/fa';
@@ -24,6 +24,7 @@ import colors from '../../../assets/common/colorCss';
 
 const HomeScreen = ({navigation}) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(20);
   const isFocused = useIsFocused();
   const handleGoToDetail = item => {
     const deviceId = item?.data?.id_esp;
@@ -103,10 +104,14 @@ const HomeScreen = ({navigation}) => {
         <TouchableOpacity
           style={styles.header2}
           onPress={() => setModalVisible(true)}>
-          <Image
-            source={require('../../../assets/icon/canhBao.png')}
-            style={styles.alertIcon}
-          />
+          <View style={styles.iconContainer}>
+            <Icon name="notifications" size={30} color="#206477" />
+            {notificationCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{notificationCount}</Text>
+              </View>
+            )}
+          </View>
         </TouchableOpacity>
         <CustomAlert
           visible={modalVisible}
@@ -193,6 +198,26 @@ const styles = StyleSheet.create({
     width: '20%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  iconContainer: {
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    right: -6,
+    top: -6,
+    backgroundColor: 'red',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+    paddingHorizontal: 4,
   },
   container: {
     height: 'auto',
