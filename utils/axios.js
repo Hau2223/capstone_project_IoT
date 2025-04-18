@@ -20,6 +20,24 @@ httpRequest.interceptors.request.use(
   err => Promise.reject(err),
 );
 
+httpRequest.interceptors.request.use(
+  async req => {
+    const token = await AsyncStorage.getItem('authToken');
+    if (token) {
+      req.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Kiểm tra xem request có phải là multipart/form-data hay không
+    if (req.headers['Content-Type'] === 'multipart/form-data') {
+      // Nếu đúng, giữ lại content-type là 'multipart/form-data'
+      req.headers['Content-Type'] = 'multipart/form-data';
+    }
+
+    return req;
+  },
+  err => Promise.reject(err),
+);
+
 export const get = async (path, options = {}) => {
   const response = await httpRequest.get(path, options);
   return response.data;

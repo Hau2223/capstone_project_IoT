@@ -14,6 +14,7 @@ import colors from '../../../../assets/common/colorCss';
 import {ThemeContext} from '../../../../assets/common/themeProvider';
 import {createStyle} from '../style';
 import LinearGradient from 'react-native-linear-gradient';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const ComfirmNewPass = ({data, handleInputChange, handleResetPass}) => {
   const navigation = useNavigation();
@@ -25,6 +26,10 @@ const ComfirmNewPass = ({data, handleInputChange, handleResetPass}) => {
     email: '',
     password: '',
     cfNewPassword: '',
+  });
+  const [showPassword, setShowPassword] = useState({
+    newPassword: false,
+    cfNewPassword: false,
   });
 
   const handleRequest = () => {
@@ -63,6 +68,12 @@ const ComfirmNewPass = ({data, handleInputChange, handleResetPass}) => {
       handleResetPass();
     }
   };
+  const togglePasswordVisibility = key => {
+    setShowPassword(prev => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
 
   return (
     <View style={styles.cnpContainer}>
@@ -98,10 +109,21 @@ const ComfirmNewPass = ({data, handleInputChange, handleResetPass}) => {
                 value={data.newPassword}
                 onChangeText={text => handleInputChange('newPassword', text)}
                 placeholder={t('enter_new_password')}
-                secureTextEntry
-                style={styles.cnpTextInput}
+                secureTextEntry={!showPassword.newPassword}
+                style={[styles.cnpTextInput, {paddingRight: 40}]}
+              
               />
+              <TouchableOpacity
+                style={styles.cnpEyeIcon}
+                onPress={() => togglePasswordVisibility('newPassword')}>
+                <Ionicons
+                  name={showPassword.newPassword ? 'eye-off' : 'eye'}
+                  size={22}
+                  color={colors.loginTxt}
+                />
+              </TouchableOpacity>
             </View>
+
             {error.newPassword ? (
               <Text style={styles.cnpErrorText} numberOfLines={2}>
                 {error.newPassword}
@@ -113,13 +135,23 @@ const ComfirmNewPass = ({data, handleInputChange, handleResetPass}) => {
           <View style={styles.cnpInputGroup}>
             <View style={styles.cnpInputWrapper}>
               <TextInput
-                value={data.cfnewPassword}
+                value={data.cfNewPassword}
                 onChangeText={text => handleInputChange('cfNewPassword', text)}
-                secureTextEntry
                 placeholder={t('enter_again_password')}
-                style={styles.cnpTextInput}
+                secureTextEntry={!showPassword.cfNewPassword}
+                style={[styles.cnpTextInput, {paddingRight: 40}]}
               />
+              <TouchableOpacity
+                style={styles.cnpEyeIcon}
+                onPress={() => togglePasswordVisibility('cfNewPassword')}>
+                <Ionicons
+                  name={showPassword.cfNewPassword ? 'eye-off' : 'eye'}
+                  size={22}
+                  color={colors.loginTxt}
+                />
+              </TouchableOpacity>
             </View>
+
             {error.cfNewPassword ? (
               <Text style={styles.cnpErrorText} numberOfLines={2}>
                 {error.cfNewPasswordm}

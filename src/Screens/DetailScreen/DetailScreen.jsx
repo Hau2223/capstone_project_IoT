@@ -8,7 +8,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {memberId} from '../../../services/menberServices';
 import {gardenId} from '../../../services/authServices';
 
-const DetailScreen = ({route}) => {
+const DetailScreen =  ({route}) => {
   const {item} = route.params;
   const [isWatering, setIsWatering] = useState(false);
   const [isFan, setIsFan] = useState(false);
