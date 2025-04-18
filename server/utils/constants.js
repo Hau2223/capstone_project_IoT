@@ -1,5 +1,5 @@
 module.exports = {
-  CONFIGURL: {url: 'http://localhost:8000'},
+  CONFIGURL: {url: 'https://capstone-project-iot-1.onrender.com'},
   // //https://capstone-project-iot-1.onrender.com
   // //http://localhost:8000
   // //http://192.168.1.5:8000
