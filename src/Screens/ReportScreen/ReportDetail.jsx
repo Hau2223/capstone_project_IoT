@@ -1,4 +1,4 @@
-import { StyleSheet, TouchableOpacity, Text, View, Animated } from 'react-native';
+import { StyleSheet, TouchableOpacity, Text, View } from 'react-native';
 import React, { useRef, useEffect, useState } from 'react';
 import { LineChart } from 'react-native-gifted-charts';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -153,28 +153,12 @@ const dataSoLanDen = [
 const WeekSelector = ({ onSelectWeek }) => {
   const [date, setDate] = useState(new Date());
   const [show, setShow] = useState(false);
-  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handleDateChange = (_, selectedDate) => {
     setShow(false);
     if (selectedDate) {
-      // Add press animation
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 0.95,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          tension: 50,
-          friction: 3,
-          useNativeDriver: true,
-        })
-      ]).start();
-
       setDate(selectedDate);
-      onSelectWeek(getWeekRange(selectedDate));
+      onSelectWeek(getWeekRange(selectedDate)); // Sử dụng getWeekRange toàn cục
     }
   };
 
@@ -191,22 +175,11 @@ const WeekSelector = ({ onSelectWeek }) => {
           />
         )}
       </View>
-      <TouchableOpacity 
-        style={styles.button} 
-        onPress={() => setShow(true)}
-        activeOpacity={0.7}
-      >
-        <Animated.Text 
-          style={[
-            styles.weekText,
-            {
-              transform: [{ scale: scaleAnim }]
-            }
-          ]}
-        >
+      <TouchableOpacity style={styles.button} onPress={() => setShow(true)}>
+        <Text style={styles.weekText}>
           Tuần: {getWeekRange(date).startOfWeek.toDateString()} -{' '}
           {getWeekRange(date).endOfWeek.toDateString()}
-        </Animated.Text>
+        </Text>
       </TouchableOpacity>
       <View style={styles.detailLine}>
         <View style={styles.detail}>
@@ -223,42 +196,10 @@ const WeekSelector = ({ onSelectWeek }) => {
 };
 
 const LineChartComponent = ({ data1, data2 }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-
-  useEffect(() => {
-    // Reset animations
-    fadeAnim.setValue(0);
-    slideAnim.setValue(50);
-
-    // Start animations
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      })
-    ]).start();
-  }, [data1, data2]);
-
   console.log('Data1 (Số lần tưới):', data1);
   console.log('Data2 (Số lần bật đèn):', data2);
   return (
-    <Animated.View 
-      style={[
-        styles.chartContainer,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }]
-        }
-      ]}
-    >
+    <View style={styles.chartContainer}>
       <LineChart
         data={data1}
         data2={data2}
@@ -328,7 +269,7 @@ const LineChartComponent = ({ data1, data2 }) => {
           },
         }}
       />
-    </Animated.View>
+    </View>
   );
 };
 
