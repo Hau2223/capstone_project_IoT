@@ -1,6 +1,7 @@
 import { TouchableOpacity, StyleSheet, Text, View, ScrollView, SafeAreaView, TextInput, Switch, Modal, Platform, Dimensions, PanResponder, Animated } from 'react-native';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Picker } from '@react-native-picker/picker';
+import {updateSchedule, addSchedule} from '../../../services/scheduleServices';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CLOCK_SIZE = SCREEN_WIDTH - 80;
@@ -8,52 +9,57 @@ const CLOCK_RADIUS = CLOCK_SIZE / 2;
 const CLOCK_INNER_RADIUS = CLOCK_RADIUS - 40;
 const DOT_SIZE = 30;
 
-const CustomSwitch = ({ value, onValueChange, activeColor = '#4CAF50' }) => {
-  const translateX = useRef(new Animated.Value(value ? 22 : 0)).current;
-  
-  useEffect(() => {
-    Animated.spring(translateX, {
-      toValue: value ? 22 : 0,
-      useNativeDriver: true,
-      bounciness: 4,
-    }).start();
-  }, [value]);
+const SetTimerScreen = ({ route, navigation }) => {
+  const { item } = route.params;
+  const isNewSchedule = item?.isNewSchedule;
+  const existingSchedule = item?.schedule;
 
-  return (
-    <TouchableOpacity
-      activeOpacity={0.8}
-      onPress={() => onValueChange(!value)}
-      style={[
-        styles.switchContainer,
-        { backgroundColor: value ? activeColor : '#e0e0e0' }
-      ]}
-    >
-      <Animated.View
-        style={[
-          styles.switchThumb,
-          {
-            transform: [{ translateX }],
-            backgroundColor: value ? '#fff' : '#f5f5f5',
-          }
-        ]}
-      >
-        {value && (
-          <View style={styles.switchIcon}>
-          </View>
-        )}
-      </Animated.View>
-    </TouchableOpacity>
-  );
-};
+  const [selectedTime, setSelectedTime] = useState(() => {
+    if (existingSchedule?.numbClock) {
+      const [hours, minutes] = existingSchedule.numbClock.split(':');
+      const date = new Date();
+      date.setHours(parseInt(hours));
+      date.setMinutes(parseInt(minutes));
+      return date;
+    }
+    return new Date();
+  });
 
-const SetTimerScreen = () => {
-  const [selectedTime, setSelectedTime] = useState(new Date());
+  const [isAM, setIsAM] = useState(() => {
+    const hours = selectedTime.getHours();
+    return hours < 12;
+  });
+
+  const [duration, setDuration] = useState(() => {
+    if (existingSchedule?.timer) {
+      const timerMatch = existingSchedule.timer.match(/(\d+)/);
+      if (timerMatch) {
+        return parseInt(timerMatch[1]);
+      }
+    }
+    return 30; // Default duration
+  });
+
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [selectedDays, setSelectedDays] = useState([]);
-  const [scheduleName, setScheduleName] = useState('');
+  const [showDurationPicker, setShowDurationPicker] = useState(false);
+  const [selectedDays, setSelectedDays] = useState(() => {
+    if (existingSchedule?.calendar) {
+      const dayMap = {
+        'T.2': '2', 'T.3': '3', 'T.4': '4', 'T.5': '5',
+        'T.6': '6', 'T.7': '7', 'CN': 'C'
+      };
+      return existingSchedule.calendar.split(', ')
+        .map(day => dayMap[day.trim()])
+        .filter(Boolean);
+    }
+    return [];
+  });
+  const [scheduleName, setScheduleName] = useState(existingSchedule?.name || '');
   const [notificationEnabled, setNotificationEnabled] = useState(true);
   const [alarmEnabled, setAlarmEnabled] = useState(false);
   const [isHourMode, setIsHourMode] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [timeInputMode, setTimeInputMode] = useState('clock'); // 'clock' or 'keypad'
 
   const pan = useRef(new Animated.ValueXY()).current;
   const angle = useRef(new Animated.Value(0)).current;
@@ -68,9 +74,6 @@ const SetTimerScreen = () => {
     { id: 'C', label: 'CN' },
   ];
 
-  const hours = Array.from({ length: 24 }, (_, i) => i);
-  const minutes = Array.from({ length: 60 }, (_, i) => i);
-
   const toggleDay = (dayId) => {
     if (selectedDays.includes(dayId)) {
       setSelectedDays(selectedDays.filter((d) => d !== dayId));
@@ -80,6 +83,105 @@ const SetTimerScreen = () => {
   };
 
   const formatTimeUnit = (unit) => unit.toString().padStart(2, '0');
+
+  const toggleAMPM = (isAM) => {
+    setIsAM(isAM);
+    const newTime = new Date(selectedTime);
+    const currentHours = newTime.getHours();
+    if (isAM && currentHours >= 12) {
+      newTime.setHours(currentHours - 12);
+    } else if (!isAM && currentHours < 12) {
+      newTime.setHours(currentHours + 12);
+    }
+    setSelectedTime(newTime);
+  };
+
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      
+      // Convert selected days to API format
+      const dayMap = {
+        '2': 'Monday', '3': 'Tuesday', '4': 'Wednesday', '5': 'Thursday',
+        '6': 'Friday', '7': 'Saturday', 'C': 'Sunday'
+      };
+      const repeatDays = selectedDays.map(day => dayMap[day]);
+
+      // Format time to 24-hour format (HH:mm)
+      let hours = selectedTime.getHours();
+      const minutes = selectedTime.getMinutes();
+      const formattedTime = `${formatTimeUnit(hours)}:${formatTimeUnit(minutes)}`;
+
+      if (!isNewSchedule && existingSchedule) {
+        // Prepare update data
+        const updateData = {
+          id_esp: item.id_esp,
+          scheduleId: existingSchedule.id,
+          data: {
+            startTime: formattedTime,
+            repeat: repeatDays,
+            status: existingSchedule.isWatering || false,
+            duration: duration
+          }
+        };
+
+        console.log('Update data being sent:', JSON.stringify(updateData, null, 2));
+
+        // Call update API
+        const response = await updateSchedule(updateData);
+        console.log('Raw API response:', response);
+        
+        // Parse response if it's a string
+        let parsedResponse = response;
+        if (typeof response === 'string') {
+          try {
+            parsedResponse = JSON.parse(response);
+          } catch (e) {
+            console.error('Error parsing response:', e);
+          }
+        }
+
+        console.log('Parsed API response:', parsedResponse);
+        
+        if (parsedResponse && 
+            (parsedResponse.message === "Schedule updated successfully" || 
+             parsedResponse.status === 200 || 
+             parsedResponse.status === true)) {
+          console.log('Schedule updated successfully');
+          navigation.goBack();
+        } else {
+          console.error('Failed to update schedule. Response:', parsedResponse);
+        }
+      } else {
+        // Handle new schedule creation
+        const addData = {
+          id_esp: item.id_esp,
+          name: item.controlName || 'water',
+          data: {
+            startTime: formattedTime,
+            repeat: repeatDays,
+            status: false,
+            duration: duration
+          }
+        };
+
+        console.log('Add schedule data:', JSON.stringify(addData, null, 2));
+        const response = await addSchedule(addData);
+        console.log('Add schedule response:', response);
+
+        if (response && response.message === "Schedule added successfully") {
+          console.log('Schedule added successfully');
+          navigation.goBack();
+        } else {
+          console.error('Failed to add schedule. Response:', response);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving schedule:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
@@ -177,11 +279,13 @@ const SetTimerScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.cancelButton}>Huỷ</Text>
         </TouchableOpacity>
-        <TouchableOpacity>
-          <Text style={styles.saveButton}>Lưu</Text>
+        <TouchableOpacity onPress={handleSave} disabled={loading}>
+          <Text style={[styles.saveButton, loading && styles.saveButtonDisabled]}>
+            {loading ? 'Đang lưu...' : 'Lưu'}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -191,6 +295,12 @@ const SetTimerScreen = () => {
             <Text style={styles.selectedTime}>
               {formatTimeUnit(selectedTime.getHours())}:{formatTimeUnit(selectedTime.getMinutes())}
             </Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.durationButton}
+            onPress={() => setShowDurationPicker(true)}
+          >
+            <Text style={styles.durationText}>{duration} phút</Text>
           </TouchableOpacity>
         </View>
 
@@ -202,7 +312,10 @@ const SetTimerScreen = () => {
           <View style={styles.modalOverlay}>
             <View style={styles.pickerContainer}>
               <View style={styles.pickerHeader}>
-                <TouchableOpacity onPress={() => setShowTimePicker(false)}>
+                <TouchableOpacity onPress={() => {
+                  setShowTimePicker(false);
+                  setIsHourMode(true);
+                }}>
                   <Text style={styles.cancelButton}>Huỷ</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => {
@@ -214,29 +327,57 @@ const SetTimerScreen = () => {
               </View>
 
               <View style={styles.timeDisplayContainer}>
-                <TouchableOpacity 
-                  onPress={() => setIsHourMode(true)}
-                  style={styles.timeUnitButton}
-                >
-                  <Text style={[
-                    styles.timeUnitText,
-                    isHourMode && styles.activeTimeUnit
-                  ]}>
-                    {formatTimeUnit(selectedTime.getHours())}
-                  </Text>
-                </TouchableOpacity>
-                <Text style={styles.timeUnitSeparator}>:</Text>
-                <TouchableOpacity 
-                  onPress={() => setIsHourMode(false)}
-                  style={styles.timeUnitButton}
-                >
-                  <Text style={[
-                    styles.timeUnitText,
-                    !isHourMode && styles.activeTimeUnit
-                  ]}>
-                    {formatTimeUnit(selectedTime.getMinutes())}
-                  </Text>
-                </TouchableOpacity>
+                <View style={styles.timeDisplay}>
+                  <TouchableOpacity 
+                    onPress={() => setIsHourMode(true)}
+                    style={styles.timeUnitButton}
+                  >
+                    <Text style={[
+                      styles.timeUnitText,
+                      isHourMode && styles.activeTimeUnit
+                    ]}>
+                      {formatTimeUnit(selectedTime.getHours() % 12 || 12)}
+                    </Text>
+                  </TouchableOpacity>
+                  <Text style={styles.timeUnitSeparator}>:</Text>
+                  <TouchableOpacity 
+                    onPress={() => setIsHourMode(false)}
+                    style={styles.timeUnitButton}
+                  >
+                    <Text style={[
+                      styles.timeUnitText,
+                      !isHourMode && styles.activeTimeUnit
+                    ]}>
+                      {formatTimeUnit(selectedTime.getMinutes())}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.ampmContainer}>
+                  <TouchableOpacity 
+                    onPress={() => toggleAMPM(true)}
+                    style={[
+                      styles.ampmButton,
+                      isAM && styles.ampmButtonActive
+                    ]}
+                  >
+                    <Text style={[
+                      styles.ampmText,
+                      isAM && styles.ampmTextActive
+                    ]}>AM</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={() => toggleAMPM(false)}
+                    style={[
+                      styles.ampmButton,
+                      !isAM && styles.ampmButtonActive
+                    ]}
+                  >
+                    <Text style={[
+                      styles.ampmText,
+                      !isAM && styles.ampmTextActive
+                    ]}>PM</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <View style={styles.clockContainer} {...panResponder.panHandlers}>
@@ -249,8 +390,46 @@ const SetTimerScreen = () => {
           </View>
         </Modal>
 
+        <Modal
+          visible={showDurationPicker}
+          transparent
+          animationType="fade"
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.pickerContainer}>
+              <View style={styles.pickerHeader}>
+                <TouchableOpacity onPress={() => setShowDurationPicker(false)}>
+                  <Text style={styles.cancelButton}>Huỷ</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setShowDurationPicker(false)}>
+                  <Text style={styles.saveButton}>Xong</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.durationPickerContainer}>
+                <Picker
+                  selectedValue={duration}
+                  onValueChange={(itemValue) => setDuration(itemValue)}
+                  style={styles.durationPicker}
+                >
+                  {[15, 30, 45, 60, 90, 120].map((value) => (
+                    <Picker.Item 
+                      key={value} 
+                      label={`${value} phút`} 
+                      value={value} 
+                    />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Mỗi T.3, T5, T7</Text>
+          <Text style={styles.sectionTitle}>Mỗi {selectedDays.map(day => {
+            const dayObj = daysOfWeek.find(d => d.id === day);
+            return dayObj ? dayObj.label : '';
+          }).join(', ')}</Text>
           <View style={styles.daysContainer}>
             {daysOfWeek.map((day) => (
               <TouchableOpacity
@@ -289,10 +468,11 @@ const SetTimerScreen = () => {
               <Text style={styles.settingTitle}>Thông báo</Text>
               <Text style={styles.settingDescription}>Nhận thông báo khi đến giờ</Text>
             </View>
-            <CustomSwitch
+            <Switch
               value={notificationEnabled}
               onValueChange={setNotificationEnabled}
-              activeColor="#4CAF50"
+              trackColor={{ false: '#767577', true: '#81b0ff' }}
+              thumbColor={notificationEnabled ? '#4CAF50' : '#f4f3f4'}
             />
           </View>
           
@@ -303,10 +483,11 @@ const SetTimerScreen = () => {
               <Text style={styles.settingTitle}>Âm thanh chuông báo</Text>
               <Text style={styles.settingDescription}>Phát âm thanh khi thông báo</Text>
             </View>
-            <CustomSwitch
+            <Switch
               value={alarmEnabled}
               onValueChange={setAlarmEnabled}
-              activeColor="#4CAF50"
+              trackColor={{ false: '#767577', true: '#81b0ff' }}
+              thumbColor={alarmEnabled ? '#4CAF50' : '#f4f3f4'}
             />
           </View>
         </View>
@@ -337,6 +518,9 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: '#FF9500',
     fontWeight: '600',
+  },
+  saveButtonDisabled: {
+    opacity: 0.5,
   },
   container: {
     flex: 1,
@@ -370,28 +554,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     marginBottom: 20,
-  },
-  timeDisplayContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  timeUnitButton: {
-    padding: 10,
-  },
-  timeUnitText: {
-    fontSize: 40,
-    color: '#000',
-    opacity: 0.5,
-  },
-  activeTimeUnit: {
-    opacity: 1,
-    fontWeight: 'bold',
-  },
-  timeUnitSeparator: {
-    fontSize: 40,
-    marginHorizontal: 5,
-    color: '#000',
   },
   clockContainer: {
     width: CLOCK_SIZE,
@@ -451,6 +613,24 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     backgroundColor: '#FF9500',
+  },
+  durationButton: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+  },
+  durationText: {
+    fontSize: 18,
+    color: '#000000',
+    textAlign: 'center',
+  },
+  durationPickerContainer: {
+    width: '100%',
+    height: 200,
+  },
+  durationPicker: {
+    width: '100%',
   },
   section: {
     padding: 20,
@@ -538,34 +718,52 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     marginVertical: 8,
   },
-  switchContainer: {
-    width: 50,
-    height: 28,
-    borderRadius: 14,
-    padding: 2,
-    justifyContent: 'center',
-  },
-  switchThumb: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    justifyContent: 'center',
+  timeDisplayContainer: {
     alignItems: 'center',
+    marginBottom: 30,
   },
-  switchIcon: {
+  timeDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  timeUnitButton: {
+    padding: 10,
+  },
+  timeUnitText: {
+    fontSize: 40,
+    color: '#000',
+    opacity: 0.5,
+  },
+  activeTimeUnit: {
     opacity: 1,
-  },
-  switchIconText: {
-    color: '#4CAF50',
-    fontSize: 12,
     fontWeight: 'bold',
+  },
+  timeUnitSeparator: {
+    fontSize: 40,
+    marginHorizontal: 5,
+    color: '#000',
+  },
+  ampmContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    padding: 4,
+  },
+  ampmButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+  },
+  ampmButtonActive: {
+    backgroundColor: '#FF9500',
+  },
+  ampmText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
+  },
+  ampmTextActive: {
+    color: '#fff',
   },
 });

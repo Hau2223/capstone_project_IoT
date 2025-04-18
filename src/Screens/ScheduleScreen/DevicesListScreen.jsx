@@ -4,9 +4,9 @@ import ItemSchedule from '../../components/ItemSchedule';
 import { getAllDevices } from '../../../services/deviceServices';
 
 const DevicesListScreen = ({ navigation, route }) => {
-  const controlName = route.params?.controlName
+  const controlName = route.params?.controlName;
   const [devices, setDevices] = useState([]);
-  const idUser = route.params?.idUser || '67f9ff224c36c6ad57e60434'; //thay id User từ API vào đây nhé
+  const idUser = route.params?.idUser || '67f9ff224c36c6ad57e60434';
 
   useEffect(() => {
     const fetchDevices = async () => {
@@ -17,23 +17,52 @@ const DevicesListScreen = ({ navigation, route }) => {
         console.log('Tất cả thiết bị từ API:', allDevices);
 
         const filteredDevices = allDevices
-          .filter(device =>
-            device.members?.some(member => member.userId === idUser) &&
-            device.controls?.some(
-              control => 
-                control.name === controlName && 
-                control.schedules?.length > 0
-            )
-          )
+          .filter(device => device.members?.some(member => member.userId === idUser))
           .map((device, index) => {
-            const waterControl = device.controls.find(c => c.name === controlName);
+            const control = device.controls.find(c => c.name === controlName);
+            const hasSchedules = control?.schedules && control.schedules.length > 0;
+            
+            // Sort schedules by time if they exist
+            const sortedSchedules = hasSchedules ? [...control.schedules].sort((a, b) => {
+              // First sort by time
+              const timeA = a.startTime.split(':').map(Number);
+              const timeB = b.startTime.split(':').map(Number);
+              
+              if (timeA[0] !== timeB[0]) {
+                return timeA[0] - timeB[0];
+              }
+              if (timeA[1] !== timeB[1]) {
+                return timeA[1] - timeB[1];
+              }
+              
+              // If times are equal, sort by days
+              const daysOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+              const firstDayA = a.repeat[0] || '';
+              const firstDayB = b.repeat[0] || '';
+              
+              return daysOrder.indexOf(firstDayA) - daysOrder.indexOf(firstDayB);
+            }) : [];
+
+            // Determine status text based on control type and schedule existence
+            let statusText = 'Chưa có thiết bị';
+            if (control) {
+              if (hasSchedules) {
+                statusText = `Trạng thái ${controlName === 'water' ? 'tưới' : controlName === 'light' ? 'đèn' : 'quạt'}: ${control.status ? 'ON' : 'OFF'}`;
+              } else {
+                statusText = `Trạng thái: - - -`;
+              }
+            }
+
             return {
               id: device._id,
+              id_esp: device.id_esp,
+              controlName: controlName,
               tenKhu: device.name_area || `Khu ${index + 1}`,
-              trangThaiTuoi: `Trạng thái tưới: ${waterControl?.status ? 'ON' : 'OFF'}`,
+              trangThaiTuoi: statusText,
               imageSource: { uri: device.img_area } || require('../../../assets/img/1.png'),
-              scheduleInfo: waterControl?.schedules?.[0], // Lấy lịch đầu tiên nếu có
-              schedules: waterControl?.schedules || [], // Lưu tất cả lịch để dùng nếu cần
+              scheduleInfo: sortedSchedules[0] || null,
+              schedules: sortedSchedules,
+              hasSchedules: hasSchedules
             };
           });
 
@@ -67,10 +96,12 @@ const DevicesListScreen = ({ navigation, route }) => {
           renderItem={({ item }) => (
             <View style={styles.itemWrapper}>
               <ItemSchedule
+                onPress={() => handleGoToAlarm(item)}
+                imageSource={item.imageSource}
                 tenKhu={item.tenKhu}
                 trangThaiTuoi={item.trangThaiTuoi}
-                imageSource={item.imageSource}
-                onPress={() => handleGoToAlarm(item)}
+                schedules={item.schedules}
+                hasSchedules={item.hasSchedules}
               />
             </View>
           )}
