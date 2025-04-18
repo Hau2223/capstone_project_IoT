@@ -22,13 +22,13 @@ const ScheduleScreen = ({ navigation, route }) => {
       const userData = await AsyncStorage.getItem('user');
       if (userData) {
         const parsedData = JSON.parse(userData);
-        setIdUser(parsedData.idUser || route.params?.idUser || '67fc85f73db6d19e181ad8a6');
+        setIdUser(parsedData.idUser || route.params?.idUser || '67f9ff224c36c6ad57e60434');
       } else {
-        setIdUser(route.params?.idUser || '67fc85f73db6d19e181ad8a6');
+        setIdUser(route.params?.idUser || '67f9ff224c36c6ad57e60434');
       }
     } catch (err) {
       console.error('Lỗi khi lấy idUser:', err);
-      setIdUser(route.params?.idUser || '67fc85f73db6d19e181ad8a6');
+      setIdUser(route.params?.idUser || '67f9ff224c36c6ad57e60434');
     }
   }, [route.params?.idUser]);
 
