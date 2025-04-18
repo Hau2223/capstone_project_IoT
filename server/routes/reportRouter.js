@@ -8,7 +8,7 @@ app.use(bodyParser.json());
  * @swagger
  * /api/report/detailReport/{deviceId}:
  *   get:
- *     summary: Lấy thông tin báo cáo theo deviceId
+ *     summary: Get report details by deviceId
  *     tags: [Reports]
  *     parameters:
  *       - in: path
@@ -16,10 +16,10 @@ app.use(bodyParser.json());
  *         required: true
  *         schema:
  *           type: string
- *         description: ID của thiết bị cần lấy báo cáo
+ *         description: Device ID to get reports for
  *     responses:
  *       200:
- *         description: Trả về danh sách báo cáo của thiết bị
+ *         description: List of reports for the device
  *         content:
  *           application/json:
  *             schema:
@@ -27,17 +27,9 @@ app.use(bodyParser.json());
  *               items:
  *                 $ref: '#/components/schemas/Report'
  *       404:
- *         description: Không tìm thấy báo cáo nào cho thiết bị
- *         content:
- *           application/json:
- *             example:
- *               message: "No reports found for this device"
+ *         description: No reports found for this device
  *       500:
- *         description: Lỗi máy chủ
- *         content:
- *           application/json:
- *             example:
- *               message: "Error fetching data"
+ *         description: Server error
  */
 app.get('/detailReport/:deviceId', async (req, res) => {
   try {
@@ -54,12 +46,11 @@ app.get('/detailReport/:deviceId', async (req, res) => {
   }
 });
 
-
 /**
  * @swagger
  * /api/report/createReport:
  *   post:
- *     summary: Tạo báo cáo mới
+ *     summary: Create a new report
  *     tags: [Reports]
  *     requestBody:
  *       required: true
@@ -67,106 +58,44 @@ app.get('/detailReport/:deviceId', async (req, res) => {
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/Report'
- *           examples:
- *             fullReport:
- *               summary: Ví dụ báo cáo đầy đủ
- *               value:
- *                 deviceId: "abc123"
- *                 time_created: "2024-03-25T10:30:00Z"
- *                 water_usage: 50
- *                 water_duration: 120
- *                 light_usage: 30
- *                 light_duration: 180
- *             defaultReport:
- *               summary: Ví dụ báo cáo mặc định
- *               value:
- *                 deviceId: "xyz456"
- *                 water_usage: 40
- *                 water_duration: 90
- *                 light_usage: 20
- *                 light_duration: 150
  *     responses:
  *       201:
- *         description: Tạo báo cáo thành công
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Report'
- *             examples:
- *               successResponse:
- *                 summary: Kết quả tạo báo cáo thành công
- *                 value:
- *                   _id: "60d5ecb54b6cf82de4d7a8c2"
- *                   deviceId: "abc123"
- *                   time_created: "2024-03-25T10:30:00Z"
- *                   water_usage: 50
- *                   water_duration: 120
- *                   light_usage: 30
- *                   light_duration: 180
- *                   createdAt: "2024-03-25T10:30:00Z"
- *                   updatedAt: "2024-03-25T10:35:00Z"
+ *         description: Report created successfully
  *       400:
- *         description: Thiếu thông tin bắt buộc
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Required fields are missing"
- *             examples:
- *               missingFields:
- *                 summary: Thiếu thông tin bắt buộc
- *                 value:
- *                   message: "Required fields are missing"
+ *         description: Missing required fields
  *       500:
- *         description: Lỗi máy chủ
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Internal server error"
- *             examples:
- *               serverError:
- *                 summary: Lỗi máy chủ nội bộ
- *                 value:
- *                   message: "Internal server error"
+ *         description: Server error
  */
 app.post('/createReport', async (req, res) => {
   try {
     const {
       deviceId,
-      time_created,
       water_usage,
-      water_duration,
-      light_usage,
-      light_duration,
+      moisture_avg,
+      luminosity_avg,
+      tempurature_avg,
+      humidity_avg,
+      stream_avg
     } = req.body;
-    if (
-      !deviceId ||
-      !water_usage ||
-      !water_duration ||
-      !light_usage ||
-      !light_duration
-    ) {
-      return res.status(400).json({message: 'Missing required fields'});
+
+    if (!deviceId || !water_usage) {
+      return res.status(400).json({ message: 'Missing required fields' });
     }
+
     const report = new Report({
       deviceId,
-      time_created,
       water_usage,
-      water_duration,
-      light_usage,
-      light_duration,
+      moisture_avg: moisture_avg || [],
+      luminosity_avg: luminosity_avg || [],
+      tempurature_avg: tempurature_avg || [],
+      humidity_avg: humidity_avg || [],
+      stream_avg: stream_avg || []
     });
+
     await report.save();
-    res.status(201).json({message: 'Report saved successfully', report});
+    res.status(201).json({ message: 'Report saved successfully', report });
   } catch (error) {
-    res.status(500).json({message: 'Error saving data', error});
+    res.status(500).json({ message: 'Error saving data', error });
   }
 });
 
@@ -174,7 +103,7 @@ app.post('/createReport', async (req, res) => {
  * @swagger
  * /api/report/updateReport/{deviceId}:
  *   put:
- *     summary: Cập nhật báo cáo mới nhất của một thiết bị
+ *     summary: Update the latest report for a device
  *     tags: [Reports]
  *     parameters:
  *       - in: path
@@ -182,159 +111,118 @@ app.post('/createReport', async (req, res) => {
  *         required: true
  *         schema:
  *           type: string
- *         description: ID của thiết bị cần cập nhật báo cáo mới nhất
+ *         description: Device ID to update report for
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - water_usage
- *               - water_duration
- *               - light_usage
- *               - light_duration
  *             properties:
  *               water_usage:
  *                 type: number
- *                 description: Mức sử dụng nước
- *               water_duration:
- *                 type: number
- *                 description: Thời gian sử dụng nước (giây)
- *               light_usage:
- *                 type: number
- *                 description: Mức sử dụng điện
- *               light_duration:
- *                 type: number
- *                 description: Thời gian sử dụng điện (giây)
- *           example:
- *             water_usage: 10
- *             water_duration: 300
- *             light_usage: 15
- *             light_duration: 600
+ *               moisture_avg:
+ *                 type: array
+ *                 items:
+ *                   type: number
+ *               luminosity_avg:
+ *                 type: array
+ *                 items:
+ *                   type: number
+ *               tempurature_avg:
+ *                 type: array
+ *                 items:
+ *                   type: number
+ *               humidity_avg:
+ *                 type: array
+ *                 items:
+ *                   type: number
+ *               stream_avg:
+ *                 type: array
+ *                 items:
+ *                   type: number
  *     responses:
  *       200:
- *         description: Báo cáo cập nhật thành công
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                 report:
- *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                     deviceId:
- *                       type: string
- *                     water_usage:
- *                       type: number
- *                     water_duration:
- *                       type: number
- *                     light_usage:
- *                       type: number
- *                     light_duration:
- *                       type: number
- *                     time_created:
- *                       type: string
- *                       format: date-time
- *             example:
- *               message: "Report updated successfully"
- *               report:
- *                 _id: "60d5ecb54b6cf82de4d7a8c1"
- *                 deviceId: "12345"
- *                 water_usage: 10
- *                 water_duration: 300
- *                 light_usage: 15
- *                 light_duration: 600
- *                 time_created: "2024-03-25T10:30:00Z"
+ *         description: Report updated successfully
  *       400:
- *         description: Thiếu dữ liệu yêu cầu
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *             example:
- *               message: "Missing required fields"
+ *         description: Missing required fields
  *       404:
- *         description: Không tìm thấy báo cáo mới nhất cho thiết bị
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *             example:
- *               message: "No report found for this device"
+ *         description: No report found for this device
  *       500:
- *         description: Lỗi máy chủ
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                 error:
- *                   type: string
- *             example:
- *               message: "Error updating data"
- *               error: "Internal server error details"
+ *         description: Server error
  */
 app.put('/updateReport/:deviceId', async (req, res) => {
   try {
-    const {deviceId} = req.params;
-    const {water_usage, water_duration, light_usage, light_duration} = req.body;
+    const { deviceId } = req.params;
+    const {
+      water_usage,
+      moisture_avg,
+      luminosity_avg,
+      tempurature_avg,
+      humidity_avg,
+      stream_avg
+    } = req.body;
 
-    // Validate input fields
-    if (
-      !deviceId ||
-      !water_usage ||
-      !water_duration ||
-      !light_usage ||
-      !light_duration
-    ) {
-      return res.status(400).json({message: 'Missing required fields'});
+    if (!deviceId) {
+      return res.status(400).json({ message: 'Device ID is required' });
     }
 
-    // Find the NEWEST report for this device (sorted by time_created DESCENDING)
-    const newestReport = await Report.findOne({deviceId}).sort({
-      time_created: -1,
+    // Get current date at midnight
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Find report for today
+    let report = await Report.findOne({
+      deviceId,
+      time_created: {
+        $gte: today,
+        $lt: tomorrow
+      }
     });
 
-    if (!newestReport) {
-      return res.status(404).json({message: 'No report found for this device'});
+    // If no report exists for today, create a new one
+    if (!report) {
+      report = new Report({
+        deviceId,
+        time_created: new Date(),
+        water_usage: water_usage || 0,
+        moisture_avg: Array.isArray(moisture_avg) ? moisture_avg : [],
+        luminosity_avg: Array.isArray(luminosity_avg) ? luminosity_avg : [],
+        tempurature_avg: Array.isArray(tempurature_avg) ? tempurature_avg : [],
+        humidity_avg: Array.isArray(humidity_avg) ? humidity_avg : [],
+        stream_avg: Array.isArray(stream_avg) ? stream_avg : []
+      });
+    } else {
+      // Update existing report by appending new values
+      if (water_usage !== undefined) {
+        report.water_usage = water_usage;
+      }
+      
+      // Helper function to append new values to arrays
+      const appendToArray = (existingArray, newValues) => {
+        if (!Array.isArray(newValues)) return existingArray;
+        return [...existingArray, ...newValues];
+      };
+
+      report.moisture_avg = appendToArray(report.moisture_avg, moisture_avg);
+      report.luminosity_avg = appendToArray(report.luminosity_avg, luminosity_avg);
+      report.tempurature_avg = appendToArray(report.tempurature_avg, tempurature_avg);
+      report.humidity_avg = appendToArray(report.humidity_avg, humidity_avg);
+      report.stream_avg = appendToArray(report.stream_avg, stream_avg);
     }
 
-    // Update the newest report
-    const updatedReport = await Report.findByIdAndUpdate(
-      newestReport._id,
-      {
-        $set: {
-          water_usage,
-          water_duration,
-          light_usage,
-          light_duration,
-        },
-      },
-      {new: true},
-    );
-
+    await report.save();
     res.status(200).json({
       message: 'Report updated successfully',
-      report: updatedReport,
+      report
     });
   } catch (error) {
     console.error('Error updating report:', error);
     res.status(500).json({
       message: 'Error updating data',
-      error: error.message,
+      error: error.message
     });
   }
 });
@@ -343,7 +231,7 @@ app.put('/updateReport/:deviceId', async (req, res) => {
  * @swagger
  * /api/report/deleteReport/{id}:
  *   delete:
- *     summary: Xóa báo cáo theo ID
+ *     summary: Delete a report by ID
  *     tags: [Reports]
  *     parameters:
  *       - in: path
@@ -351,35 +239,23 @@ app.put('/updateReport/:deviceId', async (req, res) => {
  *         required: true
  *         schema:
  *           type: string
- *         description: ID của báo cáo cần xóa
+ *         description: Report ID to delete
  *     responses:
  *       200:
- *         description: Xóa báo cáo thành công
- *         content:
- *           application/json:
- *             example:
- *               message: "Report deleted successfully"
+ *         description: Report deleted successfully
  *       404:
- *         description: Không tìm thấy báo cáo
- *         content:
- *           application/json:
- *             example:
- *               message: "Report not found"
+ *         description: Report not found
  *       500:
- *         description: Lỗi máy chủ
- *         content:
- *           application/json:
- *             example:
- *               message: "Error deleting data"
+ *         description: Server error
  */
 app.delete('/deleteReport/:id', async (req, res) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
     const report = await Report.findByIdAndDelete(id);
-    if (!report) return res.status(404).json({message: 'Report not found'});
-    res.status(200).json({message: 'Report deleted successfully'});
+    if (!report) return res.status(404).json({ message: 'Report not found' });
+    res.status(200).json({ message: 'Report deleted successfully' });
   } catch (error) {
-    res.status(500).json({message: 'Error deleting data', error});
+    res.status(500).json({ message: 'Error deleting data', error });
   }
 });
 
@@ -387,11 +263,11 @@ app.delete('/deleteReport/:id', async (req, res) => {
  * @swagger
  * /api/report/listReport:
  *   get:
- *     summary: Lấy danh sách tất cả báo cáo
+ *     summary: Get all reports
  *     tags: [Reports]
  *     responses:
  *       200:
- *         description: Trả về danh sách báo cáo
+ *         description: List of all reports
  *         content:
  *           application/json:
  *             schema:
@@ -399,18 +275,14 @@ app.delete('/deleteReport/:id', async (req, res) => {
  *               items:
  *                 $ref: '#/components/schemas/Report'
  *       500:
- *         description: Lỗi máy chủ
- *         content:
- *           application/json:
- *             example:
- *               message: "Error fetching data"
+ *         description: Server error
  */
 app.get('/listReport', async (req, res) => {
   try {
     const reports = await Report.find();
     res.status(200).json(reports);
   } catch (error) {
-    res.status(500).json({message: 'Error fetching data', error});
+    res.status(500).json({ message: 'Error fetching data', error });
   }
 });
 
