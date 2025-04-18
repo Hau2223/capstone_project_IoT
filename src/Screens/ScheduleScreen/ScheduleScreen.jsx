@@ -1,81 +1,174 @@
-import { StyleSheet, Text, View,FlatList, Dimensions } from 'react-native';
-import React from 'react';
+import { StyleSheet, Text, View, Dimensions } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
 import ItemSortSchedule from '../../components/ItemSortSchedule';
+import { getAllDevices } from '../../../services/deviceServices';
+import { profile } from '../../../services/authServices';
 
 const screenWidth = Dimensions.get('window').width;
 const itemSpacing = 20;
 const itemWidth = (screenWidth - itemSpacing * 3) / 2;
 
-const data = [
-  {
-    id: '1',
-    soLuong: '2',
-    iconImg: require('../../../assets/icon/iconLightYellow.png'),
-  },
-  {
-    id: '2',
-    soLuong: '5',
-    iconImg: require('../../../assets/icon/iconLightYellow.png'),
+const ScheduleScreen = ({ navigation, route }) => {
+  const [scheduleCounts, setScheduleCounts] = useState({
+    water: 0,
+    light: 0,
+    wind: 0,
+  });
+  const [error, setError] = useState(null);
+  const [idUser, setIdUser] = useState(null);
 
-  },
-  {
-    id: '3',
-    soLuong: '2',
-    iconImg: require('../../../assets/icon/iconLightYellow.png'),
-  },
-  {
-    id: '4',
-    soLuong: '5',
-    iconImg: require('../../../assets/icon/iconLightYellow.png'),
+  useEffect(() => {
+    const loadIdUser = async () => {
+      try {
+        const response = await profile();
+        if (response?.data) {
+          setIdUser(response.data._id);
+          console.log('ID User từ API:', response.data._id);
+        }
+      } catch (err) {
+        console.error('Lỗi khi lấy idUser:', err);
+      }
+    };
 
-  },
-  {
-    id: '4',
-    soLuong: '5',
-    iconImg: require('../../../assets/icon/iconLightYellow.png'),
+    loadIdUser();
+  }, []);
 
-  },
-];
+  const fetchScheduleCounts = useCallback(async () => {
+    if (!idUser) return;
 
-const ScheduleScreen = ({navigation}) => {
+    try {
+      setError(null);
+      const response = await getAllDevices();
+      const allDevices = response?.data || [];
 
-  const handleGoToListDevices = item => {
-    navigation.navigate('DevicesListScreen', {item});
+      console.log('Tất cả thiết bị từ API:', allDevices);
+
+      const counts = {
+        water: 0,
+        light: 0,
+        wind: 0,
+      };
+
+      allDevices
+        .filter(device => device.members?.some(member => member.userId === idUser))
+        .forEach(device => {
+          device.controls?.forEach(control => {
+            if (control.schedules?.length > 0) {
+              if (control.name === 'water' && !counts.waterMarked?.includes(device._id)) {
+                counts.water += 1;
+                counts.waterMarked = counts.waterMarked || [];
+                counts.waterMarked.push(device._id);
+              } else if (control.name === 'light' && !counts.lightMarked?.includes(device._id)) {
+                counts.light += 1;
+                counts.lightMarked = counts.lightMarked || [];
+                counts.lightMarked.push(device._id);
+              } else if (control.name === 'wind' && !counts.windMarked?.includes(device._id)) {
+                counts.wind += 1;
+                counts.windMarked = counts.windMarked || [];
+                counts.windMarked.push(device._id);
+              }
+            }
+          });
+        });
+
+      delete counts.waterMarked;
+      delete counts.lightMarked;
+      delete counts.windMarked;
+
+      setScheduleCounts(counts);
+      console.log('Số khu vực có lịch trình:', counts);
+    } catch (err) {
+      console.error('Error details:', {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
+      });
+      setError(err.response?.data?.message || 'Lỗi khi lấy dữ liệu thiết bị');
+      setScheduleCounts({ water: 0, light: 0, wind: 0 });
+    }
+  }, [idUser]);
+
+  useEffect(() => {
+    if (idUser) {
+      fetchScheduleCounts();
+      const interval = setInterval(() => {
+        fetchScheduleCounts();
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [idUser, fetchScheduleCounts]);
+
+  const handleGoToListDevices = controlName => {
+    navigation.navigate('DevicesListScreen', {
+      controlName,
+      idUser,
+    });
   };
-  return (
-    <View>
-          <View style={styles.header}>
-            <View style={styles.header1}>
-              <Text style={styles.textHeader}>Vườn tiêu Bình Phước</Text>
-            </View>
-          </View>
-          <View style={styles.container}>
-            <FlatList
-              showsVerticalScrollIndicator={false}
-              data={data}
-              numColumns={2}
-              keyExtractor={item => item.id}
-              renderItem={({item}) => (
-                <View style={[styles.itemWrapper, { width: itemWidth }]}>
-                  <ItemSortSchedule
-                    content={item.soLuong}
-                    img={item.iconImg}
-                    onPress={() => handleGoToListDevices(item)}
-                  />
-                </View>
-              )}
-              nestedScrollEnabled={true}
-              contentContainerStyle={styles.listContainer}
-            />
 
-          </View>
+  const getIconForControl = name => {
+    try {
+      switch (name) {
+        case 'light':
+          return require('../../../assets/icon/iconLightYellow.png');
+        case 'water':
+          return require('../../../assets/icon/iconWaring.png');
+        case 'wind':
+          return require('../../../assets/icon/iconFan.png');
+        default:
+          return require('../../../assets/icon/iconLightYellow.png');
+      }
+    } catch (e) {
+      console.warn(`Icon not found for ${name}, using default icon`);
+      return require('../../../assets/icon/iconWaring.png');
+    }
+  };
+
+  const controlItems = [
+    { name: 'water', label: 'Lịch tưới' },
+    { name: 'light', label: 'Lịch đèn' },
+    { name: 'wind', label: 'Lịch quạt' },
+  ];
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.header1}>
+          <Text style={styles.textHeader}>Vườn tiêu Bình Phước</Text>
         </View>
+      </View>
+      <View style={styles.content}>
+        {error ? (
+          <Text>Lỗi: {error}</Text>
+        ) : scheduleCounts.water + scheduleCounts.light + scheduleCounts.wind === 0 ? (
+          <Text>Không có khu vực nào có lịch trình</Text>
+        ) : (
+          <View style={styles.itemRow}>
+            {controlItems.map((item, index) => (
+              <View
+                key={item.name}
+                style={[styles.itemWrapper, { width: itemWidth }]}
+              >
+                <ItemSortSchedule
+                  img={getIconForControl(item.name)}
+                  content={`${scheduleCounts[item.name]}`}
+                  onPress={() => handleGoToListDevices(item.name)}
+                />
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+    </View>
   );
 };
 
 export default ScheduleScreen;
 
 export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#EAEAEA',
+  },
   header: {
     height: 70,
     width: '100%',
@@ -92,22 +185,20 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 20,
   },
-  container: {
-    backgroundColor: '#EAEAEA',
+  content: {
+    flex: 1,
     paddingTop: 20,
+    paddingHorizontal: 20,
     alignItems: 'center',
   },
-
-  itemWrapper: {
-    alignItems: 'center',
+  itemRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     width: '100%',
-  },
-
-  listContainer: {
-    paddingBottom: 180,
+    marginBottom: 20,
   },
   itemWrapper: {
-    marginBottom: 20,
-    marginHorizontal: 10,
+    marginBottom: itemSpacing,
   },
 });
