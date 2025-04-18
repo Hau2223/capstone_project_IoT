@@ -166,13 +166,22 @@ const light = StyleSheet.create({
     gap: 5,
   },
   cnpInputWrapper: {
-    height: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    height: 45,
     backgroundColor: colors.white,
     borderRadius: 20,
     paddingHorizontal: 10,
   },
+
   cnpTextInput: {
-    maxWidth: '90%',
+    flex: 1,
+    fontSize: 16,
+    color: colors.black,
+  },
+  cnpEyeIcon: {
+    alignItems: 'center',
   },
   cnpErrorText: {
     color: 'red',

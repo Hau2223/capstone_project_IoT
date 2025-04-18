@@ -12,6 +12,6 @@ npm start -- --reset-cache
 android\app\build\outputs\apk\release\app-release.apk
 
 ## export file .aab
-./gradlew bundleReleas
+./gradlew bundleRelease
 ## location export
 android/app/build/outputs/bundle/release/app-release.aab

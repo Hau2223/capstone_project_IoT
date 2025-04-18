@@ -24,6 +24,7 @@ const colors = {
   InputOTP: '#D5CBF2',
   reSendOTP: '#12589E',
   bg_setting: '#F0F4F3',
+  txtSetting: '#15B392',
 
   liner_light1: '#74C174',
   liner_light2: '#217E54',
