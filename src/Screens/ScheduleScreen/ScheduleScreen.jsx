@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, Dimensions } from 'react-native';
 import React, { useState, useEffect, useCallback } from 'react';
 import ItemSortSchedule from '../../components/ItemSortSchedule';
 import { getAllDevices } from '../../../services/deviceServices';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { profile } from '../../../services/authServices';
 
 const screenWidth = Dimensions.get('window').width;
 const itemSpacing = 20;
@@ -17,23 +17,24 @@ const ScheduleScreen = ({ navigation, route }) => {
   const [error, setError] = useState(null);
   const [idUser, setIdUser] = useState(null);
 
-  const loadIdUser = useCallback(async () => {
-    try {
-      const userData = await AsyncStorage.getItem('user');
-      if (userData) {
-        const parsedData = JSON.parse(userData);
-        setIdUser(parsedData.idUser || route.params?.idUser || '67f9ff224c36c6ad57e60434');
-      } else {
-        setIdUser(route.params?.idUser || '67f9ff224c36c6ad57e60434');
+  useEffect(() => {
+    const loadIdUser = async () => {
+      try {
+        const response = await profile();
+        if (response?.data) {
+          setIdUser(response.data._id);
+          console.log('ID User từ API:', response.data._id);
+        }
+      } catch (err) {
+        console.error('Lỗi khi lấy idUser:', err);
       }
-    } catch (err) {
-      console.error('Lỗi khi lấy idUser:', err);
-      setIdUser(route.params?.idUser || '67f9ff224c36c6ad57e60434');
-    }
-  }, [route.params?.idUser]);
+    };
+
+    loadIdUser();
+  }, []);
 
   const fetchScheduleCounts = useCallback(async () => {
-    if (!idUser) return; //
+    if (!idUser) return;
 
     try {
       setError(null);
@@ -86,10 +87,6 @@ const ScheduleScreen = ({ navigation, route }) => {
       setScheduleCounts({ water: 0, light: 0, wind: 0 });
     }
   }, [idUser]);
-
-  useEffect(() => {
-    loadIdUser();
-  }, [loadIdUser]);
 
   useEffect(() => {
     if (idUser) {

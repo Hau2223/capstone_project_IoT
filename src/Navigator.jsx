@@ -36,6 +36,7 @@ import SetTimerScreen from './Screens/ScheduleScreen/SetTimerScreen';
 import ReportScreen from './Screens/ReportScreen/ReportScreen';
 import ReportDetail from './Screens/ReportScreen/ReportDetail';
 import colors from '../assets/common/colorCss';
+import EditProfileScreen from './Screens/EditProfile/EditProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const StackNav = createNativeStackNavigator();
@@ -69,10 +70,10 @@ const getTabBarIcon = (name, focused, theme) => {
         width: 25,
         height: 25,
         tintColor: focused
-        ? colors.acticetab
-        : theme === 'dark'
-        ? colors.inacticetabDark
-        : colors.inacticetab
+          ? colors.acticetab
+          : theme === 'dark'
+          ? colors.inacticetabDark
+          : colors.inacticetab,
       }}
       resizeMode="contain"
     />
@@ -92,16 +93,17 @@ function MyTabs() {
           borderTopWidth: 0,
           elevation: 0,
         },
-        // tabBarItemStyle: {
-        //   alignItems: 'center',
-        //   justifyContent: 'center',
-        //   backgroundColor: 'red',
-        // },
+        tabBarPressColor: 'transparent',
+        tabBarPressOpacity: 1,
+        tabBarItemStyle: { 
+          pressEffect: 'none', // Tắt hiệu ứng nhấp
+        },
         tabBarActiveBackgroundColor: 'transparent',
         tabBarInactiveBackgroundColor: 'transparent',
         headerShadowVisible: false,
         tabBarActiveTintColor: colors.acticetab,
-        tabBarInactiveTintColor: theme === 'dark' ? colors.inacticetabDark : colors.inacticetab,
+        tabBarInactiveTintColor:
+          theme === 'dark' ? colors.inacticetabDark : colors.inacticetab,
         tabBarHideOnKeyboard: true,
         tabBarLabelStyle: {
           fontSize: 14,
@@ -242,6 +244,11 @@ const Navigator = () => {
               <StackNav.Screen
                 name="LanguageSetting"
                 component={LanguageSettingScreen}
+                options={{headerShown: false, animation: 'fade_from_bottom'}}
+              />
+              <StackNav.Screen
+                name="EditProfile"
+                component={EditProfileScreen}
                 options={{headerShown: false, animation: 'fade_from_bottom'}}
               />
             </StackNav.Navigator>

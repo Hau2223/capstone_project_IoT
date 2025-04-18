@@ -30,6 +30,8 @@ const ResetPasswordScreen = ({route, navigation}) => {
     newPassword: '',
     cfNewPassword: '',
   });
+
+  
   const [modal, setModal] = useState({visible: false, type: '', message: ''});
   const [onConfirmAction, setOnConfirmAction] = useState(null);
   const showAlert = (type, message, title = '') => {

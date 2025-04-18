@@ -1,20 +1,19 @@
-// Phần import giữ nguyên (trừ colors)
 import React, {useState, useCallback, useEffect, memo, useContext} from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   Pressable,
   Image,
   ScrollView,
-  ImageBackground,
   SafeAreaView,
+  StatusBar,
+  LogBox,
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
-import IconOc from 'react-native-vector-icons/Octicons';
 import Icon from 'react-native-vector-icons/AntDesign';
 import IconMa from 'react-native-vector-icons/MaterialCommunityIcons';
 import {createStyle} from './style';
+import {useIsFocused} from '@react-navigation/native';
 import {ThemeContext} from '../../../assets/common/themeProvider';
 import {IMAGES} from '../../../utils/constants';
 import HeaderCompo from '../../components/HeaderCompo';
@@ -22,11 +21,13 @@ import DeviceInfo from 'react-native-device-info';
 import {detailDevice} from '../../../services/deviceServices';
 import {gardenId} from '../../../services/authServices';
 import colors from '../../../assets/common/colorCss';
+LogBox.ignoreAllLogs();
 
 const AccountInfoScreen = ({navigation, route}) => {
   const {userInfo} = route.params;
   const {theme} = useContext(ThemeContext);
   const styles = createStyle(theme);
+  const isFocused = useIsFocused();
 
   const [garden, SetGarden] = useState([]);
 
@@ -51,16 +52,17 @@ const AccountInfoScreen = ({navigation, route}) => {
   }, []);
 
   useEffect(() => {
-    fetchGarder();
-    const interval = setInterval(() => {
+    if (isFocused) {
       fetchGarder();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
+      const interval = setInterval(() => {
+        fetchGarder();
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [isFocused]);
 
   const profileFields = [
-    {label: 'Họ tên', value: userInfo?.fullName, icon: 'account'},
+    {label: 'Họ tên', value: userInfo?.name, icon: 'account'},
     {label: 'Email', value: userInfo?.email, icon: 'email'},
     {label: 'Số điện thoại', value: userInfo?.phone, icon: 'phone'},
     {label: 'Địa chỉ', value: userInfo?.address, icon: 'map-marker'},
@@ -68,9 +70,15 @@ const AccountInfoScreen = ({navigation, route}) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {isFocused && (
+        <StatusBar backgroundColor={ theme === 'light' ? colors.white : colors.bg_dark}  
+        barStyle= {theme === 'light' ? "dark-content" : "light-content"} />
+      )}
       <HeaderCompo
         name="Thông tin cá nhân"
         isPress={() => navigation.goBack()}
+        bgcolor={theme === 'light' ? colors.white : colors.bg_dark}
+        color={theme === 'light' ? colors.bg_dark : colors.white}
       />
       <ScrollView
         style={{width: '100%', height: '100%'}}
@@ -102,17 +110,24 @@ const AccountInfoScreen = ({navigation, route}) => {
             </View>
           </View>
         </Animatable.View>
+
         <Animatable.View
           style={styles.layoutContent}
           animation="slideInUp"
           duration={1500}>
           <View style={styles.layoutBody}>
             <Text style={styles.txtTitle}>Hồ sơ của bạn</Text>
-            <Pressable style={styles.editbtn}>
+            <Pressable style={styles.editbtn} onPress={() => navigation.navigate('EditProfile',{userInfo}) }>
               <Icon name="edit" size={20} />
             </Pressable>
           </View>
-          <View style={{width: '95%', alignSelf: 'center', paddingHorizontal: 5, gap: 5}}>
+          <View
+            style={{
+              width: '95%',
+              alignSelf: 'center',
+              paddingHorizontal: 5,
+              gap: 5,
+            }}>
             {profileFields.map((item, index) => (
               <View key={index} style={styles.rowItem}>
                 <Text style={styles.label}>
@@ -126,7 +141,6 @@ const AccountInfoScreen = ({navigation, route}) => {
             ))}
           </View>
         </Animatable.View>
-
         <Animatable.View
           style={styles.layoutContent}
           animation="slideInUp"
@@ -134,7 +148,13 @@ const AccountInfoScreen = ({navigation, route}) => {
           <View style={styles.layoutBody}>
             <Text style={styles.txtTitle}>Khu vườn của bạn</Text>
           </View>
-          <View style={{width: '95%', alignSelf: 'center', paddingHorizontal: 5, gap: 5}}>
+          <View
+            style={{
+              width: '95%',
+              alignSelf: 'center',
+              paddingHorizontal: 5,
+              gap: 5,
+            }}>
             {garden.length > 0 ? (
               garden.map((item, index) => (
                 <View key={index} style={styles.rowItem}>

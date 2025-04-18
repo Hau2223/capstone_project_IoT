@@ -70,42 +70,6 @@ app.get('/detailDeviceBy/:id_esp', async (req, res) => {
 
 /**
  * @swagger
- * /api/device/membersBy/{id_esp}:
- *   get:
- *     summary: Lấy danh sách thành viên của thiết bị
- *     tags: [Members]
- *     parameters:
- *       - in: path
- *         name: id_esp
- *         required: true
- *         description: ID của thiết bị
- *         schema:
- *           type: string
- *           example: "ESP123456"
- *     responses:
- *       200:
- *         description: List of members retrieved successfully
- *       404:
- *         description: Device not found
- *       500:
- *         description: Error retrieving members
- */
-app.get('/membersBy/:id_esp', async (req, res) => {
-  try {
-    const device = await Device.findOne({id_esp: req.params.id_esp});
-    if (!device) {
-      return res.status(404).json({message: 'Device not found'});
-    }
-    res.status(200).json({data: device.members});
-  } catch (error) {
-    res
-      .status(500)
-      .json({message: 'Error retrieving members', error: error.message});
-  }
-});
-
-/**
- * @swagger
  * /api/device/membersDetail/{id_esp}:
  *   get:
  *     summary: Lấy tất cả tên của members trong một Device
@@ -126,10 +90,17 @@ app.get('/membersBy/:id_esp', async (req, res) => {
  *             schema:
  *               type: object
  *               properties:
- *                 names:
+ *                 members:
  *                   type: array
  *                   items:
- *                     type: string
+ *                     type: object
+ *                     properties:
+ *                       userId:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       role:
+ *                         type: string
  *       404:
  *         description: Device not found
  *       500:
@@ -137,31 +108,27 @@ app.get('/membersBy/:id_esp', async (req, res) => {
  */
 app.get('/membersDetail/:id_esp', async (req, res) => {
   try {
-    const device = await Device.findOne({id_esp: req.params.id_esp});
+    const device = await Device.findOne({ id_esp: req.params.id_esp });
 
     if (!device) {
-      return res.status(404).json({message: 'Device not found'});
+      return res.status(404).json({ message: 'Device not found' });
     }
+
     const membersInfo = await Promise.all(
-      device.members.map(async member => {
+      device.members.map(async (member) => {
         const user = await User.findById(member.userId);
+    
         return {
+          userId: user ? user._id : member.userId,
           name: user ? user.name : 'Unknown',
           role: member.role,
         };
-      }),
+      })
     );
-
-    // Trả về tên và role của các User
-    res.status(200).json({
-      status: 200,
-      message: 'Lấy danh sách thành viên thành công',
-      data: membersInfo,
-    });
-  } catch (error) {
-    res
-      .status(500)
-      .json({status: 500, message: 'Server error', error: error.message});
+    res.json({ members: membersInfo });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

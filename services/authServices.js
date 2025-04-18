@@ -8,13 +8,9 @@ export const login = async params => {
   });
 };
 
-export const loginGoogle = async params => {
-  console.log(params.idToken);
-  return await post('/user/google-login',{
-    idToken: params.idToken
-  });
+export const loginGoogle = async (idToken) => {
+  return await post('/user/googlemobile', { idToken });
 };
-
 
 export const signUp = async params => {
   return await post('/user/register', {
@@ -54,4 +50,6 @@ export const profile = async () => {
 export const gardenId = async () => {
   return await get('/user/getGardenby');
 };
+
+
 

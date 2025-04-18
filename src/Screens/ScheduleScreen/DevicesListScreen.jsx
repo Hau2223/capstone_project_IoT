@@ -6,10 +6,12 @@ import { getAllDevices } from '../../../services/deviceServices';
 const DevicesListScreen = ({ navigation, route }) => {
   const controlName = route.params?.controlName;
   const [devices, setDevices] = useState([]);
-  const idUser = route.params?.idUser || '67f9ff224c36c6ad57e60434';
+  const idUser = route.params?.idUser;
 
   useEffect(() => {
     const fetchDevices = async () => {
+      if (!idUser) return;
+
       try {
         const res = await getAllDevices();
         const allDevices = res?.data || [];

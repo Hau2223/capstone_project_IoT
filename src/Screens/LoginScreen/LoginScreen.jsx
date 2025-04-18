@@ -23,12 +23,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {login, loginGoogle} from '../../../services/authServices';
 import {UserContext} from '../../../utils/UserContext';
 import LinearGradient from 'react-native-linear-gradient';
-import {GoogleSignin} from '@react-native-google-signin/google-signin';
+// import auth from '@react-native-firebase/auth';
+// import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 import colors from '../../../assets/common/colorCss';
 import {useTranslation} from 'react-i18next';
 import {ThemeContext} from '../../../assets/common/themeProvider';
 import {createStyle} from './style';
+
+// GoogleSignin.configure({
+//   webClientId:
+//     '1028552878321-9502prl6iadm8mgs3gn3n9tjokrniigi.apps.googleusercontent.com',
+//   offlineAccess: true,
+// });
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -38,7 +45,7 @@ const LoginScreen = () => {
   const deviceId = DeviceInfo.getDeviceId();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [focusedFieldPhone, setFocusedFieldPhone] = useState(null);
+  const [focusedFieldEmail, setFocusedFieldEmail] = useState(null);
   const [focusedFieldPass, setFocusedFieldPass] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showInfoAlert, setShowInfoAlert] = useState(false);
@@ -68,9 +75,19 @@ const LoginScreen = () => {
           const token = response.data;
           setShowInfoAlert(false);
 
+          // Lưu token
           AsyncStorage.setItem('authToken', token)
             .then(() => console.log('Token đã được lưu:', token))
             .catch(err => console.log('Lỗi lưu token:', err));
+
+          // Lưu thông tin user
+          const userData = {
+            idUser: response.data.idUser,
+            email: email
+          };
+          AsyncStorage.setItem('user', JSON.stringify(userData))
+            .then(() => console.log('User data đã được lưu:', userData))
+            .catch(err => console.log('Lỗi lưu user data:', err));
 
           setUserToken(token);
           navigation.navigate('Tabs');
@@ -94,25 +111,20 @@ const LoginScreen = () => {
       });
   }, [email, password, deviceId, setUserToken, navigation]);
 
-  const handleGoogleLogin = async () => {
-    try {
-      await GoogleSignin.hasPlayServices();
-    const userInfo = await GoogleSignin.signIn();
-    const idToken = userInfo.idToken;
-    console.log(idToken);
-    
-
-    const response = await loginGoogle( { idToken });
-
-    const token = response.data.token;
-
-    await AsyncStorage.setItem('authToken', token);
-    setUserToken(token);
-    navigation.navigate('Tabs');
-    } catch (error) {
-      console.error('Google Sign-in error', error);
-    }
-  };
+  // const onGoogleButtonPress = async () => {
+  //   try {
+  //     await GoogleSignin.hasPlayServices();
+  //     const { idToken } = await GoogleSignin.signIn();
+  
+  //     const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+  
+  //     const userCredential = await auth().signInWithCredential(googleCredential);
+  
+  //     console.log('User signed in:', userCredential.user);
+  //   } catch (error) {
+  //     console.error('Google Sign-In Error:', error);
+  //   }
+  // };
 
   const shouldExitApp = React.useCallback(() => {
     const currentRoute =
@@ -169,13 +181,13 @@ const LoginScreen = () => {
               selectionColor={colors.loginTxt}
               underlineColorAndroid="transparent"
               onChangeText={text => setEmail(text)}
-              onFocus={() => setFocusedFieldPhone('phone')}
-              onBlur={() => setFocusedFieldPhone(null)}
+              onFocus={() => setFocusedFieldEmail('email')}
+              onBlur={() => setFocusedFieldEmail(null)}
               placeholder={t('enter_email')}
               placeholderTextColor={colors.loginTxt}
               style={styles.txtInput}
             />
-            {focusedFieldPhone && email.length > 0 && (
+            {focusedFieldEmail && email.length > 0 && (
               <>
                 <Pressable onPress={toggleDelUserVisible}>
                   <IconOni
@@ -249,13 +261,13 @@ const LoginScreen = () => {
               <Text style={styles.txtBtn}>{t('login')}</Text>
             </Pressable>
           </LinearGradient>
-          <View style={styles.wrapperManual}>
+          {/* <View style={styles.wrapperManual}>
             <Text style={styles.textManual}>Hoặc đăng kí với</Text>
-          </View>
+          </View> */}
 
-          <Pressable oonPress={handleGoogleLogin} style={styles.btnGoogle}>
+          {/* <Pressable style={styles.btnGoogle} onPress={onGoogleButtonPress}>
             <Text style={styles.txtGoogle}>{t('loginGoogle')}</Text>
-          </Pressable>
+          </Pressable> */}
 
           <Text style={styles.txtAccNaN}>
             {t('no_account')}{' '}

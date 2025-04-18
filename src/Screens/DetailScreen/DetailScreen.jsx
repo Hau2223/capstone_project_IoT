@@ -50,8 +50,6 @@ const DetailScreen = ({route}) => {
     try {
       const data = await gardenId();
       const ids = data?.data || [];
-      // console.log('IDs:', ids);
-      // console.log('deviceId:', deviceId);
     
       if (!ids.includes(deviceId)) {
         setError(`Device ID "${deviceId}" không hợp lệ hoặc không tồn tại trong danh sách`);
@@ -60,7 +58,10 @@ const DetailScreen = ({route}) => {
       }
   
       const res = await memberId({ id: deviceId });
-      setUserInfo(res.data);
+      console.log('Member response:', res);
+      if (res?.members) {
+        setUserInfo(res.members);
+      }
     } catch (err) {
       console.error('Error fetching user profile:', err);
       setError(err.message || 'Error fetching user data');
@@ -181,7 +182,7 @@ const DetailScreen = ({route}) => {
         <FrameItem2
           style={styles.containerFrame}
           valueStatus={lightControl?.status}></FrameItem2>
-        <FrameItem3 header3={'THÀNH VIÊN'} users={userInfo?.flat() || []} />
+        <FrameItem3 header3={'THÀNH VIÊN'} users={userInfo || []} />
       </Animated.ScrollView>
     </View>
   );
@@ -296,22 +297,27 @@ const StatusComponent = ({nameIcon, colorIcon, txtStatus, valueStatus}) => {
 };
 
 const FrameItem3 = ({ header3, users = [] }) => {
+  console.log('Rendering users:', users);
   return (
     <View style={styles.containerFrame}>
       <Header3 header3={header3} />
-      <FlatList
-        data={users}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <UserComponent
-            nameIcon={'account-circle'}
-            colorIcon={'#D9D9D9'}
-            txtUser={item.name}
-            txtRole={item.role}
-          />
-        )}
-        scrollEnabled={false}
-      />
+      {users && users.length > 0 ? (
+        <FlatList
+          data={users}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+            <UserComponent
+              nameIcon={'account-circle'}
+              colorIcon={'#D9D9D9'}
+              txtUser={item.name || 'Chưa có tên'}
+              txtRole={item.role || 'Chưa có vai trò'}
+            />
+          )}
+          scrollEnabled={false}
+        />
+      ) : (
+        <Text style={styles.noMembersText}>Không có thành viên nào</Text>
+      )}
     </View>
   );
 };
@@ -501,5 +507,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end',
     paddingRight: 10,
+  },
+  noMembersText: {
+    textAlign: 'center',
+    color: '#636363',
+    fontSize: 20,
+    marginTop: 20,
   },
 });

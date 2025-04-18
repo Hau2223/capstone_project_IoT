@@ -56,7 +56,7 @@ const light = StyleSheet.create({
     paddingHorizontal: 10,
   },
   txtInput: {
-    maxWidth: '90%',
+    maxWidth: '80%',
   },
   iconPass: {
     flexDirection: 'row',
