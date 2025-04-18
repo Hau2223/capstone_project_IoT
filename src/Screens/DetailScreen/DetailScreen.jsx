@@ -1,5 +1,5 @@
-import {StyleSheet, Text, View, Image, ScrollView} from 'react-native';
-import React, {memo, useState, useEffect, useCallback} from 'react';
+import {StyleSheet, Text, View, FlatList, ScrollView, Animated} from 'react-native';
+import React, {memo, useState, useEffect, useCallback, useRef} from 'react';
 // import OnOffBtn from '../../components/Button/OnOff';
 import {Switch} from 'react-native-paper';
 import FastImage from 'react-native-fast-image';
@@ -10,9 +10,11 @@ import {gardenId} from '../../../services/authServices';
 
 const DetailScreen =  ({route}) => {
   const {item} = route.params;
+  const {deviceId} = route.params;
   const [isWatering, setIsWatering] = useState(false);
   const [isFan, setIsFan] = useState(false);
   const [member, setMember] = useState(null);
+  const scrollY = useRef(new Animated.Value(1)).current;
 
   const sensors = item?.data?.sensors || [];
   const controls = item?.data?.controls || [];
@@ -46,40 +48,43 @@ const DetailScreen =  ({route}) => {
 
   const fetchUserProfile = useCallback(async () => {
     try {
-      const data = await gardenId(); // trả về mảng ID
-      const ids = data?.data || []; // ['ESP001', 'ESP002', ...]
-      console.log('ID:', ids);
-      
-
-      const allMembers = await Promise.all(
-        ids.map(async id => {
-          const res = await memberId({ id });
-          return res.members; // hoặc res tùy API trả về
-        })
-      );
-
-      setUserInfo(allMembers);
+      const data = await gardenId();
+      const ids = data?.data || [];
+      // console.log('IDs:', ids);
+      // console.log('deviceId:', deviceId);
+    
+      if (!ids.includes(deviceId)) {
+        setError(`Device ID "${deviceId}" không hợp lệ hoặc không tồn tại trong danh sách`);
+        setLoading(false);
+        return;
+      }
+  
+      const res = await memberId({ id: deviceId });
+      setUserInfo(res.data);
     } catch (err) {
+      console.error('Error fetching user profile:', err);
       setError(err.message || 'Error fetching user data');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [deviceId]);
+  
+  
 
   useEffect(() => {
+    console.log('Current deviceId:', deviceId);
     fetchUserProfile();
     const interval = setInterval(() => {
       fetchUserProfile();
     }, 5000);
-
+  
     return () => clearInterval(interval);
-  }, []);
-  console.log('userInfo', userInfo);
+  }, [deviceId]);  // Lắng nghe sự thay đổi của deviceId
+
 
 
   const names = userInfo?.flat()?.map(member => member.name).join(', ');
   const roles = userInfo?.flat()?.map(member => member.role).join(', ');
-
   
 
   // useEffect(() => {
@@ -108,10 +113,35 @@ const DetailScreen =  ({route}) => {
   //   console.log("item", item);
   // }
   // );
+
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [350, 200],
+    extrapolate: 'clamp',
+  });
+
+  const imageHeight = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [263, 150],
+    extrapolate: 'clamp',
+  });
+
+  const headerFontSize = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [32, 24],
+    extrapolate: 'clamp',
+  });
+
+  const headerMarginTop = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [10, 5],
+    extrapolate: 'clamp',
+  });
+
   return (
     <View style={styles.frame}>
-      <View style={styles.container1}>
-        <View style={styles.img}>
+      <Animated.View style={[styles.container1, { height: headerHeight }]}>
+        <Animated.View style={[styles.img, { height: imageHeight }]}>
           <FastImage
             style={styles.imgStyle}
             source={{
@@ -120,12 +150,27 @@ const DetailScreen =  ({route}) => {
             }}
             resizeMode={FastImage.resizeMode.cover}
           />
-          <Text style={styles.header2}>{item?.data?.name_area}</Text>
-        </View>
-      </View>
-      <ScrollView
+        </Animated.View>
+        <Animated.Text 
+          style={[
+            styles.header2, 
+            { 
+              fontSize: headerFontSize,
+              marginTop: headerMarginTop
+            }
+          ]}>
+          {item?.data?.name_area}
+        </Animated.Text>
+      </Animated.View>
+      <Animated.ScrollView
         showsVerticalScrollIndicator={false}
-        style={styles.ScrollView}>
+        style={styles.ScrollView}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false },
+        )}
+        scrollEventThrottle={8}
+        bounces={false}>
         <FrameItem1
           txtTemp={temperatureSensor?.value ?? 0}
           txtMoisture={moistureSensor?.value ?? 0}
@@ -136,57 +181,8 @@ const DetailScreen =  ({route}) => {
         <FrameItem2
           style={styles.containerFrame}
           valueStatus={lightControl?.status}></FrameItem2>
-        <FrameItem3 header3={'THÀNH VIÊN'} nameUser={names} role={roles} ></FrameItem3>
-        {/* <View style={styles.content1}>
-            <Text style={styles.textStyle}>Nhiệt độ: {temperatureSensor?.value ?? 0}°C</Text>
-            <Text style={styles.textStyle}>Độ ẩm đất: {moistureSensor?.value ?? 0}%</Text>
-            <Text style={styles.textStyle}>Ánh sáng: {luminositySensor?.value ?? 0}%</Text>
-            <View style={styles.settingOnOff}>
-              <View style={styles.frameIconLight}>
-                <Image
-                  style={styles.iconLight}
-                  source={require('../../../assets/icon/iconLight.png')}
-                />
-              </View>
-              <View style={styles.frameTxtLight}>
-                <Text style={styles.txtLightLevel}>
-                  Cài đặt mức sáng bật/tắt đèn
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View style={styles.line} />
-          <View style={styles.content2}>
-            <View style={styles.frameTuoiQuat}>
-              <View style={styles.contentTuoiQuat}>
-                <Text style={styles.textStyle}>Trạng thái tưới</Text>
-              </View>
-              <View style={styles.buttonTuoiQuat}>
-                <Switch
-                  value={waterControl?.status}
-                  onValueChange={newValue => setIsWatering(newValue)}
-                  trackColor={{false: 'white', true: 'white'}}
-                  thumbColor={waterControl?.status ? colors.primary : '#ACACAC'}
-                  style={{transform: [{scale: 1.5}]}}
-                />
-              </View>
-            </View>
-            <View style={styles.frameTuoiQuat}>
-              <View style={styles.contentTuoiQuat}>
-                <Text style={styles.textStyle}>Trạng thái quạt</Text>
-              </View>
-              <View style={styles.buttonTuoiQuat}>
-                <Switch
-                  value={windControl?.status}
-                  onValueChange={newValue => setIsFan(newValue)}
-                  trackColor={{false: 'white', true: 'white'}}
-                  thumbColor={windControl?.status ? colors.primary : '#ACACAC'}
-                  style={{transform: [{scale: 1.5}]}}
-                />
-              </View>
-            </View>
-          </View> */}
-      </ScrollView>
+        <FrameItem3 header3={'THÀNH VIÊN'} users={userInfo?.flat() || []} />
+      </Animated.ScrollView>
     </View>
   );
 };
@@ -299,20 +295,23 @@ const StatusComponent = ({nameIcon, colorIcon, txtStatus, valueStatus}) => {
   );
 };
 
-const FrameItem3 = ({header3,nameUser,role}) => {
+const FrameItem3 = ({ header3, users = [] }) => {
   return (
     <View style={styles.containerFrame}>
       <Header3 header3={header3} />
-      <UserComponent
-        nameIcon={'account-circle'}
-        colorIcon={'#D9D9D9'}
-        txtUser={nameUser}
-        txtRole={role}></UserComponent>
-      <UserComponent
-        nameIcon={'account-circle'}
-        colorIcon={'#D9D9D9'}
-        txtUser={'Peter'}
-        txtRole={'HCM'}></UserComponent>
+      <FlatList
+        data={users}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) => (
+          <UserComponent
+            nameIcon={'account-circle'}
+            colorIcon={'#D9D9D9'}
+            txtUser={item.name}
+            txtRole={item.role}
+          />
+        )}
+        scrollEnabled={false}
+      />
     </View>
   );
 };
@@ -339,25 +338,25 @@ const styles = StyleSheet.create({
   frame: {
     height: '100%',
     width: '100%',
-    backgroundColor: 'white',
+    backgroundColor: '#F5F5F5',
     alignItems: 'center',
   },
   container1: {
-    height: 350,
     width: '100%',
     alignItems: 'center',
-    backgroundColor: '#F2F2F2',
+    backgroundColor: 'white',
+    overflow: 'hidden',
   },
   img: {
-    height: 263,
     width: '95%',
     borderRadius: 5,
     marginTop: 10,
+    overflow: 'hidden',
   },
   ScrollView: {
     height: 'auto',
     width: '95%',
-    backgroundColor: 'white',
+    backgroundColor: '#F5F5F5',
     marginHorizontal: 20,
     marginTop: 10,
   },
@@ -369,10 +368,15 @@ const styles = StyleSheet.create({
   },
   header2: {
     color: '#206477',
-    fontSize: 32,
     fontWeight: 'bold',
-    marginVertical: 10,
+    marginTop: 10,
     marginLeft: 10,
+    position: 'absolute',
+    bottom: 20,
+    left: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    padding: 10,
+    borderRadius: 8,
   },
   content1: {
     height: 'auto',
@@ -448,6 +452,8 @@ const styles = StyleSheet.create({
     borderColor: '#E8E8E8',
     paddingHorizontal: 15,
     paddingVertical: 50,
+    backgroundColor: 'white',
+    
   },
   textHeader3: {
     textAlign: 'center',
@@ -468,7 +474,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#E8E8E8',
-    paddingVertical: 10,
+    paddingVertical: 20,
   },
   iconContent: {
     width: '15%',

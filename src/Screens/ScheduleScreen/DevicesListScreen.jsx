@@ -1,51 +1,56 @@
-import {Image, StyleSheet, Text, View, FlatList} from 'react-native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { Image, StyleSheet, Text, View, FlatList } from 'react-native';
 import ItemSchedule from '../../components/ItemSchedule';
+import { getAllDevices } from '../../../services/deviceServices';
 
-const DevicesListScreen = ({navigation}) => {
-  const data = [
-    {
-      id: '1',
-      tenKhu: 'Khu 1',
-      textBtnSchedule: 'Nhiệt độ: 19°C',
-      trangThaiTuoi: 'Trạng thái tưới: OFF',
-      imageSource: require('../../../assets/img/1.png'),
-    },
-    {
-      id: '2',
-      tenKhu: 'Khu 2',
-      trangThaiTuoi: 'Trạng thái tưới: ON',
-      imageSource: require('../../../assets/img/1.png'),
-    },
-    {
-      id: '3',
-      tenKhu: 'Khu 3',
-      trangThaiTuoi: 'Trạng thái tưới: OFF',
-      imageSource: require('../../../assets/img/1.png'),
-    },
-    {
-      id: '4',
-      tenKhu: 'Khu 4',
-      trangThaiTuoi: 'Trạng thái tưới: ON',
-      imageSource: require('../../../assets/img/1.png'),
-    },
-    {
-      id: '5',
-      tenKhu: 'Khu 5',
-      trangThaiTuoi: 'Trạng thái tưới: OFF',
-      imageSource: require('../../../assets/img/1.png'),
-    },
-    {
-      id: '6',
-      tenKhu: 'Khu 6',
-      trangThaiTuoi: 'Trạng thái tưới: OFF',
-      imageSource: require('../../../assets/img/1.png'),
-    },
-  ];
+const DevicesListScreen = ({ navigation, route }) => {
+  const controlName = route.params?.controlName
+  const [devices, setDevices] = useState([]);
+  const idUser = route.params?.idUser || '67f9ff224c36c6ad57e60434'; //thay id User từ API vào đây nhé
+
+  useEffect(() => {
+    const fetchDevices = async () => {
+      try {
+        const res = await getAllDevices();
+        const allDevices = res?.data || [];
+
+        console.log('Tất cả thiết bị từ API:', allDevices);
+
+        const filteredDevices = allDevices
+          .filter(device =>
+            device.members?.some(member => member.userId === idUser) &&
+            device.controls?.some(
+              control => 
+                control.name === controlName && 
+                control.schedules?.length > 0
+            )
+          )
+          .map((device, index) => {
+            const waterControl = device.controls.find(c => c.name === controlName);
+            return {
+              id: device._id,
+              tenKhu: device.name_area || `Khu ${index + 1}`,
+              trangThaiTuoi: `Trạng thái tưới: ${waterControl?.status ? 'ON' : 'OFF'}`,
+              imageSource: { uri: device.img_area } || require('../../../assets/img/1.png'),
+              scheduleInfo: waterControl?.schedules?.[0], // Lấy lịch đầu tiên nếu có
+              schedules: waterControl?.schedules || [], // Lưu tất cả lịch để dùng nếu cần
+            };
+          });
+
+        setDevices(filteredDevices);
+        console.log('Danh sách thiết bị:', filteredDevices);
+      } catch (err) {
+        console.error('Lỗi khi lấy danh sách thiết bị:', err.message);
+      }
+    };
+
+    fetchDevices();
+  }, [controlName, idUser]);
 
   const handleGoToAlarm = item => {
-    navigation.navigate('AlarmScreen', {item});
+    navigation.navigate('AlarmScreen', { item });
   };
+
   return (
     <View>
       <View style={styles.header}>
@@ -56,10 +61,10 @@ const DevicesListScreen = ({navigation}) => {
       <View style={styles.container}>
         <FlatList
           showsVerticalScrollIndicator={false}
-          data={data}
+          data={devices}
           numColumns={1}
           keyExtractor={item => item.id}
-          renderItem={({item}) => (
+          renderItem={({ item }) => (
             <View style={styles.itemWrapper}>
               <ItemSchedule
                 tenKhu={item.tenKhu}
@@ -99,14 +104,13 @@ export const styles = StyleSheet.create({
   container: {
     height: 'auto',
     width: '100%',
-    flexDirection: "column",
+    flexDirection: 'column',
     marginBottom: 180,
   },
   itemWrapper: {
     alignItems: 'center',
     width: '100%',
   },
-
   listContainer: {
     paddingHorizontal: 0,
     paddingVertical: 10,
