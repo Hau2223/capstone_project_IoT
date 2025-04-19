@@ -169,6 +169,7 @@ app.put('/updateReport/:deviceId', async (req, res) => {
 
     // Get current date at midnight
     const today = new Date();
+    const twoHoursAgo = new Date(today.getTime() - 2 * 60 * 60 * 1000);
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -181,7 +182,6 @@ app.put('/updateReport/:deviceId', async (req, res) => {
         $lt: tomorrow
       }
     });
-
     // If no report exists for today, create a new one
     if (!report) {
       report = new Report({
@@ -195,6 +195,11 @@ app.put('/updateReport/:deviceId', async (req, res) => {
         stream_avg: Array.isArray(stream_avg) ? stream_avg : []
       });
     } else {
+      if (report.updatedAt > twoHoursAgo) {
+        return res.status(429).json({
+          message: 'You can only update the report once every 2 hours.'
+        });
+      }
       // Update existing report by appending new values
       if (water_usage !== undefined) {
         report.water_usage = water_usage;
