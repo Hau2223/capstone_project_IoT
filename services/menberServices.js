@@ -9,3 +9,4 @@ export const memberId = async params => {
   export const memberBys = async params => {    
     return await get(`/device/membersBy/${params.id_esp}`);
   };
+  
