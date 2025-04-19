@@ -502,6 +502,69 @@ app.patch('/updateName/:id_esp', async (req, res) => {
   }
 });
 
+
+/**
+ * @swagger
+ * /api/device/updateMember/{id_esp}/{userId}:
+ *   put:
+ *     summary: Promote a member to owner by id_esp and userId
+ *     tags:
+ *       - Members
+ *     parameters:
+ *       - in: path
+ *         name: id_esp
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ESP ID of the device
+ *       - in: path
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The userId of the member to be promoted to owner
+ *     responses:
+ *       200:
+ *         description: Successfully updated member to owner
+ *       404:
+ *         description: Device or user not found
+ *       500:
+ *         description: Internal server error
+ */
+app.put('/updateMember/:id_esp/:userId', async (req, res) => {
+
+  const { id_esp, userId } = req.params;
+  try {
+    // 1. Find the device
+    const device = await Device.findOne({ id_esp });    
+    if (!device) return res.status(404).json({ message: 'Device not found' });
+
+    // 2. Check if the user is already a member
+    const memberIndex = device.members.findIndex(
+      (m) =>  m.userId.toString() === userId.toString()
+    )
+    if (memberIndex === -1) {
+      return res.status(404).json({ message: 'User not found in members list' });
+    }
+
+    // 3. Demote any other owner to member
+    device.members = device.members.map((m, i) => ({
+      ...m.toObject(),
+      role: i === memberIndex ? 'owner' : 'member',
+    }));
+
+    await device.save();
+
+    res.status(200).json({
+      message: 'User promoted to owner successfully',
+      members: device.members,
+    });
+  } catch (error) {
+    console.error('Error updating member role:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 /**
  * @swagger
  * /api/device/delMember/{id_esp}/{userId}:
@@ -677,7 +740,6 @@ app.put('/upload-img/:id_esp', upload.single('img_area'), async (req, res) => {
     if (!updatedDevice) {
       return res.status(404).json({message: 'Device not found'});
     }
-  
 
     res.status(200).json({
       message: 'Device image updated',
