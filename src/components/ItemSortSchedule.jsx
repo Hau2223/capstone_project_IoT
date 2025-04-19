@@ -10,7 +10,7 @@ const ItemSortSchedule = ({img,content, onPress}) => {
           source={img}
           style={styles.alertIcon}
         />
-        <Text style={styles.Content}>Số lượng khu hẹn giờ: {content}</Text>
+        <Text style={styles.Content}>Số khu có lịch tưới: {content}</Text>
       </View>
     </TouchableOpacity>
   );
