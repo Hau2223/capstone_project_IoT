@@ -121,7 +121,6 @@ app.put('/updateControl/:id_esp/:controlId', async (req, res) => {
   }
 });
 
-
 /**
  * @swagger
  * /api/control/updateControls/{id_esp}:

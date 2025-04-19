@@ -3,6 +3,7 @@ const colors = {
   secondary: '#EAEAEA',
   bg_dark: '#212121',
   acticetab: '#217E54',
+  bg_NaN: 'transparent',
   inacticetab: '#515151',
   inacticetabDark: '#F9F9F9',
   txtdefault: '#515151',
@@ -30,6 +31,8 @@ const colors = {
   liner_light2: '#217E54',
   liner_dark1: '#74C174',
   liner_dark2: '#217E54',
+
+
 
 };
 

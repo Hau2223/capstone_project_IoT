@@ -7,11 +7,11 @@ const passport = require('passport');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const passportGoogle = require('../utils/passportGoogle');
-const upload = require('../middlewares/uploadImgMiddleware');
 const URLIMG = require('../utils/constants').URLIMG;
 const path = require('path');
 const {OAuth2Client} = require('google-auth-library');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const upload = require('../middlewares/cloudinaryUpload');
 
 require('dotenv').config({
   path: './etc/secrets/config.env',
@@ -21,6 +21,7 @@ app.use(bodyParser.json());
 app.use(passport.initialize());
 
 const authenticateJWT = require('../middlewares/authMiddleware');
+const { CONFIGURL } = require('../utils/constants');
 const otpStore = {};
 const pendingRegistrations = {};
 const registeredUsers = {};
@@ -826,8 +827,6 @@ app.put('/changePassword', authenticateJWT, async (req, res) => {
   }
 });
 
-app.use('/uploads', express.static('uploads'));
-
 /**
  * @swagger
  * /api/user/avatar:
@@ -854,7 +853,7 @@ app.use('/uploads', express.static('uploads'));
  *           application/json:
  *             example:
  *               message: "Avatar updated"
- *               avatar: "/uploads/1683729332829.jpg"
+ *               avatar: "https://res.cloudinary.com/dzgvy2rlt/image/upload/v1744970883/uploads/example.jpg"
  *       400:
  *         description: Không có ảnh được tải lên
  *         content:
@@ -869,51 +868,31 @@ app.use('/uploads', express.static('uploads'));
  *               message: "Error uploading avatar"
  *               error: "Chi tiết lỗi"
  */
-app.put(
-  '/avatar',
-  authenticateJWT,
-  (req, res, next) => {
-    upload.single('avatar')(req, res, function (err) {
-      if (err) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          return res
-            .status(400)
-            .json({message: 'Ảnh vượt quá dung lượng tối đa 5MB'});
-        }
-        return res.status(400).json({message: err.message});
-      }
-      next();
-    });
-  },
-  async (req, res) => {
-    try {
-      const userId = req.user.userId;
-      const filePath = req.file ? `/uploads/${req.file.filename}` : null;
+app.put('/avatar', authenticateJWT, upload.single('avatar'), async (req, res) => {
+  try {
+    const userId = req.user.userId;
 
-      if (!filePath) {
-        return res.status(400).json({message: 'No image uploaded'});
-      }
-
-      const updatedUser = await User.findByIdAndUpdate(
-        userId,
-        {avatar: URLIMG.urlUser + filePath},
-        {new: true},
-      );
-
-      res.status(200).json({
-        status: 200,
-        message: 'Avatar updated',
-        avatar: updatedUser.avatar,
-      });
-    } catch (err) {
-      res.status(500).json({
-        status: 500,
-        message: 'Error uploading avatar',
-        error: err.message,
-      });
+    if (!req.file || !req.file.path) {
+      return res.status(400).json({ message: 'No image uploaded' });
     }
-  },
-);
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { avatar: req.file.path },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: 'Avatar updated',
+      avatar: updatedUser.avatar,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: 'Error uploading avatar',
+      error: err.message,
+    });
+  }
+});
 
 app.get(
   '/google',
