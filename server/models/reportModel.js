@@ -34,6 +34,8 @@ const reportSchema = new Schema({
     type: [Number],
     default: [],
   },
+}, {
+  timestamps: true // <-- Important
 });
 
 const Report = mongoose.model('Report', reportSchema);
