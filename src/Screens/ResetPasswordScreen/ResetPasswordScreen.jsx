@@ -157,13 +157,12 @@ const ResetPasswordScreen = ({route, navigation}) => {
           barStyle={'light-content'}
         />
       )}
-
-      <HeaderCompo isPress={handleBack} color={colors.white} />
       {step === 'confirm' && (
         <ComfirmEmail
           email={data.newEmail}
           handleInputChange={handleInputChange}
           handleEmail={handleEmail}
+          handleBack={handleBack}
           handleSendCode={handleSendCode}
         />
       )}
@@ -172,6 +171,7 @@ const ResetPasswordScreen = ({route, navigation}) => {
           email={data.newEmail}
           handleVerifyOTP={handleVerifyOTP}
           handleReSendCode={handleReSendCode}
+          handleBack={handleBack}
         />
       )}
       {step === 'confirmNewpass' && (
@@ -179,6 +179,7 @@ const ResetPasswordScreen = ({route, navigation}) => {
           data={data}
           handleInputChange={handleInputChange}
           handleResetPass={handleResetPass}
+          handleBack={handleBack}
         />
       )}
 

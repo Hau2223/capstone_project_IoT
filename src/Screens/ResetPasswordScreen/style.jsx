@@ -7,15 +7,18 @@ const light = StyleSheet.create({
     alignContent: 'center',
   },
   //ComfirmEmail
+  ceWrapper: {
+    flex: 1,
+  },
   ceContainer: {
-    flex: 0.85,
-    alignItems: 'center',
     justifyContent: 'center',
+    flex: 0.85,
   },
   ceFormLogin: {
     width: '80%',
     borderRadius: 39,
     alignItems: 'center',
+    alignSelf: 'center',
     gap: 30,
   },
   ceImg: {
@@ -69,6 +72,9 @@ const light = StyleSheet.create({
   },
 
   //VerifyOTP
+  vrWrapper: {
+    flex: 1,
+  },
   vrContainer: {
     flex: 0.85,
     alignItems: 'center',
@@ -128,6 +134,9 @@ const light = StyleSheet.create({
   },
 
   //NewPassword
+  cnpWrapper: {
+    flex: 1
+  },
   cnpContainer: {
     flex: 0.85,
     alignItems: 'center',

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {memo, useState} from 'react';
 import {
   View,
   StyleSheet,
@@ -14,9 +14,10 @@ import {TextInput, Button, Text, Avatar} from 'react-native-paper';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {IMAGES} from '../../../utils/constants';
 import {Picker} from '@react-native-picker/picker';
+import { uploadAvatar } from '../../../services/authServices';
 
 const EditProfileScreen = ({navigation, route}) => {
-  const {userInfo} = route.params;
+  const {userInfo, onUpdate} = route.params;
   const [formData, setFormData] = useState({
     name: userInfo?.name || '',
     email: userInfo?.email || '',
@@ -85,22 +86,45 @@ const EditProfileScreen = ({navigation, route}) => {
     }));
   };
 
-  const handleSave = () => {
-    console.log(
-      formData.name,
-      formData.email,
-      formData.phone,
-      formData.gender,
-      formData.address,
-      formData.avatar,
-    );
-    // navigation.goBack();
+  const handleSave = async () => {
+    try {
+      const form = new FormData();
+  
+      if (formData.avatar && !formData.avatar.startsWith('http')) {
+        form.append('avatar', {
+          uri: formData.avatar,
+          name: 'avatar.jpg',
+          type: 'image/jpeg',
+        });
+      }
+  
+      const response = await uploadAvatar(form, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      
+      Alert.alert('Thành công', 'Cập nhật ảnh đại diện thành công', [
+        {
+          text: 'OK',
+          onPress: () => {
+            navigation.goBack();
+          },
+        },
+      ]);
+      
+      console.log('Kết quả upload:', response);
+    } catch (error) {
+      console.error('Lỗi upload ảnh:', error);
+      Alert.alert('Lỗi', 'Không thể upload ảnh. Vui lòng thử lại.');
+    }
   };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={pickImage} style={styles.avatarWrapper}>
-        <View style={styles.avatarContainer}>
+      <View  style={styles.avatarWrapper}>
+        <Pressable style={styles.avatarContainer} onPress={pickImage}>
           <Image
             source={{
               uri: formData?.avatar || IMAGES.IMAGES_H,
@@ -108,10 +132,8 @@ const EditProfileScreen = ({navigation, route}) => {
             style={styles.avatar}
           />
           <Avatar.Icon icon="camera" size={30} style={styles.cameraIcon} />
-        </View>
-        {/* <Text style={styles.avatarText}>Chọn ảnh</Text> */}
-      </TouchableOpacity>
-
+        </Pressable>
+      </View>
       <View>
         <TextInput
           label="Họ tên"
@@ -177,7 +199,7 @@ const EditProfileScreen = ({navigation, route}) => {
   );
 };
 
-export default EditProfileScreen;
+export default memo(EditProfileScreen);
 
 const styles = StyleSheet.create({
   container: {

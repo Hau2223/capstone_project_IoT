@@ -3,8 +3,7 @@ const Device = require('../models/deviceModel');
 const app = express();
 const bodyParser = require('body-parser');
 const User = require('../models/userModel');
-const upload = require('../middlewares/uploadImgMiddleware');
-const URLIMG = require('../utils/constants').URLIMG;
+const upload = require('../middlewares/cloudinaryUpload');
 
 app.use(bodyParser.json());
 
@@ -108,27 +107,27 @@ app.get('/detailDeviceBy/:id_esp', async (req, res) => {
  */
 app.get('/membersDetail/:id_esp', async (req, res) => {
   try {
-    const device = await Device.findOne({ id_esp: req.params.id_esp });
+    const device = await Device.findOne({id_esp: req.params.id_esp});
 
     if (!device) {
-      return res.status(404).json({ message: 'Device not found' });
+      return res.status(404).json({message: 'Device not found'});
     }
 
     const membersInfo = await Promise.all(
-      device.members.map(async (member) => {
+      device.members.map(async member => {
         const user = await User.findById(member.userId);
-    
+
         return {
           userId: user ? user._id : member.userId,
           name: user ? user.name : 'Unknown',
           role: member.role,
         };
-      })
+      }),
     );
-    res.json({ members: membersInfo });
+    res.json({members: membersInfo});
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({message: 'Server error'});
   }
 });
 
@@ -340,7 +339,6 @@ app.post('/addMember/:id_esp', async (req, res) => {
     });
   }
 });
-
 
 /**
  * @swagger
@@ -621,8 +619,6 @@ app.delete('/delDeviceBy/:id_esp', async (req, res) => {
   }
 });
 
-app.use('/uploads', express.static('uploads'));
-
 /**
  * @swagger
  * /api/device/upload-img/{id_esp}:
@@ -656,7 +652,7 @@ app.use('/uploads', express.static('uploads'));
  *           application/json:
  *             example:
  *               message: "Device image updated"
- *               img_area: "/uploads/example.jpg"
+ *               img_area: "https://res.cloudinary.com/dzgvy2rlt/image/upload/v1744970883/uploads/example.jpg"
  *       400:
  *         description: Lỗi khi không có ảnh hoặc quá dung lượng
  *       404:
@@ -664,52 +660,40 @@ app.use('/uploads', express.static('uploads'));
  *       500:
  *         description: Lỗi server
  */
-app.put(
-  '/upload-img/:id_esp',
-  (req, res, next) => {
-    upload.single('img_area')(req, res, function (err) {
-      if (err) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          return res
-            .status(400)
-            .json({message: 'Ảnh vượt quá dung lượng tối đa 5MB'});
-        }
-        return res.status(400).json({message: err.message});
-      }
-      next();
-    });
-  },
-  async (req, res) => {
-    try {
-      const id_esp = req.params.id_esp;
-      const filePath = req.file ? `/uploads/${req.file.filename}` : null;
+app.put('/upload-img/:id_esp', upload.single('img_area'), async (req, res) => {
+  try {
+    const {id_esp} = req.params;
 
-      if (!filePath) {
-        return res.status(400).json({message: 'No image uploaded'});
-      }
-
-      // 🔍 Tìm thiết bị theo id_esp
-      const updatedDevice = await Device.findOneAndUpdate(
-        {id_esp},
-        {img_area: URLIMG.urlDevice + filePath},
-        {new: true},
-      );
-
-      if (!updatedDevice) {
-        return res.status(404).json({message: 'Device not found'});
-      }
-
-      res.status(200).json({
-        message: 'Device image updated',
-        img_area: updatedDevice.img_area,
-      });
-    } catch (err) {
-      res.status(500).json({
-        message: 'Error uploading image for device',
-        error: err.message,
-      });
+    if (!req.file || !req.file.path) {
+      return res.status(400).json({message: 'No image uploaded'});
     }
-  },
-);
+    // Cập nhật link ảnh mới vào DB
+    const updatedDevice = await Device.findOneAndUpdate(
+      {id_esp},
+      {img_area: req.file.path},
+      {new: true},
+    );
+
+    if (!updatedDevice) {
+      return res.status(404).json({message: 'Device not found'});
+    }
+  
+
+    res.status(200).json({
+      message: 'Device image updated',
+      img_area: updatedDevice.img_area,
+    });
+  } catch (err) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res
+        .status(400)
+        .json({message: 'Ảnh vượt quá dung lượng tối đa 5MB'});
+    }
+    res.status(500).json({
+      message: 'Error uploading image for device',
+      error: err.message,
+    });
+  }
+});
 
 module.exports = app;

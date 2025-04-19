@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useEffect, memo, useContext} from 'react';
+import React, {useState, useCallback, memo, useContext} from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import * as Animatable from 'react-native-animatable';
 import Icon from 'react-native-vector-icons/AntDesign';
 import IconMa from 'react-native-vector-icons/MaterialCommunityIcons';
 import {createStyle} from './style';
-import {useIsFocused} from '@react-navigation/native';
+import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 import {ThemeContext} from '../../../assets/common/themeProvider';
 import {IMAGES} from '../../../utils/constants';
 import HeaderCompo from '../../components/HeaderCompo';
@@ -21,58 +21,63 @@ import DeviceInfo from 'react-native-device-info';
 import {detailDevice} from '../../../services/deviceServices';
 import {gardenId} from '../../../services/authServices';
 import colors from '../../../assets/common/colorCss';
+
 LogBox.ignoreAllLogs();
 
 const AccountInfoScreen = ({navigation, route}) => {
-  const {userInfo} = route.params;
+  const {userInfo, fetchUserProfile} = route.params;
   const {theme} = useContext(ThemeContext);
   const styles = createStyle(theme);
   const isFocused = useIsFocused();
 
-  const [garden, SetGarden] = useState([]);
+  const [currentUserInfo, setCurrentUserInfo] = useState(userInfo); // State mới để lưu userInfo
+  const [garden, setGarden] = useState([]);
 
   const fetchGarder = useCallback(async () => {
     try {
       const res = await gardenId();
       if (res.status === 200) {
-        // SetGarden(res.data);
         const dataGarden = await Promise.all(
           res.data.map(async id => {
             const deviceData = await detailDevice({id});
             return deviceData;
           }),
         );
-        SetGarden(dataGarden);
+        setGarden(dataGarden);
       }
     } catch (err) {
-      setError(err.message || 'Error fetching user data');
-    } finally {
-      setLoading(false);
+      console.error(err.message || 'Error fetching user data');
     }
   }, []);
 
-  useEffect(() => {
-    if (isFocused) {
-      fetchGarder();
-      const interval = setInterval(() => {
+  useFocusEffect(
+    useCallback(() => {
+      const fetchData = async () => {
+        const userData = await fetchUserProfile(); // Gọi và nhận dữ liệu mới
+        if (userData) {
+          setCurrentUserInfo(userData);  // Cập nhật userInfo mới
+        }
         fetchGarder();
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [isFocused]);
+      };
+
+      fetchData();
+    }, [fetchUserProfile, fetchGarder]),
+  );
 
   const profileFields = [
-    {label: 'Họ tên', value: userInfo?.name, icon: 'account'},
-    {label: 'Email', value: userInfo?.email, icon: 'email'},
-    {label: 'Số điện thoại', value: userInfo?.phone, icon: 'phone'},
-    {label: 'Địa chỉ', value: userInfo?.address, icon: 'map-marker'},
+    {label: 'Họ tên', value: currentUserInfo?.name, icon: 'account'},
+    {label: 'Email', value: currentUserInfo?.email, icon: 'email'},
+    {label: 'Số điện thoại', value: currentUserInfo?.phone, icon: 'phone'},
+    {label: 'Địa chỉ', value: currentUserInfo?.address, icon: 'map-marker'},
   ];
 
   return (
     <SafeAreaView style={styles.container}>
       {isFocused && (
-        <StatusBar backgroundColor={ theme === 'light' ? colors.white : colors.bg_dark}  
-        barStyle= {theme === 'light' ? "dark-content" : "light-content"} />
+        <StatusBar
+          backgroundColor={theme === 'light' ? colors.white : colors.bg_dark}
+          barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+        />
       )}
       <HeaderCompo
         name="Thông tin cá nhân"
@@ -96,7 +101,7 @@ const AccountInfoScreen = ({navigation, route}) => {
             <Image
               style={styles.imgProfile}
               source={{
-                uri: userInfo?.avatar ? userInfo.avatar : IMAGES.IMAGES_H,
+                uri: currentUserInfo?.avatar ? currentUserInfo.avatar : IMAGES.IMAGES_H,
               }}
             />
             <View style={styles.txtInfo}>
@@ -105,7 +110,7 @@ const AccountInfoScreen = ({navigation, route}) => {
                 style={[styles.txtWelcome, styles.txtName]}
                 numberOfLines={1}
                 ellipsizeMode="tail">
-                {userInfo?.name}
+                {currentUserInfo?.name}
               </Text>
             </View>
           </View>
@@ -117,7 +122,9 @@ const AccountInfoScreen = ({navigation, route}) => {
           duration={1500}>
           <View style={styles.layoutBody}>
             <Text style={styles.txtTitle}>Hồ sơ của bạn</Text>
-            <Pressable style={styles.editbtn} onPress={() => navigation.navigate('EditProfile',{userInfo}) }>
+            <Pressable
+              style={styles.editbtn}
+              onPress={() => navigation.navigate('EditProfile', { userInfo: currentUserInfo })}>
               <Icon name="edit" size={20} />
             </Pressable>
           </View>
@@ -141,6 +148,7 @@ const AccountInfoScreen = ({navigation, route}) => {
             ))}
           </View>
         </Animatable.View>
+        
         <Animatable.View
           style={styles.layoutContent}
           animation="slideInUp"
