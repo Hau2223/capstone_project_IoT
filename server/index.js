@@ -39,6 +39,7 @@ const controlRou = require('./routes/controlRouter');
 const sensorRou = require('./routes/sensorRouter');
 const scheduleRou = require('./routes/scheduleRouter');
 const reportRou = require('./routes/reportRouter');
+const adminRou = require("./routes/adminRouter");
 
 app.use(
   cors({
@@ -58,6 +59,8 @@ app.use('/api/control', controlRou);
 app.use('/api/sensor', sensorRou);
 app.use('/api/schedule', scheduleRou);
 app.use('/api/report', reportRou);
+app.use('/api/admin', adminRou);
+
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

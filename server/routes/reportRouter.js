@@ -35,9 +35,21 @@ app.get('/detailReport/:deviceId', async (req, res) => {
   try {
     const { deviceId } = req.params;
     const reports = await Report.find({ deviceId });
-
     if (!reports.length) {
-      return res.status(404).json({ message: 'No reports found for this device' });
+      const now = Date.now();
+      const dummyReport = {
+        deviceId: deviceId,
+        time_created: now,
+        water_usage: 0,
+        moisture_avg: [],
+        luminosity_avg: [],
+        tempurature_avg: [],
+        humidity_avg: [],
+        stream_avg: [],
+        __v: 0, // Optional: Mongoose adds __v by default, you can omit it if not needed
+      };
+
+      return res.status(200).json(dummyReport);
     }
 
     res.status(200).json(reports);
