@@ -377,6 +377,8 @@ app.post('/register', async (req, res) => {
  *             example:
  *               message: "Internal server error"
  */
+
+
 app.post('/resetPassword', async (req, res) => {
   const {email, newPassword} = req.body;
 
