@@ -8,8 +8,8 @@ export const login = async params => {
   });
 };
 
-export const loginGoogle = async (idToken) => {
-  return await post('/user/googlemobile', { idToken });
+export const loginGoogle = async idToken => {
+  return await post('/user/googlemobile', {idToken});
 };
 
 export const signUp = async params => {
@@ -55,4 +55,22 @@ export const uploadAvatar = async (form, options = {}) => {
   return await put('/user/avatar', form, options);
 };
 
+export const updateProfile = async params => {
+  return await put('/user/updateProfile', {
+    name: params.name,
+    phone: params.phone,
+    gender: params.gender,
+    address: params.address,
+    dob: params.dob,
+  });
+};
+
+export const changePassword = async params => {
+  console.log(params.currentPassword);
+  
+  return await put('/user/changePassword', {
+    currentPassword: params.currentPassword,
+    newPassword: params.newPassword,
+  });
+};
 

@@ -229,27 +229,27 @@ const Navigator = () => {
               <StackNav.Screen
                 name="AccountInfo"
                 component={AccountInfoScreen}
-                options={{headerShown: false, animation: 'fade_from_bottom'}}
+                options={{headerShown: false, animation:  'fade'}}
               />
               <StackNav.Screen
                 name="ChangePassword"
                 component={ChangePasswordScreen}
-                options={{headerShown: false, animation: 'fade_from_bottom'}}
+                options={{headerShown: false, animation: "slide_from_right"}}
               />
               <StackNav.Screen
                 name="GeneralSetting"
                 component={GeneralSettingScreen}
-                options={{headerShown: false, animation: 'fade_from_bottom'}}
+                options={{headerShown: false, animation: 'slide_from_right'}}
               />
               <StackNav.Screen
                 name="LanguageSetting"
                 component={LanguageSettingScreen}
-                options={{headerShown: false, animation: 'fade_from_bottom'}}
+                options={{headerShown: false, animation: 'slide_from_right'}}
               />
               <StackNav.Screen
                 name="EditProfile"
                 component={EditProfileScreen}
-                options={{headerShown: false, animation: 'fade_from_bottom'}}
+                options={{headerShown: false, animation: 'slide_from_right'}}
               />
             </StackNav.Navigator>
           </UserProvider>

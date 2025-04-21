@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useContext, useCallback, memo} from 'react';
-import {View, Text, Image, TouchableOpacity, StatusBar} from 'react-native';
+import {View, Text, Image, TouchableOpacity, StatusBar, Pressable} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {ThemeContext} from '../../../assets/common/themeProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -70,46 +70,46 @@ const SettingsScreen = ({navigation}) => {
 
       {/* Danh sách cài đặt */}
       <View style={styles.body}>
-        <Text style={styles.sectionTitle}>Cài đặt</Text>
+        <Text style={styles.sectionTitle}>{t('setting')}</Text>
         <View style={styles.settingBox}>
-          <TouchableOpacity
+          <Pressable
             style={styles.optionContainer}
             onPress={() => navigation.navigate('GeneralSetting')}>
-            <Text style={styles.optionText}>Cài đặt chung</Text>
-          </TouchableOpacity>
+            <Text style={styles.optionText}>{t('general_settings')}</Text>
+          </Pressable>
 
-          <TouchableOpacity
+          <Pressable
             style={styles.optionContainer}
             onPress={() =>
-              navigation.navigate('AccountInfo', {userInfo, fetchUserProfile})
+              navigation.navigate('AccountInfo', {userInfo})
             }>
-            <Text style={styles.optionText}>Thông tin tài khoản</Text>
-          </TouchableOpacity>
+            <Text style={styles.optionText}>{t('account_info')}</Text>
+          </Pressable>
 
-          <TouchableOpacity
+          <Pressable
             style={styles.optionContainer}
             onPress={() => navigation.navigate('ChangePassword')}>
-            <Text style={styles.optionText}>Đổi mật khẩu</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+            <Text style={styles.optionText}>{t('change_password')}</Text>
+          </Pressable>
+          <Pressable
             style={styles.optionContainer}
             onPress={toggleTheme}>
-            <Text style={styles.optionText}>Giao diện</Text>
-          </TouchableOpacity>
+            <Text style={styles.optionText}>{t('interface')}</Text>
+          </Pressable>
 
-          <TouchableOpacity
+          <Pressable
             style={styles.optionContainer}
             onPress={() => navigation.navigate('LanguageSetting')}>
-            <Text style={styles.optionText}>Ngôn ngữ</Text>
-          </TouchableOpacity>
+            <Text style={styles.optionText}>{t('language')}</Text>
+          </Pressable>
 
-          <TouchableOpacity
+          <Pressable
             onPress={handleLogout}
             style={[styles.optionContainer, {borderBottomWidth: 0}]}>
             <Text style={[styles.optionText, {color: colors.red}]}>
-              Đăng xuất
+              {t('logout')}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     </View>

@@ -1,4 +1,11 @@
-import {StyleSheet, Text, View, FlatList, ScrollView, Animated} from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  ScrollView,
+  Animated,
+} from 'react-native';
 import React, {memo, useState, useEffect, useCallback, useRef} from 'react';
 // import OnOffBtn from '../../components/Button/OnOff';
 import {Switch} from 'react-native-paper';
@@ -34,7 +41,7 @@ const DetailScreen = ({route}) => {
     stream: streamSensor,
   } = sensorMap;
 
-  console.log("sensorMap", sensorMap);
+  // console.log("sensorMap", sensorMap);
 
   const {
     water: waterControl,
@@ -50,15 +57,17 @@ const DetailScreen = ({route}) => {
     try {
       const data = await gardenId();
       const ids = data?.data || [];
-    
+
       if (!ids.includes(deviceId)) {
-        setError(`Device ID "${deviceId}" không hợp lệ hoặc không tồn tại trong danh sách`);
+        setError(
+          `Device ID "${deviceId}" không hợp lệ hoặc không tồn tại trong danh sách`,
+        );
         setLoading(false);
         return;
       }
-  
-      const res = await memberId({ id: deviceId });
-      console.log('Member response:', res);
+
+      const res = await memberId({id: deviceId});
+      // console.log('Member response:', res);
       if (res?.members) {
         setUserInfo(res.members);
       }
@@ -69,24 +78,25 @@ const DetailScreen = ({route}) => {
       setLoading(false);
     }
   }, [deviceId]);
-  
-  
 
   useEffect(() => {
-    console.log('Current deviceId:', deviceId);
+    // console.log('Current deviceId:', deviceId);
     fetchUserProfile();
-    const interval = setInterval(() => {
-      fetchUserProfile();
-    }, 5000);
-  
-    return () => clearInterval(interval);
-  }, [deviceId]);  // Lắng nghe sự thay đổi của deviceId
+    // const interval = setInterval(() => {
+    //   fetchUserProfile();
+    // }, 5000);
 
+    // return () => clearInterval(interval);
+  }, [fetchUserProfile]); // Lắng nghe sự thay đổi của deviceId
 
-
-  const names = userInfo?.flat()?.map(member => member.name).join(', ');
-  const roles = userInfo?.flat()?.map(member => member.role).join(', ');
-  
+  const names = userInfo
+    ?.flat()
+    ?.map(member => member.name)
+    .join(', ');
+  const roles = userInfo
+    ?.flat()
+    ?.map(member => member.role)
+    .join(', ');
 
   // useEffect(() => {
   //   const fetchMemberNames = async () => {
@@ -138,11 +148,12 @@ const DetailScreen = ({route}) => {
     outputRange: [10, 5],
     extrapolate: 'clamp',
   });
+  console.log(controlMap);
 
   return (
     <View style={styles.frame}>
-      <Animated.View style={[styles.container1, { height: headerHeight }]}>
-        <Animated.View style={[styles.img, { height: imageHeight }]}>
+      <Animated.View style={[styles.container1, {height: headerHeight}]}>
+        <Animated.View style={[styles.img, {height: imageHeight}]}>
           <FastImage
             style={styles.imgStyle}
             source={{
@@ -152,13 +163,13 @@ const DetailScreen = ({route}) => {
             resizeMode={FastImage.resizeMode.cover}
           />
         </Animated.View>
-        <Animated.Text 
+        <Animated.Text
           style={[
-            styles.header2, 
-            { 
+            styles.header2,
+            {
               fontSize: headerFontSize,
-              marginTop: headerMarginTop
-            }
+              marginTop: headerMarginTop,
+            },
           ]}>
           {item?.data?.name_area}
         </Animated.Text>
@@ -167,8 +178,8 @@ const DetailScreen = ({route}) => {
         showsVerticalScrollIndicator={false}
         style={styles.ScrollView}
         onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false },
+          [{nativeEvent: {contentOffset: {y: scrollY}}}],
+          {useNativeDriver: false},
         )}
         scrollEventThrottle={8}
         bounces={false}>
@@ -181,7 +192,9 @@ const DetailScreen = ({route}) => {
           style={styles.containerFrame}></FrameItem1>
         <FrameItem2
           style={styles.containerFrame}
-          valueStatus={lightControl?.status}></FrameItem2>
+          waterStatus={waterControl?.status}
+          lightStatus={lightControl?.status}
+          windStatus={windControl?.status}></FrameItem2>
         <FrameItem3 header3={'THÀNH VIÊN'} users={userInfo || []} />
       </Animated.ScrollView>
     </View>
@@ -251,53 +264,72 @@ const SensorComponent = ({nameIcon, colorIcon, txtSensor, txtNumb}) => {
   );
 };
 
-const FrameItem2 = ({valueStatus}) => {
+const FrameItem2 = ({waterStatus, lightStatus, windStatus}) => {
+  const [water, setWater] = useState(waterStatus);
+  const [light, setLight] = useState(lightStatus);
+  const [wind, setWind] = useState(windStatus);
+
+  useEffect(() => {
+    setWater(waterStatus);
+    setLight(lightStatus);
+    setWind(windStatus);
+  }, [waterStatus, lightStatus, windStatus]);
+
   return (
     <View style={styles.containerFrame}>
       <Header3 header3={'ĐIỀU KHIỂN'} />
       <StatusComponent
-        nameIcon={'water'}
-        colorIcon={'#03A9F4'}
+        nameIcon="water"
+        colorIcon="#03A9F4"
         txtStatus="Nước"
-        valueStatus={valueStatus}></StatusComponent>
+        valueStatus={water}
+        onChange={setWater}
+      />
       <StatusComponent
-        nameIcon={'lightbulb-on-outline'}
-        colorIcon={'#FFEB3B'}
-        txtStatus="Nước"
-        valueStatus={valueStatus}></StatusComponent>
+        nameIcon="lightbulb-on-outline"
+        colorIcon="#FFEB3B"
+        txtStatus="Đèn"
+        valueStatus={light}
+        onChange={setLight}
+      />
       <StatusComponent
-        nameIcon={'weather-windy'}
-        colorIcon={'#90A4AE'}
+        nameIcon="weather-windy"
+        colorIcon="#90A4AE"
         txtStatus="Gió"
-        valueStatus={valueStatus}></StatusComponent>
+        valueStatus={wind}
+        onChange={setWind}
+      />
     </View>
   );
 };
 
-const StatusComponent = ({nameIcon, colorIcon, txtStatus, valueStatus}) => {
-  return (
-    <View style={styles.contentFrame}>
-      <View style={styles.iconContent}>
-        <Icon name={nameIcon} size={50} color={colorIcon} />
-      </View>
-      <View style={styles.textContent}>
-        <Text style={styles.textStyle}>{txtStatus}</Text>
-      </View>
-      <View style={styles.valueContent}>
-        <Switch
-          value={valueStatus}
-          onValueChange={newValue => setIsFan(newValue)}
-          trackColor={{false: '#F6F6F6', true: 'white'}}
-          thumbColor={valueStatus ? colors.primary : '#ACACAC'}
-          style={{transform: [{scale: 1.5}]}}
-        />
-      </View>
+const StatusComponent = ({
+  nameIcon,
+  colorIcon,
+  txtStatus,
+  valueStatus,
+  onChange,
+}) => (
+  <View style={styles.contentFrame}>
+    <View style={styles.iconContent}>
+      <Icon name={nameIcon} size={50} color={colorIcon} />
     </View>
-  );
-};
+    <View style={styles.textContent}>
+      <Text style={styles.textStyle}>{txtStatus}</Text>
+    </View>
+    <View style={styles.valueContent}>
+      <Switch
+        value={valueStatus}
+        onValueChange={onChange}
+        trackColor={{false: '#F6F6F6', true: 'white'}}
+        thumbColor={valueStatus ? colors.primary : '#ACACAC'}
+        style={{transform: [{scale: 1.5}]}}
+      />
+    </View>
+  </View>
+);
 
-const FrameItem3 = ({ header3, users = [] }) => {
-  console.log('Rendering users:', users);
+const FrameItem3 = ({header3, users = []}) => {
   return (
     <View style={styles.containerFrame}>
       <Header3 header3={header3} />
@@ -305,7 +337,7 @@ const FrameItem3 = ({ header3, users = [] }) => {
         <FlatList
           data={users}
           keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
+          renderItem={({item}) => (
             <UserComponent
               nameIcon={'account-circle'}
               colorIcon={'#D9D9D9'}
@@ -459,7 +491,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 50,
     backgroundColor: 'white',
-    
   },
   textHeader3: {
     textAlign: 'center',

@@ -13,7 +13,7 @@ const AlarmScreen = ({route, navigation}) => {
   const previousSchedulesRef = useRef([]);
 
   const {item} = route.params;
-  console.log('AlarmScreen item:', item); // Debug log
+  // console.log('AlarmScreen item:', item); // Debug log
 
   useEffect(() => {
     if (item.id_esp) {
@@ -40,14 +40,14 @@ const AlarmScreen = ({route, navigation}) => {
       }
 
       const controlName = item.controlName || 'water';
-      console.log('Fetching schedules for:', { id_esp: item.id_esp, controlName }); // Debug log
+      // console.log('Fetching schedules for:', { id_esp: item.id_esp, controlName }); // Debug log
 
       const response = await scheduleId({
         id_esp: item.id_esp,
         name: controlName
       });
       
-      console.log('Schedule API response:', response); // Debug log
+      // console.log('Schedule API response:', response); // Debug log
 
       if (response?.data) {
         const formattedSchedules = response.data.map((schedule, index) => ({
