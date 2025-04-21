@@ -5,21 +5,28 @@ import {
   StyleSheet,
   FlatList,
   Pressable,
+  StatusBar,
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {ThemeContext} from '../../../assets/common/themeProvider';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import colors from '../../../assets/common/colorCss';
+import {createStyle} from './style';
+import {useIsFocused} from '@react-navigation/native';
+import HeaderCompo from '../../components/HeaderCompo';
+import {white} from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
 
 const languages = [
-  { code: 'vi', label: 'Vietnamese', flag: '🇻🇳' },
-  { code: 'en', label: 'English', flag: '🇬🇧' },
+  {code: 'vi', label: 'Vietnamese', flag: '🇻🇳'},
+  {code: 'en', label: 'English', flag: '🇬🇧'},
 ];
 
 const LanguageSettingScreen = ({navigation}) => {
   const {t, i18n} = useTranslation();
   const {theme} = useContext(ThemeContext);
   const [selectedLang, setSelectedLang] = useState(i18n.language);
+  // const styles = createStyle(theme);
+  const isFocused = useIsFocused();
 
   const changeLanguage = async lang => {
     i18n.changeLanguage(lang);
@@ -28,9 +35,21 @@ const LanguageSettingScreen = ({navigation}) => {
 
   return (
     <View style={[styles.container, theme === 'dark' && styles.darkMode]}>
-      <Text style={[styles.text, theme === 'dark' && styles.darkText]}>
-        {t('setting')}
-      </Text>
+      {isFocused && (
+        <StatusBar
+          backgroundColor={theme === 'light' ? colors.white : colors.bg_dark}
+          barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+        />
+      )}
+      <HeaderCompo
+        name={t('setting')}
+        isPress={() => navigation.goBack()}
+        bgcolor={colors.white}
+        color={colors.black}
+      />
+      <View>
+        <Text>Ngôn ngữ hiện tại</Text>
+      </View>
       <FlatList
         data={languages}
         keyExtractor={item => item.code}
@@ -74,7 +93,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
-    // padding: 16,
+    marginHorizontal: 10,
     gap: 10,
   },
   text: {
@@ -84,19 +103,18 @@ const styles = StyleSheet.create({
   },
   ctnmain: {
     gap: 10,
-    marginHorizontal: 10,
   },
   languageItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#315070',
+    backgroundColor: colors.primary,
     padding: 10,
     borderRadius: 8,
     justifyContent: 'space-between',
   },
   selected: {
     borderWidth: 2,
-    borderColor: 'yellow',
+    borderColor: colors.white,
   },
   flag: {
     width: 30,

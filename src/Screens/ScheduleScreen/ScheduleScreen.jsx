@@ -23,7 +23,7 @@ const ScheduleScreen = ({ navigation, route }) => {
         const response = await profile();
         if (response?.data) {
           setIdUser(response.data._id);
-          console.log('ID User từ API:', response.data._id);
+          // console.log('ID User từ API:', response.data._id);
         }
       } catch (err) {
         console.error('Lỗi khi lấy idUser:', err);
@@ -41,7 +41,7 @@ const ScheduleScreen = ({ navigation, route }) => {
       const response = await getAllDevices();
       const allDevices = response?.data || [];
 
-      console.log('Tất cả thiết bị từ API:', allDevices);
+      // console.log('Tất cả thiết bị từ API:', allDevices);
 
       const counts = {
         water: 0,
@@ -76,7 +76,7 @@ const ScheduleScreen = ({ navigation, route }) => {
       delete counts.windMarked;
 
       setScheduleCounts(counts);
-      console.log('Số khu vực có lịch trình:', counts);
+      // console.log('Số khu vực có lịch trình:', counts);
     } catch (err) {
       console.error('Error details:', {
         status: err.response?.status,

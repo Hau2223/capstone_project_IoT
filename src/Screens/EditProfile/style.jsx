@@ -10,29 +10,99 @@ import {fonts} from '../../../assets/common/fontCss';
 const light = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    justifyContent: 'center',
+    backgroundColor: colors.white,
+  },
+  body: {
+    paddingBottom: 30,
+    paddingHorizontal: 20,
   },
   avatarWrapper: {
     alignItems: 'center',
     marginBottom: 20,
   },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+  avatarContainer: {
+    position: 'relative',
   },
-  avatarText: {
-    marginTop: 8,
-    fontSize: 14,
-    color: '#666',
+  avatar: {
+    width: 120,
+    height: 120,
+    borderWidth: 4,
+    borderColor: colors.primary,
+    borderRadius: 60,
+  },
+  cameraIcon: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    backgroundColor: colors.white,
+  },
+  contentWrapper: {
+    // paddingHorizontal: 20,
+  },
+  inputGroup: {
+    gap: 5,
   },
   input: {
+    height: 45,
+    marginBottom: 10,
+  },
+  label: {
+    fontSize: 18,
+    color: colors.black,
+  },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: colors.black,
+    justifyContent: 'center',
+    borderRadius: 4,
     marginBottom: 15,
+    overflow: 'hidden',
+    paddingHorizontal: 5,
+  },
+  picker: {
+    height: 45,
+    color: colors.black,
+  },
+  btnSave: {
+    alignSelf: 'flex-end',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+  },
+  txtSave: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.white,
   },
 });
 
 const dark = StyleSheet.create({
   ...light,
+  container: {
+    ...light.container,
+    backgroundColor: colors.bg_dark,
+  },
+  cameraIcon: {
+    ...light.cameraIcon,
+    backgroundColor: colors.bg_dark,
+  },
+  label: {
+    ...light.label,
+    color: colors.white,
+  },
+  pickerWrapper: {
+    ...light.pickerWrapper,
+    borderColor: colors.white,
+    backgroundColor: colors.white,
+  },
+  picker: {
+    ...light.picker,
+    color: colors.black,
+  }
 });
 
 export const createStyle = mode => {

@@ -21,7 +21,7 @@ app.use(bodyParser.json());
 app.use(passport.initialize());
 
 const authenticateJWT = require('../middlewares/authMiddleware');
-const { CONFIGURL } = require('../utils/constants');
+const {CONFIGURL} = require('../utils/constants');
 const otpStore = {};
 const pendingRegistrations = {};
 const registeredUsers = {};
@@ -100,7 +100,7 @@ app.post('/login', async (req, res) => {
     const token = createToken(user._id);
     await user.save();
 
-    res.status(200).json({data: token, status: 200});
+    res.status(200).json({data: token, role: user.role,  status: 200});
   } catch (err) {
     console.error('Error logging in user:', err);
     res.status(500).json({status: 500, message: 'Internal server error'});
@@ -482,7 +482,7 @@ app.post('/logout', authenticateJWT, async (req, res) => {
     const userId = req.user.userId;
 
     // Tìm người dùng và xóa token
-    await User.findByIdAndUpdate(userId, {token: null});
+    await User.findOne({userId});
 
     res.status(200).json({status: 200, message: 'Logout successful'});
   } catch (error) {
@@ -554,36 +554,64 @@ app.get('/getGardenby', authenticateJWT, async (req, res) => {
  *     summary: Cập nhật thông tin tài khoản người dùng
  *     tags: [Information]
  *     security:
- *       - bearerAuth: [] # Bảo mật với JWT
+ *       - bearerAuth: []  # Bảo mật với JWT
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
- *           example:
- *             name: "Nguyen Van B"
- *             full_name: "Nguyễn Văn B"
- *             avatar: "avatar_url.jpg"
  *           schema:
  *             type: object
  *             properties:
  *               name:
  *                 type: string
- *               full_name:
+ *                 example: "Nguyen Van B"
+ *               gender:
  *                 type: string
- *               avatar:
+ *                 enum: [male, female, other]
+ *                 example: "male"
+ *               phone:
  *                 type: string
+ *                 example: "0987654321"
+ *               address:
+ *                 type: string
+ *                 example: "123 Đường ABC, TP.HCM"
+ *               dob:
+ *                 type: string
+ *                 format: date
+ *                 example: "1995-05-20"
  *     responses:
  *       200:
  *         description: Thông tin người dùng được cập nhật thành công
  *         content:
  *           application/json:
- *             example:
- *               status: 200
- *               message: "Profile updated successfully"
- *               data:
- *                 name: "Nguyen Van B"
- *                 email: "example@gmail.com"
- *                 full_name: "Nguyễn Văn B"
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Profile updated successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       example: "Nguyen Van B"
+ *                     gender:
+ *                       type: string
+ *                       example: "male"
+ *                     phone:
+ *                       type: string
+ *                       example: "0987654321"
+ *                     address:
+ *                       type: string
+ *                       example: "123 Đường ABC, TP.HCM"
+ *                     dob:
+ *                       type: string
+ *                       format: date
+ *                       example: "1995-05-20"
  *       400:
  *         description: Dữ liệu không hợp lệ
  *       401:
@@ -596,7 +624,7 @@ app.get('/getGardenby', authenticateJWT, async (req, res) => {
 app.put('/updateProfile', authenticateJWT, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const {name, avatar} = req.body;
+    const {name, gender, phone, address, dob} = req.body;
 
     // Tạo object chứa các trường cần cập nhật
     const updateFields = {};
@@ -605,8 +633,18 @@ app.put('/updateProfile', authenticateJWT, async (req, res) => {
     if (name !== undefined) {
       updateFields.name = name;
     }
-    if (avatar !== undefined) {
-      updateFields.avatar = avatar;
+    if (gender !== undefined) {
+      updateFields.gender = gender;
+    }
+    if (phone !== undefined) {
+      updateFields.phone = phone;
+    }
+
+    if (address !== undefined) {
+      updateFields.address = address;
+    }
+    if (dob !== undefined) {
+      updateFields.dob = dob;
     }
 
     // Kiểm tra nếu không có trường nào được cập nhật
@@ -637,8 +675,10 @@ app.put('/updateProfile', authenticateJWT, async (req, res) => {
       message: 'Profile updated successfully',
       data: {
         name: updatedUser.name,
-        email: updatedUser.email,
-        avatar: updatedUser.avatar,
+        gender: updatedUser.gender,
+        phone: updatedUser.phone,
+        address: updatedUser.address,
+        dob: updatedUser.dob
       },
     });
   } catch (error) {
@@ -870,31 +910,36 @@ app.put('/changePassword', authenticateJWT, async (req, res) => {
  *               message: "Error uploading avatar"
  *               error: "Chi tiết lỗi"
  */
-app.put('/avatar', authenticateJWT, upload.single('avatar'), async (req, res) => {
-  try {
-    const userId = req.user.userId;
+app.put(
+  '/avatar',
+  authenticateJWT,
+  upload.single('avatar'),
+  async (req, res) => {
+    try {
+      const userId = req.user.userId;
 
-    if (!req.file || !req.file.path) {
-      return res.status(400).json({ message: 'No image uploaded' });
+      if (!req.file || !req.file.path) {
+        return res.status(400).json({message: 'No image uploaded'});
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        {avatar: req.file.path},
+        {new: true},
+      );
+
+      res.status(200).json({
+        message: 'Avatar updated',
+        avatar: updatedUser.avatar,
+      });
+    } catch (err) {
+      res.status(500).json({
+        message: 'Error uploading avatar',
+        error: err.message,
+      });
     }
-
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { avatar: req.file.path },
-      { new: true }
-    );
-
-    res.status(200).json({
-      message: 'Avatar updated',
-      avatar: updatedUser.avatar,
-    });
-  } catch (err) {
-    res.status(500).json({
-      message: 'Error uploading avatar',
-      error: err.message,
-    });
-  }
-});
+  },
+);
 
 app.get(
   '/google',
@@ -923,7 +968,5 @@ app.get('/show-token', (req, res) => {
     </html>
   `);
 });
-
-
 
 module.exports = app;
