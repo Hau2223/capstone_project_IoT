@@ -1,4 +1,5 @@
 const swaggerJsDoc = require('swagger-jsdoc');
+const CONFIGURL = require('./constants').CONFIGURL;
 
 const options = {
   definition: {
@@ -9,11 +10,13 @@ const options = {
       description: 'API Documentation for IoT project',
     },
     tags: [
-      { name: 'Authentication'},
-      { name: 'Controls'},
-      { name: 'Devices'},
-      { name: 'Sensors'},
-      { name: 'Information'},
+      {name: 'Authentication'},
+      {name: 'Controls'},
+      {name: 'Devices'},
+      {name: 'Information'},
+      {name: 'Members'},
+      {name: 'Schedules'},
+      {name: 'Sensors'},
     ],
     components: {
       securitySchemes: {
@@ -31,10 +34,11 @@ const options = {
     ],
     servers: [
       {
-        url: 'https://capstone-project-iot-1.onrender.com',
+        url: CONFIGURL.url,
         // //https://capstone-project-iot-1.onrender.com
         // //http://localhost:8000
-        // //http://192.168.1.12:8000
+        // //http://192.168.1.5:8000
+        // //http://127.0.0.1:8000
       },
     ],
   },

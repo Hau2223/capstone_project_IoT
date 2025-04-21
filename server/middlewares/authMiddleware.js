@@ -1,4 +1,7 @@
 const jwt = require('jsonwebtoken');
+require('dotenv').config({
+  path: './etc/secrets/config.env',
+});
 
 // Middleware xác thực JWT
 const authenticateJWT = (req, res, next) => {
@@ -6,8 +9,10 @@ const authenticateJWT = (req, res, next) => {
 
   if (authHeader) {
     const token = authHeader.split(' ')[1];
-
-    jwt.verify(token, 'Q$r2K6W8n!jCW%Zk', (err, user) => {
+    if (!token) {
+      return res.sendStatus(404); // Unauthorized
+    }
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
       if (err) {
         return res.status(403).json({message: 'Invalid or expired token'});
       }

@@ -5,10 +5,20 @@ const httpRequest = axios.create({
   baseURL: `${CONFIG.baseUrl}`,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
   },
 });
 
+httpRequest.interceptors.request.use(
+  async req => {
+    const token = await AsyncStorage.getItem('authToken');
+    if (token) {
+      req.headers.Authorization = `Bearer ${token}`;
+    }
+    return req;
+  },
+  err => Promise.reject(err),
+);
 
 export const get = async (path, options = {}) => {
   const response = await httpRequest.get(path, options);

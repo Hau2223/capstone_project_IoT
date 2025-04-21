@@ -1,175 +1,30 @@
 const express = require('express');
-const Sensor = require('../models/sensorModel');
 const app = express();
 const bodyParser = require('body-parser');
-const authenticateJWT = require('../middlewares/authMiddleware');
+const Device = require('../models/deviceModel');
 app.use(bodyParser.json());
 
 /**
  * @swagger
- * /api/sensor/detailSensor:
- *   get:
- *     summary: Lấy danh sách dữ liệu cảm biến
- *     tags: [Sensors]
- *     responses:
- *       200:
- *         description: Trả về danh sách dữ liệu cảm biến
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   type:
- *                     type: string
- *                     example: "moisture"
- *                   value:
- *                     type: number
- *                     example: 555
- *       500:
- *         description: Lỗi khi lấy dữ liệu
- */
-app.get('/detailSensor',authenticateJWT, async (req, res) => {
-  try {
-    const data = await Sensor.find().sort({timestamp: -1});
-    return res.json(data);
-  } catch (error) {
-    res.status(500).json({message: 'Error fetching data', error});
-  }
-});
-
-/**
- * @swagger
- * /api/sensor/detailSensorBy/{id}:
- *   get:
- *     summary: Lấy dữ liệu cảm biến theo ID
- *     tags: [Sensors]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID của cảm biến cần lấy dữ liệu
- *     responses:
- *       200:
- *         description: Trả về dữ liệu cảm biến theo ID
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 type:
- *                   type: string
- *                   example: "moisture"
- *                 value:
- *                   type: number
- *                   example: 555
- *       400:
- *         description: ID không hợp lệ
- *       404:
- *         description: Không tìm thấy cảm biến
- *       500:
- *         description: Lỗi khi lấy dữ liệu
- */
-app.get('/detailSensorBy/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Kiểm tra nếu ID không hợp lệ
-    if (!id) {
-      return res.status(400).json({ message: 'ID is required' });
-    }
-
-    // Tìm cảm biến theo ID
-    const sensor = await Sensor.findById(id);
-
-    // Kiểm tra nếu không tìm thấy cảm biến
-    if (!sensor) {
-      return res.status(404).json({ message: 'Sensor not found' });
-    }
-
-    res.status(200).json(sensor);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching sensor data', error: error.message });
-  }
-});
-
-
-/**
- * @swagger
- * /api/sensor/create:
- *   post:
- *     summary: Tạo dữ liệu cảm biến mới
- *     tags: [Sensors]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           example:  # Dữ liệu JSON mẫu để test
- *             type: 'moisture'
- *             value: 0
- *     responses:
- *       201:
- *         description: Dữ liệu đã được lưu thành công
- *       200:
- *         description: Dữ liệu đã được cập nhật thành công
- *       400:
- *         description: idDevice là bắt buộc
- *       500:
- *         description: Lỗi khi xử lý dữ liệu
- */
-app.post('/create', async (req, res) => {
-  try {
-    const {type, value, status} = req.body;
-
-    // Kiểm tra dữ liệu đầu vào
-    if (!type) {
-      return res.status(400).json({message: 'Missing required fields'});
-    }
-    if (
-      ![
-        'moisture',
-        'light',
-        'rain',
-        'temperature',
-        'humidity',
-        'water_flow',
-      ].includes(type)
-    ) {
-      return res.status(400).json({
-          message:
-            'Invalid sensor type, type includes ["moisture","light", "rain", "temperature", "humidity", "water_flow" ]',
-        });
-    }
-
-    // Tạo bản ghi mới
-    const newData = new Sensor({
-      type,
-      value,
-    });
-
-    await newData.save();
-    res.status(201).json({message: 'Data saved successfully', data: newData});
-  } catch (error) {
-    res.status(500).json({message: 'Error saving data', error: error.message});
-  }
-});
-
-/**
- * @swagger
- * /api/sensor/updateSensorBy/{id}:
+ * /api/sensor/updateSensor/{id_esp}/{sensorId}:
  *   put:
- *     summary: Cập nhật dữ liệu cảm biến
+ *     summary: Cập nhật cảm biến theo ID
  *     tags: [Sensors]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: id_esp
  *         required: true
+ *         description: ID của thiết bị
  *         schema:
  *           type: string
+ *           example: "ESP123456"
+ *       - in: path
+ *         name: sensorId
+ *         required: true
  *         description: ID của cảm biến cần cập nhật
+ *         schema:
+ *           type: string
+ *           example: "67ef7f21a7feea8813df4363"
  *     requestBody:
  *       required: true
  *       content:
@@ -179,66 +34,137 @@ app.post('/create', async (req, res) => {
  *             properties:
  *               type:
  *                 type: string
+ *                 enum: ["moisture","luminosity","rain","temperature","humidity","stream"]
  *                 example: "moisture"
  *               value:
  *                 type: number
- *                 example: 600
+ *                 example: 55
  *     responses:
  *       200:
- *         description: Dữ liệu đã được cập nhật thành công
- *       400:
- *         description: ID không hợp lệ hoặc dữ liệu không hợp lệ
+ *         description: Cập nhật cảm biến thành công
  *       404:
- *         description: Không tìm thấy cảm biến
+ *         description: Thiết bị hoặc cảm biến không tìm thấy
  *       500:
- *         description: Lỗi khi cập nhật dữ liệu
+ *         description: Lỗi máy chủ
  */
-app.put('/updateSensorBy/:id', async (req, res) => {
+app.put('/updateSensor/:id_esp/:sensorId', async (req, res) => {
   try {
-    const {id} = req.params;
+    const {id_esp, sensorId} = req.params;
     const {type, value} = req.body;
 
-    // Kiểm tra nếu ID không hợp lệ
-    if (!id) {
-      return res.status(400).json({message: 'ID is required'});
-    }
-    if (
-      ![
-        'moisture',
-        'light',
-        'rain',
-        'temperature',
-        'humidity',
-        'water_flow',
-      ].includes(type)
-    ) {
-      return res
-        .status(400)
-        .json({
-          message:
-            'Invalid sensor type, type includes ["moisture","light", "rain", "temperature", "humidity", "water_flow" ]',
-        });
+    const device = await Device.findOne({id_esp});
+    if (!device) {
+      return res.status(404).json({message: 'Device not found'});
     }
 
-    // Tìm và cập nhật dữ liệu
-    const updatedSensor = await Sensor.findByIdAndUpdate(
-      id,
-      {type, value},
-      {new: true, runValidators: true},
-    );
-
-    // Kiểm tra nếu không tìm thấy cảm biến
-    if (!updatedSensor) {
+    const sensor = device.sensors.find(s => s._id.toString() === sensorId);
+    if (!sensor) {
       return res.status(404).json({message: 'Sensor not found'});
     }
 
+    // Cập nhật cảm biến
+    if (type) {
+      sensor.type = type;
+    }
+    if (value !== undefined) {
+      sensor.value = value;
+    }
+
+    await device.save();
+
     res
       .status(200)
-      .json({message: 'Data updated successfully', data: updatedSensor});
+      .json({message: 'Sensor updated successfully', data: sensor});
   } catch (error) {
     res
       .status(500)
-      .json({message: 'Error updating data', error: error.message});
+      .json({message: 'Error updating sensor', error: error.message});
+  }
+});
+
+/**
+ * @swagger
+ * /api/sensor/updateSensors/{id_esp}:
+ *   put:
+ *     summary: Cập nhật nhiều sensor theo ID thiết bị
+ *     tags: [Sensors]
+ *     parameters:
+ *       - in: path
+ *         name: id_esp
+ *         required: true
+ *         description: ID của thiết bị
+ *         schema:
+ *           type: string
+ *           example: "ESP123456"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 sensorId:
+ *                   type: string
+ *                   example: "67efa20e81a5bd9d16d2b6c5"
+ *                 type:
+ *                   type: string
+ *                   enum: ["moisture","luminosity","rain","temperature","humidity","stream"]
+ *                   example: "moisture"
+ *                 value:
+ *                   type: number
+ *                   example: 55
+ *     responses:
+ *       200:
+ *         description: Cập nhật các sensor thành công
+ *       404:
+ *         description: Thiết bị không tìm thấy hoặc một trong các sensor không tìm thấy
+ *       500:
+ *         description: Lỗi máy chủ
+ */
+app.put('/updateSensors/:id_esp/', async (req, res) => {
+  try {
+    const {id_esp} = req.params;
+    const sensorsToUpdate = req.body;
+
+    const device = await Device.findOne({id_esp});
+    if (!device) {
+      return res.status(404).json({message: 'Device not found'});
+    }
+
+    const updatedSensors = [];
+
+    for (const sensorData of sensorsToUpdate) {
+      const {sensorId, type, value} = sensorData;
+
+      const sensor = device.sensors.find(s => s._id.toString() === sensorId);
+      if (!sensor) {
+        return res
+          .status(404)
+          .json({message: `Sensor with ID ${sensorId} not found`});
+      }
+
+      // Cập nhật sensor
+      if (type) {
+        sensor.type = type;
+      }
+      if (value !== undefined) {
+        sensor.value = value;
+      }
+
+      updatedSensors.push(sensor);
+    }
+
+    await device.save();
+
+    res
+      .status(200)
+      .json({message: 'Sensors updated successfully', data: updatedSensors});
+  } catch (error) {
+    res
+      .status(500)
+      .json({message: 'Error updating sensors', error: error.message});
   }
 });
 

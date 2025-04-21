@@ -5,9 +5,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
-import Modal from 'react-native-modal';
+import {useTranslation} from 'react-i18next';
 import Icon from 'react-native-vector-icons/Ionicons';
+import * as Animatable from 'react-native-animatable'; // ✅ import
+import colors from '../../assets/common/colorCss';
 
 const AlertModelCompo = ({
   isVisible,
@@ -17,23 +20,25 @@ const AlertModelCompo = ({
   onConfirm,
   onCancel,
 }) => {
+  const {t} = useTranslation();
+
   const getConfig = () => {
     switch (type) {
-      case 'success':
+      case t('alert_success'):
         return {
           icon: 'checkmark-circle',
           color: '#4CAF50',
           defaultTitle: 'Success',
         };
-      case 'warning':
+      case t('alert_warning'):
         return {
           icon: 'alert-circle',
           color: '#FF9800',
           defaultTitle: 'Warning',
         };
-      case 'error':
+      case t('alert_error'):
         return {icon: 'close-circle', color: '#F44336', defaultTitle: 'Error'};
-      case 'loading':
+      case t('alert_loading'):
         return {icon: 'reload', color: '#007BFF', defaultTitle: 'Loading...'};
       default:
         return {
@@ -45,56 +50,66 @@ const AlertModelCompo = ({
   };
 
   const {icon, color, defaultTitle} = getConfig();
-  const alertTitle = title || defaultTitle; // Nếu không có title thì dùng mặc định
+  const alertTitle = title || defaultTitle;
 
   return (
-    <Modal isVisible={isVisible} animationIn="fadeIn" animationOut="fadeOut">
-      <View style={[styles.modalContainer, {borderLeftColor: color}]}>
-        {type === 'loading' ? (
-          <>
-            <ActivityIndicator size="large" color={color} />
-            <Text style={styles.title}>{alertTitle}</Text>
-          </>
-        ) : (
-          <>
-            <Icon name={icon} size={40} color={color} />
-            <Text style={styles.title}>{alertTitle}</Text>
-            <Text style={styles.message}>{message}</Text>
-          </>
-        )}
+    <Modal
+      visible={isVisible}
+      animationType="none"
+      transparent={true}
+      statusBarTranslucent={true}>
+      <View style={styles.backdrop}>
+        <Animatable.View
+          animation={isVisible ? 'fadeIn' : 'fadeOut'}
+          duration={300}
+          style={[styles.modalContainer, {borderLeftColor: color}]}>
+          {type === t('alert_loading') ? (
+            <>
+              <ActivityIndicator size="large" color={color} />
+              <Text style={styles.title}>{alertTitle}</Text>
+            </>
+          ) : (
+            <>
+              <Icon name={icon} size={40} color={color} />
+              <Text style={styles.title}>{alertTitle}</Text>
+              <Text style={styles.message}>{message}</Text>
+            </>
+          )}
 
-        {/* Nút bấm theo từng loại thông báo */}
-        {type === 'warning' && (
-          <View style={styles.buttonContainer}>
+          {type === t('alert_warning') && (
             <TouchableOpacity
               style={[styles.button, {backgroundColor: color}]}
               onPress={onConfirm}>
               <Text style={styles.buttonText}>Ok</Text>
             </TouchableOpacity>
-          </View>
-        )}
-
-        {type === 'success' && (
-          <TouchableOpacity
-            style={[styles.button, {backgroundColor: color}]}
-            onPress={onConfirm}>
-            <Text style={styles.buttonText}>OK</Text>
-          </TouchableOpacity>
-        )}
-
-        {type === 'error' && (
-          <TouchableOpacity
-            style={[styles.button, {backgroundColor: color}]}
-            onPress={onConfirm}>
-            <Text style={styles.buttonText}>Retry</Text>
-          </TouchableOpacity>
-        )}
+          )}
+          {type === t('alert_success') && (
+            <TouchableOpacity
+              style={[styles.button, {backgroundColor: color}]}
+              onPress={onConfirm}>
+              <Text style={styles.buttonText}>OK</Text>
+            </TouchableOpacity>
+          )}
+          {type === t('alert_error') && (
+            <TouchableOpacity
+              style={[styles.button, {backgroundColor: color}]}
+              onPress={onConfirm}>
+              <Text style={styles.buttonText}>Retry</Text>
+            </TouchableOpacity>
+          )}
+        </Animatable.View>
       </View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   modalContainer: {
     backgroundColor: '#fff',
     padding: 20,

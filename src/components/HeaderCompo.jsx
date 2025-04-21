@@ -1,27 +1,29 @@
 import {StyleSheet, Text, View} from 'react-native';
-import React from 'react';
+import React, { memo } from 'react';
 import IconOni from 'react-native-vector-icons/Ionicons';
 import colors from '../../assets/common/colorCss';
 
-const HeaderCompo = ({name, isPress}) => {
+const HeaderCompo = ({name, isPress, color, bgcolor}) => {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {backgroundColor: bgcolor || colors.white }]}>
       <IconOni
         name="chevron-back"
         size={24}
-        color={colors.black}
+        color={color || colors.black}
         style={styles.iconHeader}
         onPress={isPress}
+      
       />
-      <Text style={styles.txtHeader}>{name}</Text>
+      <Text style={[styles.txtHeader, {color: color || colors.black}]}>{name}</Text>
     </View>
   );
 };
 
-export default HeaderCompo;
+export default memo(HeaderCompo);
 
 const styles = StyleSheet.create({
   container: {
+    width: '100%',
     height: 60,
     justifyContent: 'center',
     alignItems: 'center',
@@ -35,6 +37,5 @@ const styles = StyleSheet.create({
   txtHeader: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: colors.black,
   },
 });

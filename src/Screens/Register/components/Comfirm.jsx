@@ -6,103 +6,53 @@ import {
   Image,
   TextInput,
 } from 'react-native';
-import React from 'react';
+import React, {memo, useContext} from 'react';
 import colors from '../../../../assets/common/colorCss';
+import {useTranslation} from 'react-i18next';
+import {ThemeContext} from '../../../../assets/common/themeProvider';
+import {createStyle} from '../style';
+import LinearGradient from 'react-native-linear-gradient';
 
 const Comfirm = ({email, handleSendCode, handleInputChange, handleEmail}) => {
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
   const handlePress = () => {
     handleEmail();
     handleSendCode();
   };
   return (
-    <View style={styles.container}>
-      <View style={styles.formLogin}>
+    <View style={styles.ceContainer}>
+      <View style={styles.ceFormLogin}>
         <Image
-          style={styles.img}
-          source={require('../../../../assets/icon/ic_protect.png')}
+          style={styles.ceImg}
+          source={require('../../../../assets/icon/ic_logo.png')}
         />
-        <Text style={styles.txtTitle}>Xác minh OTP</Text>
-        <Text style={styles.txtSub}>Chúng tôi sẽ gửi mã xác nhận đến cho bạn</Text>
-        <View style={styles.layoutInput}>
-          <Text style={styles.txtform}>Xác nhận email</Text>
+        <Text style={styles.ceTitle}>{t('otp_verification')}</Text>
+        <Text style={styles.ceSubText}>{t('otp_send_message')}</Text>
+        <View style={styles.ceInputLayout}>
+          <Text style={styles.ceFormLabel}>{t('confirm_email')}</Text>
           <TextInput
             value={email}
             onChangeText={text => handleInputChange('email', text)}
-            placeholder={'Nhập Email'}
+            placeholder={t('enter_email')}
             placeholderTextColor={colors.white}
-            style={[styles.txtform, styles.txtEmail]}
+            style={[styles.ceFormLabel, styles.ceTextInput]}
           />
         </View>
-
-        <Pressable onPress={handlePress} style={styles.button}>
-  <Text style={styles.buttonText}>Gửi mã</Text>
-</Pressable>
+        <LinearGradient
+          colors={[colors.liner_light1, colors.liner_light2]}
+          start={{x: 0, y: 1}}
+          end={{x: 1, y: 0}}
+          locations={[0, 0.6]}
+          style={styles.ceButton}>
+          <Pressable onPress={handlePress}>
+            <Text style={styles.ceButtonText}>{t('send_code')}</Text>
+          </Pressable>
+        </LinearGradient>
       </View>
     </View>
   );
 };
 
-export default Comfirm;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 0.85,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  img: {
-    width: 120,
-    height: 120,
-    // backgroundColor: colors.green,
-  },
-  formLogin: {
-    width: '80%',
-    // backgroundColor: colors.white,
-    borderRadius: 39,
-    alignItems: 'center',
-    gap: 30,
-  },
-  txtTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.white,
-  },
-  txtSub: {
-    width: '70%',
-    textAlign: 'center',
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.white,
-  },
-  layoutInput: {
-    width: '90%',
-    alignItems: 'center',
-  },
-  txtform: {
-    color: colors.white,
-    fontSize: 16,
-  },
-  txtEmail: {
-    width: '100%',
-    fontStyle: 'italic',
-    fontWeight: '500',
-
-    textDecorationStyle: 'solid',
-    fontSize: 16,
-    paddingHorizontal: 10,
-    borderBottomWidth: 2,
-    borderBottomColor: colors.white,
-  },
-  button: {
-    width: '100%',
-    padding: 10,
-    backgroundColor: colors.loginBtn,
-    borderRadius: 20,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-});
+export default memo(Comfirm);

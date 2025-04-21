@@ -14,19 +14,29 @@ const reportSchema = new Schema({
     type: Number,
     required: true,
   },
-  water_duration: {
-    type: Number,
-    required: true,
+  moisture_avg:{
+    type: [Number],
+    default: [], //[12,23]
   },
-  light_usage: {
-    type: Number,
-    required: true,
+  luminosity_avg:{
+    type: [Number],
+    default: [],
   },
-  light_duration: {
-    type: Number,
-    required: true,
+  tempurature_avg:{
+    type: [Number],
+    default: [],
   },
-}); // Adds createdAt and updatedAt automatically
+  humidity_avg:{
+    type: [Number],
+    default: [],
+  },
+  stream_avg:{
+    type: [Number],
+    default: [],
+  },
+}, {
+  timestamps: true // <-- Important
+});
 
 const Report = mongoose.model('Report', reportSchema);
 module.exports = Report;

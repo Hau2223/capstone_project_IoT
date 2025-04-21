@@ -1,127 +1,119 @@
-import React, {useContext, memo} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Pressable,
-  Image,
-} from 'react-native';
-import {Switch} from 'react-native-paper';
-import colors from '../../assets/common/colorCss';
-import IconOc from 'react-native-vector-icons/Octicons';
-import {ThemeContext} from '../../assets/common/themeProvider';
-import {LanguageContext} from '../../assets/common/translation';
-import {scale} from '../../assets/common/scaleScreen';
+import React, {useState, useEffect, useContext, useCallback, memo} from 'react';
+import {View, Text, Image, TouchableOpacity, StatusBar} from 'react-native';
+import {useTranslation} from 'react-i18next';
+import {ThemeContext} from '../../../assets/common/themeProvider';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {IMAGES} from '../../../utils/constants';
+import colors from '../../../assets/common/colorCss';
+import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 import {createStyle} from './style';
-import {fonts, icons} from '../../assets/common/fontCss';
+import {profile} from '../../../services/authServices';
 
-const SettingScreen = ({navigation}) => {
+const SettingsScreen = ({navigation}) => {
+  const {t, i18n} = useTranslation();
   const {theme, toggleTheme} = useContext(ThemeContext);
-  const {t, changeLanguage, language} = useContext(LanguageContext);
+  const isFocused = useIsFocused();
   const styles = createStyle(theme);
+  const [userInfo, setUserInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  // Trong SettingsScreen
+  const fetchUserProfile = useCallback(async () => {
+    try {
+      const data = await profile();
+      setUserInfo(data.data); // Cập nhật userInfo
+      return data.data; // Trả về userInfo
+    } catch (err) {
+      setError(err.message || 'Error fetching user data');
+    } finally {
+      setLoading(false);
+    }
+  }, [setUserInfo, setError]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserProfile();
+      const interval = setInterval(() => {
+        fetchUserProfile();
+      }, 5000);
+
+      return () => clearInterval(interval);
+    }, [fetchUserProfile]),
+  );
+
+  const changeLanguage = async () => {
+    const newLang = i18n.language === 'en' ? 'vi' : 'en';
+    i18n.changeLanguage(newLang);
+  };
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('authToken');
+    await navigation.navigate('Login');
+    console.log('Đăng xuất thành công');
+  };
 
   return (
     <View style={styles.container}>
-      <View
-        style={{
-          height: scale(60),
-          width: '100%',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-        <Pressable
-          style={{
-            position: 'absolute',
-            left: scale(20),
-            height: scale(40),
-            width: scale(40),
-            justifyContent: 'center',
-          }}
-          onPress={() => navigation.goBack()}>
-          <IconOc
-            name="chevron-left"
-            size={icons.IconSize.Medium}
-            color={
-              theme === 'dark' ? colors.backforMain : colors.textInputMainLight
-            }
+      {isFocused && (
+        <StatusBar backgroundColor={colors.primary} barStyle="light-content" />
+      )}
+      <View style={styles.profileWrapper}>
+        <View style={styles.profileHeader} />
+        <View style={styles.avatarWrapper}>
+          <Image
+            source={{uri: userInfo?.avatar ? userInfo.avatar : IMAGES.IMAGES_H}}
+            style={styles.avatar}
+            resizeMode="cover"
           />
-        </Pressable>
-        <Text style={styles.textTitle}>{t('settingChangeLan')}</Text>
-      </View>
-      <View
-        style={{
-          width: '100%',
-          height: 'auto',
-          alignItems: 'center',
-          gap: scale(8),
-        }}>
-        <View style={styles.radioButton}>
-          <Text style={styles.textMode}>
-            {t('settingChangeAppearance')}{' '}
-            {theme === 'dark'
-              ? t('settingAppearanceMode2')
-              : t('settingAppearanceMode1')}
-          </Text>
-          <Switch
-            value={theme === 'dark'}
-            onValueChange={toggleTheme}
-            trackColor={{
-              false: colors.modeAppearanceFalse,
-              true: colors.modeAppearanceTrue,
-            }}
-            thumbColor={
-              theme === 'dark' ? colors.backforMain : colors.modeAppearance3
-            }
-            // ios_backgroundColor="#3e3e3e"
-            style={styles.switch}
-          />
+          <Text style={styles.profileName}>{userInfo?.name}</Text>
         </View>
-
-        <Pressable
-          style={styles.btnsetting}
-          onPress={() => navigation.navigate('ChangeLan')}>
-          <Text
-            style={{
-              color: colors.textDef,
-              fontSize: fonts.FontSize.Medium_X,
-              fontWeight: '600',
-            }}>
-            {t('settingChangeLan')}
-          </Text>
-          <IconOc
-            name="chevron-right"
-            size={icons.IconSize.Medium}
-            color={colors.textDef}
-          />
-        </Pressable>
-
-        <Pressable
-          style={styles.btnsetting}
-          onPress={() => navigation.navigate('AccountSetting')}>
-          <Text
-            style={{
-              color: colors.textDef,
-              fontSize: fonts.FontSize.Medium_X,
-              fontWeight: '600',
-            }}>
-            {t('settingAccount')}
-          </Text>
-          <IconOc
-            name="chevron-right"
-            size={icons.IconSize.Medium}
-            color={colors.textDef}
-          />
-        </Pressable>
       </View>
-      {/* <TouchableOpacity style={{backgroundColor: colors.boxchat, height: scale(55), width: scale(55), borderRadius: scale(30), position: "absolute", bottom: scale(100), right: scale(15),
-                alignItems: "center", justifyContent: "center"}}>
-                <Image style={{ width: scale(35), height: scale(35), resizeMode: 'cover',}}
-                    source={ require('../../assets/icons/i-chat.png')}/>
-            </TouchableOpacity> */}
+
+      {/* Danh sách cài đặt */}
+      <View style={styles.body}>
+        <Text style={styles.sectionTitle}>Cài đặt</Text>
+        <View style={styles.settingBox}>
+          <TouchableOpacity
+            style={styles.optionContainer}
+            onPress={() => navigation.navigate('GeneralSetting')}>
+            <Text style={styles.optionText}>Cài đặt chung</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.optionContainer}
+            onPress={() =>
+              navigation.navigate('AccountInfo', {userInfo, fetchUserProfile})
+            }>
+            <Text style={styles.optionText}>Thông tin tài khoản</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.optionContainer}
+            onPress={() => navigation.navigate('ChangePassword')}>
+            <Text style={styles.optionText}>Đổi mật khẩu</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.optionContainer}
+            onPress={toggleTheme}>
+            <Text style={styles.optionText}>Giao diện</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.optionContainer}
+            onPress={() => navigation.navigate('LanguageSetting')}>
+            <Text style={styles.optionText}>Ngôn ngữ</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={[styles.optionContainer, {borderBottomWidth: 0}]}>
+            <Text style={[styles.optionText, {color: colors.red}]}>
+              Đăng xuất
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 };
 
-export default memo(SettingScreen);
+export default memo(SettingsScreen);

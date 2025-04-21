@@ -1,34 +1,38 @@
-import React, {memo, useState} from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  Pressable,
-  useWindowDimensions,
-} from 'react-native';
+import React, {memo, useState, useContext} from 'react';
+import {Image, Text, View, TextInput, Pressable} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import {useTranslation} from 'react-i18next';
+import {ThemeContext} from '../../../../assets/common/themeProvider';
+import {createStyle} from '../style';
 import colors from '../../../../assets/common/colorCss';
+import LinearGradient from 'react-native-linear-gradient';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const Request = ({data, handleInputChange, handleData, handleRegister}) => {
   const navigation = useNavigation();
-  const {width} = useWindowDimensions();
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
+
   const [error, setError] = useState({name: '', email: '', password: ''});
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleRequest = () => {
-    let newError = {name: '', email: '', password: ''};
+    const newError = {name: '', email: '', password: ''};
 
     if (!data.name.length) {
-      newError.name = 'Nhập tên không được để trống';
+      newError.name = t('name_required');
     }
     if (!data.email.length) {
-      newError.email = 'Nhập email không được để trống';
+      newError.email = t('email_required');
     } else if (!data.email.endsWith('@gmail.com')) {
-      newError.email = 'Email phải có đuôi @gmail.com';
+      newError.email = t('email_invalid');
     }
 
     if (!data.password.length) {
-      newError.password = 'Nhập mật khẩu không được để trống';
+      newError.password = t('password_required');
+    } else if (data.password.length < 8) {
+      newError.password = t('password_invalid');
     }
 
     setError(newError);
@@ -36,69 +40,83 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
     // Nếu không có lỗi, gọi handleRegister
     if (!newError.name && !newError.email && !newError.password) {
       handleRegister();
-
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.txtTitle}>HỆ THỐNG QUẢN LÝ THIẾT BỊ IOT</Text>
-      <View style={styles.formLogin}>
-        <View style={styles.login}>
-          <Text style={styles.txtLogin}>Đăng Kí</Text>
-
+    <View style={styles.rqContainer}>
+      <Image
+        style={styles.rqImg}
+        source={require('../../../../assets/icon/ic_logo.png')}
+      />
+      <Text style={styles.rqTitle}>GreenSprout</Text>
+      <View style={styles.rqForm}>
+        <Text style={styles.rqHeading}>{t('register')}</Text>
+        <View style={styles.rqFormInner}>
           {/* Input Name */}
-          <View style={styles.edtInput}>
-            <TextInput
-              value={data.name}
-              onChangeText={text => handleInputChange('name', text)}
-              placeholder="Nhập tên"
-              style={styles.txtInput}
-            />
-            {error.name ? (
-              <Text style={styles.errorText}>{error.name}</Text>
-            ) : null}
+          <View style={styles.rqInputGroup}>
+            <View style={styles.rqInputWrapper}>
+              <TextInput
+                value={data.name}
+                onChangeText={text => handleInputChange('name', text)}
+                placeholder={t('enter_name')}
+                style={styles.rqTextInput}
+              />
+            </View>
+            {error.name && <Text style={styles.rqErrorText}>{error.name}</Text>}
           </View>
-
           {/* Input Email */}
-          <View style={styles.edtInput}>
-            <TextInput
-              value={data.email}
-              onChangeText={text => handleInputChange('email', text)}
-              placeholder="Nhập Email"
-              style={styles.txtInput}
-            />
-            {error.email ? (
-              <Text style={styles.errorText}>{error.email}</Text>
-            ) : null}
+          <View style={styles.rqInputGroup}>
+            <View style={styles.rqInputWrapper}>
+              <TextInput
+                value={data.email}
+                onChangeText={text => handleInputChange('email', text)}
+                placeholder={t('enter_email')}
+                style={styles.rqTextInput}
+              />
+            </View>
+            {error.email && (
+              <Text style={styles.rqErrorText}>{error.email}</Text>
+            )}
           </View>
 
           {/* Input Password */}
-          <View style={styles.edtInput}>
+          <View style={styles.rqInputPasswordWrapper}>
             <TextInput
               value={data.password}
               onChangeText={text => handleInputChange('password', text)}
-              secureTextEntry
-              placeholder="Nhập mật khẩu"
-              style={styles.txtInput}
+              secureTextEntry={!showPassword}
+              placeholder={t('enter_password')}
+              style={[styles.rqTextInput, {flex: 1}]}
             />
-            {error.password ? (
-              <Text style={styles.errorText}>{error.password}</Text>
-            ) : null}
+            <Pressable onPress={() => setShowPassword(prev => !prev)}>
+              <Ionicons
+                name={showPassword ? 'eye-off' : 'eye'}
+                size={22}
+                color={colors.loginTxt}
+              />
+            </Pressable>
           </View>
         </View>
 
-        {/* Button */}
-        <View style={styles.layoutbtn}>
-          <Pressable style={styles.btnLogin} onPress={handleRequest}>
-            <Text style={styles.txtBtn}>Tạo Tài Khoản</Text>
-          </Pressable>
-          <Text style={styles.txtAccNaN}>
-            Bạn đã có tài khoản?{' '}
+        <View style={styles.rqButtonGroup}>
+          <LinearGradient
+            colors={[colors.liner_light1, colors.liner_light2]}
+            start={{x: 0, y: 1}}
+            end={{x: 1, y: 0}}
+            locations={[0, 0.6]}
+            style={styles.rqButton}>
+            <Pressable onPress={handleRequest}>
+              <Text style={styles.rqButtonText}>{t('create_account')}</Text>
+            </Pressable>
+          </LinearGradient>
+
+          <Text style={styles.rqTextLink}>
+            {t('had_account')}{' '}
             <Text
-              style={styles.txtRegister}
+              style={styles.rqTextLogin}
               onPress={() => navigation.navigate('Login')}>
-              Đăng nhập
+              {t('login')}
             </Text>
           </Text>
         </View>
@@ -108,77 +126,3 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
 };
 
 export default memo(Request);
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 0.85,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  formLogin: {
-    width: '80%',
-    backgroundColor: colors.white,
-    borderRadius: 39,
-    alignItems: 'center',
-  },
-  txtTitle: {
-    fontSize: 24,
-    color: colors.white,
-    fontWeight: 'bold',
-    maxWidth: '70%',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  login: {
-    marginVertical: 20,
-    width: '80%',
-    gap: 6,
-  },
-  txtLogin: {
-    fontSize: 34,
-    color: colors.black,
-    fontWeight: 'bold',
-  },
-  edtInput: {
-    width: '100%',
-    height: 40,
-    backgroundColor: colors.loginInput,
-    borderRadius: 50,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-  },
-  txtInput: {
-    maxWidth: '90%',
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 12,
-  },
-  layoutbtn: {
-    width: '100%',
-    paddingBottom: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 5,
-  },
-  btnLogin: {
-    width: '80%',
-    height: 40,
-    backgroundColor: colors.loginBtn,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 30,
-  },
-  txtBtn: {
-    color: colors.white,
-    fontSize: 17,
-  },
-  txtAccNaN: {
-    fontSize: 13,
-    color: colors.black,
-  },
-  txtRegister: {
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-});

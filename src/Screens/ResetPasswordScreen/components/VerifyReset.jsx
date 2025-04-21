@@ -1,27 +1,59 @@
 import {Pressable, StyleSheet, View, Text, Image} from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useContext, memo, useEffect} from 'react';
 import {OtpInput} from 'react-native-otp-entry';
 import colors from '../../../../assets/common/colorCss';
+import {useTranslation} from 'react-i18next';
+import {ThemeContext} from '../../../../assets/common/themeProvider';
+import {createStyle} from '../style';
+import LinearGradient from 'react-native-linear-gradient';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import HeaderCompo from '../../../components/HeaderCompo';
 
-const VerifyReset = ({email, handleVerifyOTP, handleReSendCode}) => {
+const VerifyReset = ({email, handleVerifyOTP, handleReSendCode, handleBack}) => {
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
   const [otp, setOtp] = useState('');
+  const [timer, setTimer] = useState(120);
+
+  useEffect(() => {
+    if (timer === 0) return;
+
+    const interval = setInterval(() => {
+      setTimer(prev => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timer]);
+
+  const handleResend = () => {
+    setTimer(120);
+    handleReSendCode();
+  };
+  const formatTime = seconds => {
+    const min = String(Math.floor(seconds / 60)).padStart(2, '0');
+    const sec = String(seconds % 60).padStart(2, '0');
+    return `${min}:${sec}`;
+  };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.vrWrapper} >
+    <HeaderCompo isPress={handleBack} bgcolor={colors.bg_NaN} color={colors.white}/>
+    <View style={styles.vrContainer}>
+     
       <Image
-        style={styles.img}
-        source={require('../../../../assets/icon/ic_protect.png')}
+        style={styles.vrImg}
+        source={require('../../../../assets/icon/ic_logo.png')}
       />
-      <Text style={styles.txtTitle}>Xác minh OTP</Text>
-      <Text style={styles.txtSub}>
-        Đã gửi mã xác thực đến Email: {'\n'}
+      <Text style={styles.vrTitle}>{t('otp_verification')}</Text>
+      <Text style={styles.vrSubText}>
+        {t('otp_sent_message')} {'\n'}
         {email}
       </Text>
-      <View style={styles.formLogin}>
+      <View style={styles.vrForm}>
         <OtpInput
           numberOfDigits={4}
           onTextChange={text => setOtp(text)}
-          // focusColor={colors.loginInput}
           disabled={false}
           textInputProps={{
             accessibilityLabel: 'One-Time Password',
@@ -41,77 +73,34 @@ const VerifyReset = ({email, handleVerifyOTP, handleReSendCode}) => {
             },
           }}
         />
-        <Text style={styles.txtNaNOtp}>
-          Bạn không nhận được mã?{' '}
-          <Text style={styles.reSendOTP} onPress={() => handleReSendCode()}>
-            Gửi lại
+        <View style={styles.otpContainer}>
+          {timer > 0 && (
+            <Text style={styles.vrResendText}>
+              Thời gian còn lại {formatTime(timer)}
+            </Text>
+          )}
+          <Text style={styles.vrNoticeText}>
+            {t('did_not_receive_code')}{' '}
+            <Text style={styles.vrResendText} onPress={handleResend}>
+              {t('resend_code')}
+            </Text>
           </Text>
-        </Text>
-        <Pressable onPress={() => handleVerifyOTP(otp)} style={styles.button}>
-          <Text style={styles.buttonText}>Verify</Text>
-        </Pressable>
+        </View>
+
+        <LinearGradient
+          colors={[colors.liner_light1, colors.liner_light2]}
+          start={{x: 0, y: 1}}
+          end={{x: 1, y: 0}}
+          locations={[0, 0.6]}
+          style={styles.vrButton}>
+          <Pressable onPress={() => handleVerifyOTP(otp)}>
+            <Text style={styles.vrButtonText}>{t('verify')}</Text>
+          </Pressable>
+        </LinearGradient>
       </View>
     </View>
+    </SafeAreaView>
   );
 };
 
-export default VerifyReset;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 0.85,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 20,
-    backgroundColor: colors.background,
-  },
-  img: {
-    width: 100,
-    height: 100,
-    backgroundColor: colors.green,
-    borderRadius: 50,
-  },
-  formLogin: {
-    width: '80%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 39,
-    gap: 20,
-  },
-  txtTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.white,
-    textAlign: 'center',
-  },
-  txtSub: {
-    width: '80%',
-    textAlign: 'center',
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.white,
-  },
-  txtNaNOtp: {
-    color: colors.white,
-    fontSize: 15,
-    textAlign: 'center',
-  },
-  reSendOTP: {
-    color: colors.reSendOTP,
-    fontWeight: 'bold',
-  },
-  button: {
-    width: '80%',
-    padding: 12,
-    backgroundColor: colors.loginBtn,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-});
+export default memo(VerifyReset);
