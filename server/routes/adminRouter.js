@@ -59,8 +59,8 @@ app.get("/getAllDevice",authenticateJWT, async (req,res)=>{
                 messsage:"You don't have permisson to access"
             })
         }
-        const page = parseInt(req.body.page) || 1;
-        const limit = parseInt(req.body.limit) || 10;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
 
         const totalDevices = await Device.countDocuments();
