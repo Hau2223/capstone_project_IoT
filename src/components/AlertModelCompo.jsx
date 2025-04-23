@@ -57,7 +57,8 @@ const AlertModelCompo = ({
       visible={isVisible}
       animationType="none"
       transparent={true}
-      statusBarTranslucent={true}>
+      statusBarTranslucent={true}
+      >
       <View style={styles.backdrop}>
         <Animatable.View
           animation={isVisible ? 'fadeIn' : 'fadeOut'}

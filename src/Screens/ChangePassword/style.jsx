@@ -13,7 +13,7 @@ const light = StyleSheet.create({
     backgroundColor: colors.white,
     padding: 10,
     borderRadius: 15,
-    gap: 5,
+    gap: 15,
   },
   inputGroup: {
     gap: 5,
@@ -22,7 +22,8 @@ const light = StyleSheet.create({
     height: 40,
   },
   label: {
-    fontSize: 17,
+    fontSize: 16,
+    fontWeight: '500',
     color: colors.black,
   },
   errorText: {
@@ -50,10 +51,14 @@ const dark = StyleSheet.create({
     ...light.container,
     backgroundColor: colors.bg_dark,
   },
-  versionText: {
-    ...light.versionText,
-    color: colors.white,
+  content: {
+    ...light.content,
+    backgroundColor: colors.bg_dark,
   },
+  label: {
+    ...light.label,
+    color: colors.white,
+  }
 });
 
 export const createStyle = mode => {

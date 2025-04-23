@@ -1,21 +1,22 @@
 import {StyleSheet, Text, View, Image, TouchableOpacity} from 'react-native';
 import React from 'react';
 import FastImage from 'react-native-fast-image';
+import colors from '../../assets/common/colorCss';
 
-const getBorderColor = (
-  nhietDo,
-  doAm,
-  tempThreshold = {min: 10, max: 25},
-  humidityThreshold = {min: 10, max: 25},
-) => {
-  const isTempInRange =
-    nhietDo >= tempThreshold.min && nhietDo <= tempThreshold.max;
-  const isHumidityInRange =
-    doAm >= humidityThreshold.min && doAm <= humidityThreshold.max;
+// const getBorderColor = (
+//   nhietDo,
+//   doAm,
+//   tempThreshold = {min: 10, max: 35},
+//   humidityThreshold = {min: 30, max: 35},
+// ) => {
+//   const isTempInRange =
+//     nhietDo >= tempThreshold.min && nhietDo <= tempThreshold.max;
+//   const isHumidityInRange =
+//     doAm >= humidityThreshold.min && doAm <= humidityThreshold.max;
 
-  // return isTempInRange ? 'green' : 'red';
-  return isTempInRange && isHumidityInRange ? 'green' : 'red';
-};
+//   // return isTempInRange ? 'green' : 'red';
+//   return isTempInRange && isHumidityInRange ? 'green' : 'red';
+// };
 
 const ItemHomePage = ({
   name_area,
@@ -28,15 +29,7 @@ const ItemHomePage = ({
   onPress,
 }) => {
   return (
-    <TouchableOpacity
-      style={[
-        styles.item,
-        {
-          borderWidth: 2,
-          borderColor: getBorderColor(temperature, moisture),
-        },
-      ]}
-      onPress={onPress}>
+    <TouchableOpacity style={[styles.item]} onPress={onPress}>
       <FastImage
         style={styles.imgStyle}
         source={{
@@ -67,12 +60,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     flexDirection: 'column',
     borderRadius: 7,
-    
-    borderColor:'#C96666',
-    borderWidth:2,
+    borderColor: colors.primary,
+    borderWidth: 2,
     overflow: 'hidden',
-    justifyContent:'center',
-    alignItems:'center'
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   img: {
     height: 130,

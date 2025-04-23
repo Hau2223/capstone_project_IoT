@@ -1,5 +1,12 @@
 import React, {useState, useEffect, useContext, useCallback, memo} from 'react';
-import {View, Text, Image, TouchableOpacity, StatusBar, Pressable} from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StatusBar,
+  Pressable,
+} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {ThemeContext} from '../../../assets/common/themeProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -8,6 +15,8 @@ import colors from '../../../assets/common/colorCss';
 import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 import {createStyle} from './style';
 import {profile} from '../../../services/authServices';
+import * as Animatable from 'react-native-animatable';
+import Icon from 'react-native-vector-icons/Feather';
 
 const SettingsScreen = ({navigation}) => {
   const {t, i18n} = useTranslation();
@@ -41,10 +50,6 @@ const SettingsScreen = ({navigation}) => {
     }, [fetchUserProfile]),
   );
 
-  const changeLanguage = async () => {
-    const newLang = i18n.language === 'en' ? 'vi' : 'en';
-    i18n.changeLanguage(newLang);
-  };
   const handleLogout = async () => {
     await AsyncStorage.removeItem('authToken');
     await navigation.navigate('Login');
@@ -80,9 +85,7 @@ const SettingsScreen = ({navigation}) => {
 
           <Pressable
             style={styles.optionContainer}
-            onPress={() =>
-              navigation.navigate('AccountInfo', {userInfo})
-            }>
+            onPress={() => navigation.navigate('AccountInfo', {userInfo})}>
             <Text style={styles.optionText}>{t('account_info')}</Text>
           </Pressable>
 
@@ -91,10 +94,28 @@ const SettingsScreen = ({navigation}) => {
             onPress={() => navigation.navigate('ChangePassword')}>
             <Text style={styles.optionText}>{t('change_password')}</Text>
           </Pressable>
-          <Pressable
-            style={styles.optionContainer}
-            onPress={toggleTheme}>
-            <Text style={styles.optionText}>{t('interface')}</Text>
+
+          <Pressable style={styles.optionContainer} onPress={toggleTheme}>
+            <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: "space-between"}}>
+              <Text style={styles.optionText}>{t('interface')}</Text>
+              <Animatable.View
+                animation="bounceIn"
+                duration={2500}
+                key={theme} // quan trọng: để animation chạy lại khi theme thay đổi
+              >
+                {/* <Icon
+                  name={theme === 'light' ? 'sun' : 'moon'}
+                  size={20}
+                  color={theme === 'light' ? 'orange' : 'lightblue'}
+                  style={{marginRight: 10}}
+                /> */}
+                <Image
+                  source={theme === 'light' ? require('../../../assets/icon/ic_sun.png') : require('../../../assets/icon/ic_moon.png')}
+                  
+                  style={{height: 30, width: 30}}
+                />
+              </Animatable.View>
+            </View>
           </Pressable>
 
           <Pressable

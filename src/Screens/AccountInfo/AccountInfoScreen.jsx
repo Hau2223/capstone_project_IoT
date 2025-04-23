@@ -76,7 +76,7 @@ const AccountInfoScreen = ({navigation, route}) => {
       value: currentUserInfo.dob
         ? format(new Date(currentUserInfo.dob), 'dd/MM/yyyy')
         : '',
-      icon: 'map-marker',
+      icon: 'calendar-month',
     },
     {label: t('address'), value: currentUserInfo?.address, icon: 'map-marker'},
   ];

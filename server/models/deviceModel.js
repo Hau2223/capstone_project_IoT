@@ -8,7 +8,7 @@ const deviceSchema = new Schema({
   },
   name_area: {
     type: String,
-    default: '',
+    default: 'New Garden',
   },
   img_area: {
     type: String,
