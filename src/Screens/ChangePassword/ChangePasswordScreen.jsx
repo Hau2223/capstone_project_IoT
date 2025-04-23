@@ -85,13 +85,13 @@ const ChangePasswordScreen = ({navigation}) => {
       {isFocused && (
         <StatusBar
           backgroundColor={theme === 'light' ? colors.primary : colors.bg_dark}
-          barStyle={theme === 'light' ? 'light-content' : 'dark-content'}
+          barStyle={theme === 'light' ? 'light-content' : 'light-content'}
         />
       )}
       <HeaderCompo
         name={t('change_password')}
         isPress={() => navigation.goBack()}
-        bgcolor={colors.primary}
+        bgcolor={theme === 'light' ? colors.primary : colors.bg_dark}
         color={colors.white}
       />
       <View style={styles.content}>

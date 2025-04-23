@@ -71,8 +71,15 @@ const LoginScreen = () => {
     }
     login({email, password, deviceId})
       .then(response => {
-        if (response?.data) {
+        console.log(response);
+
+        if (
+          response?.status === 200 ||
+          response.role === 'user' ||
+          response.role === 'admin'
+        ) {
           const token = response.data;
+          const user = response.role;
           setShowInfoAlert(false);
           // Lưu token
           AsyncStorage.setItem('authToken', token)

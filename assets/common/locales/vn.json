@@ -124,5 +124,8 @@
   "passwords_do_not_match": "Mật khẩu xác nhận không khớp",
   "password_changed_successfully": "Đổi mật khẩu thành công",
 
+  "currentLanguage": "Ngôn ngữ bạn đang dùng",
+  "anotherLanguage": "Ngôn ngữ khác",
+
   "": ""
 }

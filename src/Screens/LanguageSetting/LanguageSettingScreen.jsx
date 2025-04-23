@@ -25,7 +25,7 @@ const LanguageSettingScreen = ({navigation}) => {
   const {t, i18n} = useTranslation();
   const {theme} = useContext(ThemeContext);
   const [selectedLang, setSelectedLang] = useState(i18n.language);
-  // const styles = createStyle(theme);
+  const styles = createStyle(theme);
   const isFocused = useIsFocused();
 
   const changeLanguage = async lang => {
@@ -44,96 +44,58 @@ const LanguageSettingScreen = ({navigation}) => {
       <HeaderCompo
         name={t('setting')}
         isPress={() => navigation.goBack()}
-        bgcolor={colors.white}
-        color={colors.black}
+        bgcolor={theme === 'light' ? colors.white : colors.bg_dark}
+        color={theme === 'light' ? colors.black : colors.white}
       />
-      <View>
-        <Text>Ngôn ngữ hiện tại</Text>
+      <View style={styles.layoutCurrentLan}>
+        <Text style={styles.txtTitleCurrent}>{t('currentLanguage')}</Text>
+        <View style={styles.currentLan}>
+          <Text style={[styles.txtCurrent, styles.txtFlapCurrent]}>
+            {`${languages.find(lang => lang.code === selectedLang)?.flag}`}
+          </Text>
+          <Text style={[styles.txtCurrent, styles.txtLanCurrent]}>
+            {selectedLang === 'en' ? t('areaEN') : t('areaVN')}
+          </Text>
+        </View>
       </View>
-      <FlatList
-        data={languages}
-        keyExtractor={item => item.code}
-        contentContainerStyle={styles.ctnmain}
-        renderItem={({item}) => (
-          <Pressable
-            style={[
-              styles.languageItem,
-              selectedLang === item.code && styles.selected,
-            ]}
-            onPress={() => changeLanguage(item.code)}>
-            {/* <Image source={item.flag} style={styles.flag} /> */}
-            <View style={styles.bodyLan}>
-              <Text style={styles.languageFlap}>
-                {item.code === 'en' ? '🇬🇧' : '🇻🇳'}
-              </Text>
-              <Text style={styles.languageText}>
-                {item.code === 'en' ? t('areaEN') : t('areaVN')}
-              </Text>
-            </View>
+      <View style={styles.layoutChooseLan}>
+        <Text style={styles.txtTitleCurrent}>{t('anotherLanguage')}</Text>
+        <FlatList
+          data={languages}
+          keyExtractor={item => item.code}
+          contentContainerStyle={styles.ctnmain}
+          renderItem={({item}) => (
+            <Pressable
+              style={[
+                styles.languageItem,
+                selectedLang === item.code && styles.selected,
+              ]}
+              onPress={() => changeLanguage(item.code)}>
+              {/* <Image source={item.flag} style={styles.flag} /> */}
+              <View style={styles.bodyLan}>
+                <Text style={styles.languageFlap}>
+                  {item.code === 'en' ? '🇬🇧' : '🇻🇳'}
+                </Text>
+                <Text style={styles.languageText}>
+                  {item.code === 'en' ? t('areaEN') : t('areaVN')}
+                </Text>
+              </View>
 
-            <Icon
-              name={
-                selectedLang === item.code
-                  ? 'radiobox-marked'
-                  : 'radiobox-blank'
-              }
-              size={24}
-              color={selectedLang === item.code ? 'yellow' : 'white'}
-            />
-          </Pressable>
-        )}
-      />
+              <Icon
+                name={
+                  selectedLang === item.code
+                    ? 'radiobox-marked'
+                    : 'radiobox-blank'
+                }
+                size={24}
+                color={selectedLang === item.code ? 'yellow' : 'white'}
+              />
+            </Pressable>
+          )}
+        />
+      </View>
     </View>
   );
 };
 
 export default memo(LanguageSettingScreen);
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.white,
-    marginHorizontal: 10,
-    gap: 10,
-  },
-  text: {
-    color: colors.black,
-    fontSize: 24,
-    textAlign: 'center',
-  },
-  ctnmain: {
-    gap: 10,
-  },
-  languageItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.primary,
-    padding: 10,
-    borderRadius: 8,
-    justifyContent: 'space-between',
-  },
-  selected: {
-    borderWidth: 2,
-    borderColor: colors.white,
-  },
-  flag: {
-    width: 30,
-    height: 20,
-    resizeMode: 'contain',
-  },
-  bodyLan: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 5,
-  },
-  languageFlap: {
-    fontSize: 24,
-    color: 'white',
-    marginLeft: 5,
-  },
-  languageText: {
-    fontSize: 18,
-    color: 'white',
-  },
-});

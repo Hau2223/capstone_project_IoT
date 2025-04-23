@@ -4,6 +4,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const User = require('../models/userModel');
 const upload = require('../middlewares/cloudinaryUpload');
+const authenticateJWT = require('../middlewares/authMiddleware');
 
 app.use(bodyParser.json());
 
@@ -233,13 +234,15 @@ app.post('/createDevice', async (req, res) => {
  * /api/device/addMember/{id_esp}:
  *   post:
  *     summary: Thêm thành viên vào thiết bị
- *     description: Thêm một thành viên với vai trò "owner" hoặc "member" vào thiết bị theo `id_esp`.
+ *     description: Thêm người dùng hiện tại với vai trò "owner" hoặc "member" vào thiết bị theo `id_esp`. `userId` được lấy từ token.
  *     tags: [Members]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id_esp
  *         required: true
- *         description: ID of the device
+ *         description: ID của thiết bị
  *         schema:
  *           type: string
  *           example: "ESP123456"
@@ -249,71 +252,60 @@ app.post('/createDevice', async (req, res) => {
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - userId
- *               - role
  *             properties:
- *               userId:
- *                 type: string
- *                 example: "60d5f9b7e1d4a029c8dcb123"
  *               role:
  *                 type: string
  *                 enum: ["owner", "member"]
  *                 example: "member"
  *     responses:
  *       200:
- *         description: Member added successfully
+ *         description: Thêm thành viên thành công
  *       400:
- *         description: Invalid input or member already exists
+ *         description: Dữ liệu không hợp lệ hoặc thành viên đã tồn tại
  *       404:
- *         description: User or device not found
+ *         description: Không tìm thấy người dùng hoặc thiết bị
  *       500:
- *         description: Internal server error
+ *         description: Lỗi máy chủ
  */
-app.post('/addMember/:id_esp', async (req, res) => {
+app.post('/addMember/:id_esp', authenticateJWT, async (req, res) => {
   try {
-    const {id_esp} = req.params;
-    const {userId, role} = req.body;
-
-    if (!userId) {
-      return res.status(400).json({message: 'userId is required'});
-    }
+    const { id_esp } = req.params;
+    const { role } = req.body;
+    const userId = req.user.userId; // lấy từ token
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({message: 'User not found'});
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    const device = await Device.findOne({id_esp});
+    const device = await Device.findOne({ id_esp });
     if (!device) {
-      return res.status(404).json({message: 'Device not found'});
+      return res.status(404).json({ message: 'Device not found' });
     }
 
-    // Clean invalid members
+    // Lọc thành viên không hợp lệ
     device.members = device.members.filter(m => m.userId);
 
     const isExist = device.members.some(m => m.userId.toString() === userId);
     if (isExist) {
-      return res.status(400).json({message: 'Member already exists'});
+      return res.status(400).json({ message: 'Member already exists' });
     }
 
     const ownerExists = device.members.some(m => m.role === 'owner');
     let finalRole = role || 'member';
     let notice = 'Member added successfully';
 
-    // Nếu chưa có member nào → luôn là owner
+    // Nếu thiết bị chưa có thành viên nào → thêm đầu tiên là owner
     if (device.members.length === 0) {
       finalRole = 'owner';
       notice = 'First member added as owner';
     } else if (finalRole === 'owner' && ownerExists) {
-      // Nếu đã có owner rồi → không cho thêm owner
       finalRole = 'member';
-      notice =
-        'Owner already exists. Role changed to member and added successfully';
+      notice = 'Owner already exists. Role changed to member and added successfully';
     }
 
     // Thêm user vào thiết bị
-    device.members.push({userId, role: finalRole});
+    device.members.push({ userId, role: finalRole });
 
     // Thêm id_esp vào gardenId của user nếu chưa có
     if (!user.gardenId.includes(id_esp)) {
@@ -339,6 +331,7 @@ app.post('/addMember/:id_esp', async (req, res) => {
     });
   }
 });
+
 
 /**
  * @swagger
@@ -502,7 +495,6 @@ app.patch('/updateName/:id_esp', async (req, res) => {
   }
 });
 
-
 /**
  * @swagger
  * /api/device/updateMember/{id_esp}/{userId}:
@@ -532,19 +524,18 @@ app.patch('/updateName/:id_esp', async (req, res) => {
  *         description: Internal server error
  */
 app.put('/updateMember/:id_esp/:userId', async (req, res) => {
-
-  const { id_esp, userId } = req.params;
+  const {id_esp, userId} = req.params;
   try {
     // 1. Find the device
-    const device = await Device.findOne({ id_esp });    
-    if (!device) return res.status(404).json({ message: 'Device not found' });
+    const device = await Device.findOne({id_esp});
+    if (!device) return res.status(404).json({message: 'Device not found'});
 
     // 2. Check if the user is already a member
     const memberIndex = device.members.findIndex(
-      (m) =>  m.userId.toString() === userId.toString()
-    )
+      m => m.userId.toString() === userId.toString(),
+    );
     if (memberIndex === -1) {
-      return res.status(404).json({ message: 'User not found in members list' });
+      return res.status(404).json({message: 'User not found in members list'});
     }
 
     // 3. Demote any other owner to member
@@ -561,7 +552,7 @@ app.put('/updateMember/:id_esp/:userId', async (req, res) => {
     });
   } catch (error) {
     console.error('Error updating member role:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({message: 'Internal server error'});
   }
 });
 
@@ -742,6 +733,7 @@ app.put('/upload-img/:id_esp', upload.single('img_area'), async (req, res) => {
     }
 
     res.status(200).json({
+      status: 200,
       message: 'Device image updated',
       img_area: updatedDevice.img_area,
     });
@@ -749,9 +741,10 @@ app.put('/upload-img/:id_esp', upload.single('img_area'), async (req, res) => {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res
         .status(400)
-        .json({message: 'Ảnh vượt quá dung lượng tối đa 5MB'});
+        .json({status: 400, message: 'Ảnh vượt quá dung lượng tối đa 2MB'});
     }
     res.status(500).json({
+      status: 500,
       message: 'Error uploading image for device',
       error: err.message,
     });

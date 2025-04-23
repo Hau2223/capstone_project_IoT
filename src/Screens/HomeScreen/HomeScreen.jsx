@@ -5,35 +5,37 @@ import {
   View,
   FlatList,
   BackHandler,
-  Alert,
   StatusBar,
   Platform,
+  Modal,
+  TextInput,
 } from 'react-native';
-import React, {useState, useEffect, useCallback, memo} from 'react';
+import React, {useState, useEffect, useCallback, memo, useRef} from 'react';
 import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 import ItemHomePage from '../../components/ItemHomePage';
 import CustomAlert from '../../components/CustomAlert';
 import Icon from 'react-native-vector-icons/Ionicons';
-
-import {detailSensor} from '../../../services/sensorServices';
-import {FaThermometerHalf, FaTint, FaLightbulb, FaWind} from 'react-icons/fa';
-import {MdWaterDrop} from 'react-icons/md';
-import {gardenId, profile} from '../../../services/authServices';
-import {detailDevice} from '../../../services/deviceServices';
+import {gardenId} from '../../../services/authServices';
+import {createDevice, detailDevice} from '../../../services/deviceServices';
 import colors from '../../../assets/common/colorCss';
+import * as Animatable from 'react-native-animatable';
+import {addMembertoDevice} from '../../../services/menberServices';
 
 const HomeScreen = ({navigation}) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalDevice, setModalDevice] = useState(false);
   const [notificationCount, setNotificationCount] = useState(20);
   const isFocused = useIsFocused();
+  const [deviceId, setDeviceId] = useState('');
+
   const handleGoToDetail = item => {
     const deviceId = item?.data?.id_esp;
-    navigation.navigate('DetailScreen', {item,deviceId});
+    navigation.navigate('DetailScreen', {item, deviceId});
   };
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const viewRef = useRef(null);
   const [garden, SetGarden] = useState(null);
 
   const fetchGarder = useCallback(async () => {
@@ -56,14 +58,31 @@ const HomeScreen = ({navigation}) => {
     }
   }, []);
 
-  useEffect(() => {
-    fetchGarder();
-    const interval = setInterval(() => {
-      fetchGarder();
-    }, 5000);
+  // useEffect(() => {
+  //   fetchGarder();
+  //   const interval = setInterval(() => {
+  //     fetchGarder();
+  //   }, 5000);
 
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchGarder();
+      const interval = setInterval(() => {
+        fetchGarder();
+      }, 5000);
+
+      return () => clearInterval(interval);
+    }, [fetchGarder]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      viewRef.current?.fadeInRight();
+    }, []),
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -86,6 +105,22 @@ const HomeScreen = ({navigation}) => {
         BackHandler.removeEventListener('hardwareBackPress', onBackPress);
     }, [navigation]),
   );
+  const handleCreateDevice = useCallback(
+    async idDevice => {
+      try {
+        setLoading(true);
+        const res = await addMembertoDevice({idDevice, userId: userID });
+        console.log('Thêm thành viên:', res.data);
+        await fetchGarder(); // cập nhật danh sách thiết bị ngay
+      } catch (err) {
+        setError(err.message || 'Error fetching user data');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchGarder],
+  );
+
   return (
     <View style={styles.frame}>
       {isFocused && (
@@ -151,7 +186,7 @@ const HomeScreen = ({navigation}) => {
                   wind={`${windControl?.status === true ? 'ON' : 'OFF'}`}
                   img_area={item?.data?.img_area}
                   luminosity={`${luminositySensor?.value ?? 0}%`}
-                  onPress={() => handleGoToDetail(item,item?.data?._id)}
+                  onPress={() => handleGoToDetail(item, item?.data?._id)}
                 />
               </View>
             );
@@ -159,6 +194,56 @@ const HomeScreen = ({navigation}) => {
           contentContainerStyle={styles.listContainer}
         />
       </View>
+
+      <Animatable.View
+        ref={viewRef}
+        animation="fadeInRight"
+        duration={800}
+        delay={200}
+        style={styles.floatingButtonWrapper}>
+        <TouchableOpacity
+          onPress={() => setModalDevice(true)}
+          style={styles.floatingButton}>
+          <Icon name="add-circle" size={60} color="#206477" />
+        </TouchableOpacity>
+      </Animatable.View>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        statusBarTranslucent={true}
+        visible={modalDevice}
+        onRequestClose={() => setModalDevice(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Vui lòng nhập mã thiết bị</Text>
+            <TextInput
+              placeholder="Vui lòng nhập mã thiết bị"
+              placeholderTextColor="#999"
+              keyboardType="numeric"
+              value={deviceId}
+              onChangeText={setDeviceId}
+              style={styles.modalInput}
+            />
+            <View style={styles.modalButtonGroup}>
+              <TouchableOpacity
+                style={styles.modalButtonPrimary}
+                onPress={() => {
+                  console.log('Đã nhập:', deviceId);
+                  handleCreateDevice(deviceId);
+                  setModalDevice(false);
+                }}>
+                <Text style={styles.modalButtonText}>Kết nối</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setModalDevice(false)}>
+                <Text style={styles.modalButtonText}>Hủy</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -226,6 +311,68 @@ const styles = StyleSheet.create({
   listContainer: {
     paddingHorizontal: 5,
     paddingBottom: 10,
+  },
+
+  floatingButtonWrapper: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 30 : 10,
+    right: 10,
+    zIndex: 1000,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  modalInput: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: '#000',
+    marginBottom: 20,
+  },
+  modalButtonGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  modalButtonPrimary: {
+    flex: 1,
+    backgroundColor: '#7964FA',
+    paddingVertical: 10,
+    borderRadius: 6,
+    marginRight: 10,
+    alignItems: 'center',
+  },
+  modalButtonCancel: {
+    flex: 1,
+    backgroundColor: '#6E6E6E',
+    paddingVertical: 10,
+    borderRadius: 6,
+    marginLeft: 10,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
 

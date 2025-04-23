@@ -929,11 +929,13 @@ app.put(
       );
 
       res.status(200).json({
+        status: 200,
         message: 'Avatar updated',
         avatar: updatedUser.avatar,
       });
     } catch (err) {
       res.status(500).json({
+        status: 500,
         message: 'Error uploading avatar',
         error: err.message,
       });
