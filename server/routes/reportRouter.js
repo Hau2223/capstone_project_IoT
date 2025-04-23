@@ -196,15 +196,21 @@ app.put('/updateReport/:deviceId', async (req, res) => {
     });
     // If no report exists for today, create a new one
     if (!report) {
+      const currentHour = new Date().getHours(); // 0 to 23
+      const zerosToAdd = Math.max(Math.floor(currentHour / 2), 0);
+      const padArray = (arr) => {
+        const validArray = Array.isArray(arr) ? arr : [];
+        return new Array(zerosToAdd).fill(0).concat(validArray);
+      };
       report = new Report({
         deviceId,
         time_created: new Date(),
         water_usage: water_usage || 0,
-        moisture_avg: Array.isArray(moisture_avg) ? moisture_avg : [],
-        luminosity_avg: Array.isArray(luminosity_avg) ? luminosity_avg : [],
-        tempurature_avg: Array.isArray(tempurature_avg) ? tempurature_avg : [],
-        humidity_avg: Array.isArray(humidity_avg) ? humidity_avg : [],
-        stream_avg: Array.isArray(stream_avg) ? stream_avg : []
+        moisture_avg: padArray(moisture_avg),
+        luminosity_avg: padArray(luminosity_avg),
+        tempurature_avg: padArray(tempurature_avg),
+        humidity_avg: padArray(humidity_avg),
+        stream_avg: padArray(stream_avg)
       });
     } else {
       if (report.updatedAt > twoHoursAgo) {
