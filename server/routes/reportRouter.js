@@ -115,7 +115,7 @@ app.post('/createReport', async (req, res) => {
  * @swagger
  * /api/report/updateReport/{deviceId}:
  *   put:
- *     summary: Update the latest report for a device
+ *     summary: Update the latest report for a device by replacing data at the current hour slot
  *     tags: [Reports]
  *     parameters:
  *       - in: path
@@ -134,25 +134,15 @@ app.post('/createReport', async (req, res) => {
  *               water_usage:
  *                 type: number
  *               moisture_avg:
- *                 type: array
- *                 items:
- *                   type: number
+ *                 type: number
  *               luminosity_avg:
- *                 type: array
- *                 items:
- *                   type: number
+ *                 type: number
  *               tempurature_avg:
- *                 type: array
- *                 items:
- *                   type: number
+ *                 type: number
  *               humidity_avg:
- *                 type: array
- *                 items:
- *                   type: number
+ *                 type: number
  *               stream_avg:
- *                 type: array
- *                 items:
- *                   type: number
+ *                 type: number
  *     responses:
  *       200:
  *         description: Report updated successfully
@@ -160,9 +150,12 @@ app.post('/createReport', async (req, res) => {
  *         description: Missing required fields
  *       404:
  *         description: No report found for this device
+ *       429:
+ *         description: You can only update the report once every 2 hours.
  *       500:
  *         description: Server error
  */
+
 app.put('/updateReport/:deviceId', async (req, res) => {
   try {
     const { deviceId } = req.params;
@@ -179,14 +172,23 @@ app.put('/updateReport/:deviceId', async (req, res) => {
       return res.status(400).json({ message: 'Device ID is required' });
     }
 
-    // Get current date at midnight
+    const currentHour = new Date().getHours();
+    const index = Math.floor(currentHour / 2); // 0 to 11
     const today = new Date();
-    const twoHoursAgo = new Date(today.getTime() - 2 * 60 * 60 * 1000);
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setDate(today.getDate() + 1);
 
-    // Find report for today
+
+    // Helper: replace value at correct index
+    const replaceAtIndex = (arr, index, value) => {
+      var updated = arr.length == 12 ? [...arr] : Array(12).fill(0);
+      updated[index] = value;
+      return updated;
+    };
+
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+
     let report = await Report.findOne({
       deviceId,
       time_created: {
@@ -194,49 +196,37 @@ app.put('/updateReport/:deviceId', async (req, res) => {
         $lt: tomorrow
       }
     });
-    // If no report exists for today, create a new one
+
     if (!report) {
-      const currentHour = new Date().getHours(); // 0 to 23
-      const zerosToAdd = Math.max(Math.floor(currentHour / 2), 0);
-      const padArray = (arr) => {
-        const validArray = Array.isArray(arr) ? arr : [];
-        return new Array(zerosToAdd).fill(0).concat(validArray);
-      };
       report = new Report({
         deviceId,
         time_created: new Date(),
-        water_usage: water_usage || 0,
-        moisture_avg: padArray(moisture_avg),
-        luminosity_avg: padArray(luminosity_avg),
-        tempurature_avg: padArray(tempurature_avg),
-        humidity_avg: padArray(humidity_avg),
-        stream_avg: padArray(stream_avg)
+        water_usage:  water_usage,
+        moisture_avg: replaceAtIndex([], index, moisture_avg),
+        luminosity_avg: replaceAtIndex([], index, luminosity_avg),
+        tempurature_avg: replaceAtIndex([], index, tempurature_avg),
+        humidity_avg: replaceAtIndex([], index, humidity_avg),
+        stream_avg: replaceAtIndex([], index, stream_avg)
       });
+
     } else {
       if (report.updatedAt > twoHoursAgo) {
         return res.status(429).json({
           message: 'You can only update the report once every 2 hours.'
         });
       }
-      // Update existing report by appending new values
-      if (water_usage !== undefined) {
-        report.water_usage = water_usage;
-      }
-      
-      // Helper function to append new values to arrays
-      const appendToArray = (existingArray, newValues) => {
-        if (!Array.isArray(newValues)) return existingArray;
-        return [...existingArray, ...newValues];
-      };
 
-      report.moisture_avg = appendToArray(report.moisture_avg, moisture_avg);
-      report.luminosity_avg = appendToArray(report.luminosity_avg, luminosity_avg);
-      report.tempurature_avg = appendToArray(report.tempurature_avg, tempurature_avg);
-      report.humidity_avg = appendToArray(report.humidity_avg, humidity_avg);
-      report.stream_avg = appendToArray(report.stream_avg, stream_avg);
+      
+      report.water_usage = water_usage;
+      report.moisture_avg = replaceAtIndex(report.moisture_avg, index, moisture_avg);
+      report.luminosity_avg = replaceAtIndex(report.luminosity_avg, index, luminosity_avg);
+      report.tempurature_avg = replaceAtIndex(report.tempurature_avg, index, tempurature_avg);
+      report.humidity_avg = replaceAtIndex(report.humidity_avg, index, humidity_avg);
+      report.stream_avg = replaceAtIndex(report.stream_avg, index, stream_avg);
     }
 
     await report.save();
+
     res.status(200).json({
       message: 'Report updated successfully',
       report
@@ -249,6 +239,7 @@ app.put('/updateReport/:deviceId', async (req, res) => {
     });
   }
 });
+
 
 /**
  * @swagger
