@@ -369,10 +369,6 @@ app.post('/detailReportByDate/:deviceId', async (req, res) => {
       }
     });
 
-    if (!reports.length) {
-      return res.status(404).json({ message: 'No reports found for this device on this date' });
-    }
-
     res.status(200).json(reports);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching report by date', error });
@@ -448,10 +444,6 @@ app.post('/detailReportByWeek/:deviceId', async (req, res) => {
       },
     });
 
-    if (!reports.length) {
-      return res.status(404).json({ message: 'No reports found for this device in that week' });
-    }
-
     res.status(200).json(reports);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching report by week', error });
@@ -515,10 +507,6 @@ app.post('/detailReportByMonth/:deviceId', async (req, res) => {
         $lt: end
       }
     });
-
-    if (!reports.length) {
-      return res.status(404).json({ message: 'No reports found for this device in that month' });
-    }
 
     res.status(200).json(reports);
   } catch (error) {
