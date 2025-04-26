@@ -9,8 +9,8 @@ require('dotenv').config({
   path: './etc/secrets/config.env',
 });
 
-console.log('GOOGLE_CLIENT_ID',process.env.GOOGLE_CLIENT_ID);
-console.log('GOOGLE_CLIENT_SECRET',process.env.GOOGLE_CLIENT_SECRET);
+// console.log('GOOGLE_CLIENT_ID',process.env.GOOGLE_CLIENT_ID);
+// console.log('GOOGLE_CLIENT_SECRET',process.env.GOOGLE_CLIENT_SECRET);
 
 passport.use(
   new GoogleStrategy(

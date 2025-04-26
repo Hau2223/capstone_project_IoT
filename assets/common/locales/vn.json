@@ -14,7 +14,7 @@
   "iot_management_system": "HỆ THỐNG QUẢN LÝ THIẾT BỊ IOT",
   "login": "Đăng Nhập",
   "loginGoogle": "Đăng Nhập với Google",
-  "enter_name": "Nhập tên",
+  "enter_name": "Nhập tên của bạn",
   "enter_email": "Nhập email",
   "enter_password": "Nhập mật khẩu",
   "enter_new_password": "Nhập mật khẩu mới",
@@ -26,7 +26,6 @@
   "register": "Đăng kí",
 
   "logout": "Đăng xuất",
-
 
   "otp_send_message": "Chúng tôi sẽ gửi mã OTP để xác nhận cho bạn.",
   "confirm_email": "Xác nhận Email của bạn",
@@ -49,7 +48,7 @@
   "password_invalid": "Mật khẩu phải có ít nhất 8 ký tự.",
   "cfnewPassword_required": "Vui lòng nhập lại mật khẩu",
   "cfnewPassword_mismatch": "Mật khẩu nhập lại không khớp",
-  
+
   "otp_sent_success": "Mã OTP đã được gửi!",
   "otp_resend_success": "Mã OTP đã được gửi lại!",
   "registration_failed": "Đăng kí không thành công. Vui lòng thử lại.",
@@ -77,7 +76,56 @@
   "password_reset_failed": "Đặt lại mặt khẩu không thành công!",
   "email_confirmation_note": "Chúng tôi sẽ gửi mã xác nhận đến cho bạn",
 
+  "general_settings": "Cài đặt chung",
+  "account_info": "Thông tin tài khoản",
+  "change_password": "Đổi mật khẩu",
+  "interface": "Giao diện",
+  "language": "Ngôn ngữ",
 
+  "greeting": "Xin chào,",
+  "your_profile": "Hồ sơ của bạn",
+  "your_garden": "Khu vườn của bạn",
+  "not_updated": "Chưa cập nhật",
+  "no_garden": "Chưa có khu vườn nào",
+  "version": "Phiên bản sử dụng",
+
+  "edit": "Chỉnh sửa",
+  "editProfile": "Chỉnh sửa thông tin",
+  "name": "Họ tên",
+  "email": "Email",
+  "phone": "Số điện thoại",
+  "gender": "Giới tính",
+  "male": "Nam",
+  "female": "Nữ",
+  "other": "Khác",
+  "dob": "Ngày sinh",
+  "address": "Địa chỉ",
+  "enter_phone": "Nhập số điện thoại",
+  "enter_address": "Nhập địa chỉ",
+  "choose_dob": "Chọn ngày sinh",
+  "save": "Lưu",
+  "success": "Thành công",
+  "updateSuccess": "Cập nhật hồ sơ thành công",
+  "error": "Lỗi",
+  "updateFailed": "Không thể cập nhật thông tin. Vui lòng thử lại.",
+  "selectImagePermissionTitle": "Cho phép truy cập ảnh",
+  "selectImagePermissionMessage": "Ứng dụng cần quyền để chọn ảnh từ thư viện",
+  "permissionDenied": "Quyền bị từ chối",
+  "openSettings": "Mở cài đặt",
+  "cancel": "Hủy",
+
+  "current_password": "Mật khẩu hiện tại",
+  "enter_current_password": "Nhập mật khẩu hiện tại",
+  "new_password": "Mật khẩu mới",
+  "confirm_password": "Xác nhận mật khẩu",
+  "reenter_new_password": "Nhập lại mật khẩu mới",
+
+  "password_min_length": "Mật khẩu phải có ít nhất 8 ký tự",
+  "passwords_do_not_match": "Mật khẩu xác nhận không khớp",
+  "password_changed_successfully": "Đổi mật khẩu thành công",
+
+  "currentLanguage": "Ngôn ngữ bạn đang dùng",
+  "anotherLanguage": "Ngôn ngữ khác",
 
   "": ""
 }

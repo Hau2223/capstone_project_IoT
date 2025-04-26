@@ -9,6 +9,7 @@ import AccountInfoScreen from './AccountInfo/AccountInfoScreen';
 import ChangePasswordScreen from './ChangePassword/ChangePasswordScreen';
 import GeneralSettingScreen from './GeneralSetting/GeneralSettingScreen';
 import LanguageSettingScreen from './LanguageSetting/LanguageSettingScreen';
+import EditProfileScreen from './EditProfile/EditProfileScreen';
 
 
 export {
@@ -20,6 +21,7 @@ export {
   DetailScreen,
   SettingScreen,
   AccountInfoScreen,
+  EditProfileScreen,
   ChangePasswordScreen,
   GeneralSettingScreen,
   LanguageSettingScreen,

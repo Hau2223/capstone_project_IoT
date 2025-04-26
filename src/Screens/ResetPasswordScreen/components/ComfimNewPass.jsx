@@ -15,8 +15,9 @@ import {ThemeContext} from '../../../../assets/common/themeProvider';
 import {createStyle} from '../style';
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import HeaderCompo from '../../../components/HeaderCompo';
 
-const ComfirmNewPass = ({data, handleInputChange, handleResetPass}) => {
+const ComfirmNewPass = ({data, handleInputChange, handleResetPass, handleBack}) => {
   const navigation = useNavigation();
   const {t} = useTranslation();
   const {width} = useWindowDimensions();
@@ -76,6 +77,8 @@ const ComfirmNewPass = ({data, handleInputChange, handleResetPass}) => {
   };
 
   return (
+    <View style={styles.cnpWrapper}>
+    <HeaderCompo isPress={handleBack} bgcolor={colors.bg_NaN} color={colors.white}/>
     <View style={styles.cnpContainer}>
       <Image
         style={styles.ceImg}
@@ -171,6 +174,7 @@ const ComfirmNewPass = ({data, handleInputChange, handleResetPass}) => {
           </TouchableOpacity>
         </LinearGradient>
       </View>
+    </View>
     </View>
   );
 };

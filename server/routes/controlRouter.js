@@ -121,7 +121,6 @@ app.put('/updateControl/:id_esp/:controlId', async (req, res) => {
   }
 });
 
-
 /**
  * @swagger
  * /api/control/updateControls/{id_esp}:
@@ -228,6 +227,36 @@ app.put('/updateControls/:id_esp', async (req, res) => {
     });
   }
 });
+/**
+ * @swagger
+ * /api/control/detailControls/{id_esp}:
+ *   get:
+ *     summary: Get control data for a device by ESP32 ID
+ *     tags: [Controls]
+ *     parameters:
+ *       - in: path
+ *         name: id_esp
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Control data retrieved
+ *       404:
+ *         description: Device not found
+ */
+app.get('/detailControls/:id_esp', async (req, res) => {
+  try {
+    const device = await Device.findOne({ id_esp: req.params.id_esp });
 
+    if (!device) {
+      return res.status(404).json({ message: 'Device not found' });
+    }
+
+    res.status(200).json(device.controls);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
 
 module.exports = app;

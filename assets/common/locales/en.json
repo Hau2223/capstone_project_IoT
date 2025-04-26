@@ -46,7 +46,7 @@
   "password_invalid": "Password must be at least 8 characters.",
   "cfnewPassword_required": "Please confirm your password",
   "cfnewPassword_mismatch": "Password confirmation does not match",
-  
+
   "otp_sent_success": "OTP has been sent!",
   "otp_resend_success": "OTP has been resent!",
   "registration_failed": "Registration failed. Please try again.",
@@ -61,7 +61,7 @@
   "alert_account_created": "Account has been created successfully.",
   "alert_otp_verification_failed": "OTP verification failed. Please check and try again.",
   "otp_send_error": "Error: Unable to send OTP!",
-  
+
   "otp_verification_success": "Verification successful!",
   "registration_success_message": "Account registration successful",
   "email_format_error": "Email must end with @gmail.com",
@@ -73,6 +73,57 @@
   "password_reset_success": "Password reset successful!",
   "password_reset_failed": "Password reset failed!",
 
+  "general_settings": "General Settings",
+  "account_info": "Account Info",
+  "change_password": "Change Password",
+  "interface": "Theme",
+  "language": "Language",
+
+  "greeting": "Hello,",
+  "your_profile": "Your Profile",
+  "your_garden": "Your Garden",
+  "not_updated": "Not updated",
+  "no_garden": "No garden available",
+  "version": "App Version",
+
+  "edit": "Edit",
+  "editProfile": "Edit Profile",
+  "name": "Name",
+  "email": "Email",
+  "phone": "Phone",
+  "gender": "Gender",
+  "male": "Male",
+  "female": "Female",
+  "other": "Other",
+  "dob": "Date of Birth",
+  "address": "Address",
+  "enter_phone": "Enter phone number",
+  "enter_address": "Enter address",
+  "choose_dob": "Choose date of birth",
+  "save": "Save",
+  "success": "Success",
+  "updateSuccess": "Profile updated successfully",
+  "error": "Error",
+  "updateFailed": "Unable to update profile. Please try again.",
+  "selectImagePermissionTitle": "Allow access to photos",
+  "selectImagePermissionMessage": "The app needs permission to pick images from your gallery",
+  "permissionDenied": "Permission Denied",
+  "openSettings": "Open Settings",
+  "cancel": "Cancel",
+
+  "current_password": "Current Password",
+  "enter_current_password": "Enter current password",
+  "new_password": "New Password",
+  "enter_new_password": "Enter new password",
+  "confirm_password": "Confirm Password",
+  "reenter_new_password": "Re-enter new password",
+
+  "password_min_length": "Password must be at least 8 characters long",
+  "passwords_do_not_match": "Passwords do not match",
+  "password_changed_successfully": "Password changed successfully",
+
+  "currentLanguage": "Current language",
+  "anotherLanguage": "Another language",
 
   "": ""
 }

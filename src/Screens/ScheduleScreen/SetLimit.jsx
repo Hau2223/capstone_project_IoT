@@ -47,7 +47,7 @@ const SensorThresholdScreen = ({ navigation, route }) => {
       const response = await getAllDevices();
       const allDevices = response?.data || [];
 
-      console.log('Tất cả thiết bị từ API:', allDevices);
+      // console.log('Tất cả thiết bị từ API:', allDevices);
 
       // Lọc thiết bị theo idUser
       const filteredDevices = allDevices
@@ -71,7 +71,7 @@ const SensorThresholdScreen = ({ navigation, route }) => {
 
       setDevices(filteredDevices);
       setThresholds(initialThresholds);
-      console.log('Danh sách thiết bị:', filteredDevices);
+      // console.log('Danh sách thiết bị:', filteredDevices);
     } catch (err) {
       console.error('Lỗi khi lấy thiết bị:', err.message);
       setError(err.response?.data?.message || 'Lỗi khi lấy dữ liệu thiết bị');

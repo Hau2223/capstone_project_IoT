@@ -362,7 +362,6 @@ app.put('/updateSchedule/:id_esp/:scheduleId', async (req, res) => {
   }
 });
 
-
 /**
  * @swagger
  * /api/schedule/delSchedule/{id_esp}/{scheduleId}:

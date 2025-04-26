@@ -7,8 +7,9 @@ import {ThemeContext} from '../../../../assets/common/themeProvider';
 import {createStyle} from '../style';
 import LinearGradient from 'react-native-linear-gradient';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import HeaderCompo from '../../../components/HeaderCompo';
 
-const VerifyReset = ({email, handleVerifyOTP, handleReSendCode}) => {
+const VerifyReset = ({email, handleVerifyOTP, handleReSendCode, handleBack}) => {
   const {t} = useTranslation();
   const {theme} = useContext(ThemeContext);
   const styles = createStyle(theme);
@@ -36,7 +37,10 @@ const VerifyReset = ({email, handleVerifyOTP, handleReSendCode}) => {
   };
 
   return (
-    <SafeAreaView style={styles.vrContainer}>
+    <SafeAreaView style={styles.vrWrapper} >
+    <HeaderCompo isPress={handleBack} bgcolor={colors.bg_NaN} color={colors.white}/>
+    <View style={styles.vrContainer}>
+     
       <Image
         style={styles.vrImg}
         source={require('../../../../assets/icon/ic_logo.png')}
@@ -94,6 +98,7 @@ const VerifyReset = ({email, handleVerifyOTP, handleReSendCode}) => {
           </Pressable>
         </LinearGradient>
       </View>
+    </View>
     </SafeAreaView>
   );
 };

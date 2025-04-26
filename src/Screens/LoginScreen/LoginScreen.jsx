@@ -71,24 +71,20 @@ const LoginScreen = () => {
     }
     login({email, password, deviceId})
       .then(response => {
-        if (response?.data) {
-          const token = response.data;
-          setShowInfoAlert(false);
+        console.log(response);
 
+        if (
+          response?.status === 200 ||
+          response.role === 'user' ||
+          response.role === 'admin'
+        ) {
+          const token = response.data;
+          const user = response.role;
+          setShowInfoAlert(false);
           // Lưu token
           AsyncStorage.setItem('authToken', token)
             .then(() => console.log('Token đã được lưu:', token))
             .catch(err => console.log('Lỗi lưu token:', err));
-
-          // Lưu thông tin user
-          const userData = {
-            idUser: response.data.idUser,
-            email: email
-          };
-          AsyncStorage.setItem('user', JSON.stringify(userData))
-            .then(() => console.log('User data đã được lưu:', userData))
-            .catch(err => console.log('Lỗi lưu user data:', err));
-
           setUserToken(token);
           navigation.navigate('Tabs');
         } else {
@@ -115,11 +111,11 @@ const LoginScreen = () => {
   //   try {
   //     await GoogleSignin.hasPlayServices();
   //     const { idToken } = await GoogleSignin.signIn();
-  
+
   //     const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-  
+
   //     const userCredential = await auth().signInWithCredential(googleCredential);
-  
+
   //     console.log('User signed in:', userCredential.user);
   //   } catch (error) {
   //     console.error('Google Sign-In Error:', error);
@@ -150,7 +146,6 @@ const LoginScreen = () => {
 
     return () => subscription.remove();
   }, [navigation, shouldExitApp]);
-  console.log(theme);
   return (
     <LinearGradient
       colors={[colors.liner_light1, colors.liner_light2]}
