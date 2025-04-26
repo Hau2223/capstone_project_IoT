@@ -1,12 +1,14 @@
-import { StyleSheet, Text, View, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, Dimensions, TouchableOpacity } from 'react-native';
 import React, { useState, useEffect, useCallback } from 'react';
 import ItemSortSchedule from '../../components/ItemSortSchedule';
 import { getAllDevices } from '../../../services/deviceServices';
 import { profile } from '../../../services/authServices';
+import Icon from 'react-native-vector-icons/Ionicons';
+import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 
 const screenWidth = Dimensions.get('window').width;
-const itemSpacing = 20;
-const itemWidth = (screenWidth - itemSpacing * 3) / 2;
+const itemSpacing = 15;
+const itemWidth = screenWidth - (itemSpacing * 2);
 
 const ScheduleScreen = ({ navigation, route }) => {
   const [scheduleCounts, setScheduleCounts] = useState({
@@ -105,28 +107,10 @@ const ScheduleScreen = ({ navigation, route }) => {
     });
   };
 
-  const getIconForControl = name => {
-    try {
-      switch (name) {
-        case 'light':
-          return require('../../../assets/icon/iconLightYellow.png');
-        case 'water':
-          return require('../../../assets/icon/iconWaring.png');
-        case 'wind':
-          return require('../../../assets/icon/iconFan.png');
-        default:
-          return require('../../../assets/icon/iconLightYellow.png');
-      }
-    } catch (e) {
-      console.warn(`Icon not found for ${name}, using default icon`);
-      return require('../../../assets/icon/iconWaring.png');
-    }
-  };
-
   const controlItems = [
-    { name: 'water', label: 'Lịch tưới' },
-    { name: 'light', label: 'Lịch đèn' },
-    { name: 'wind', label: 'Lịch quạt' },
+    { name: 'water', label: 'Lịch tưới', icon: 'water', iconType: 'Ionicons' },
+    { name: 'light', label: 'Lịch đèn', icon: 'sunny', iconType: 'Ionicons' },
+    { name: 'wind', label: 'Lịch quạt', icon: 'air', iconType: 'MaterialIcons' },
   ];
 
   return (
@@ -138,22 +122,31 @@ const ScheduleScreen = ({ navigation, route }) => {
       </View>
       <View style={styles.content}>
         {error ? (
-          <Text>Lỗi: {error}</Text>
+          <Text style={styles.errorText}>Lỗi: {error}</Text>
         ) : scheduleCounts.water + scheduleCounts.light + scheduleCounts.wind === 0 ? (
-          <Text>Không có khu vực nào có lịch trình</Text>
+          <Text style={styles.emptyText}>Không có khu vực nào có lịch trình</Text>
         ) : (
-          <View style={styles.itemRow}>
+          <View style={styles.itemColumn}>
             {controlItems.map((item, index) => (
-              <View
+              <TouchableOpacity
                 key={item.name}
-                style={[styles.itemWrapper, { width: itemWidth }]}
+                style={styles.itemWrapper}
+                onPress={() => handleGoToListDevices(item.name)}
               >
-                <ItemSortSchedule
-                  img={getIconForControl(item.name)}
-                  content={`${scheduleCounts[item.name]}`}
-                  onPress={() => handleGoToListDevices(item.name)}
-                />
-              </View>
+                <View style={[styles.itemContent, { backgroundColor: '#217E54' }]}>
+                  <View style={styles.textContainer}>
+                    <Text style={styles.itemLabel}>{item.label}</Text>
+                    <Text style={styles.itemCount}>{scheduleCounts[item.name]}</Text>
+                  </View>
+                  <View style={styles.iconContainer}>
+                    {item.iconType === 'Ionicons' ? (
+                      <Icon name={item.icon} size={40} color="#fff" />
+                    ) : (
+                      <MaterialIcon name={item.icon} size={40} color="#fff" />
+                    )}
+                  </View>
+                </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}
@@ -167,7 +160,7 @@ export default ScheduleScreen;
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EAEAEA',
+    backgroundColor: '#f5f5f5',
   },
   header: {
     height: 70,
@@ -188,17 +181,62 @@ export const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingTop: 20,
-    paddingHorizontal: 20,
-    alignItems: 'center',
+    paddingHorizontal: itemSpacing,
   },
-  itemRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+  itemColumn: {
     width: '100%',
-    marginBottom: 20,
   },
   itemWrapper: {
     marginBottom: itemSpacing,
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+  },
+  itemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 25,
+  },
+  iconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  textContainer: {
+    flex: 1,
+  },
+  itemLabel: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  itemCount: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#666',
   },
 });
