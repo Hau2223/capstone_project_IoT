@@ -309,4 +309,213 @@ app.get('/listReport', async (req, res) => {
   }
 });
 
+
+/**
+ * @swagger
+ * /api/report/detailReportByDate/{deviceId}:
+ *   post:
+ *     summary: Get report details for a device by specific date
+ *     tags: [Reports]
+ *     parameters:
+ *       - in: path
+ *         name: deviceId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Device ID to get reports for
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 example: "2025-04-24"
+ *     responses:
+ *       200:
+ *         description: List of reports for the given device on the specified date
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Report'
+ *       404:
+ *         description: No reports found for this device on the specified date
+ *       500:
+ *         description: Server error
+ */
+app.post('/detailReportByDate/:deviceId', async (req, res) => {
+  try {
+    const { deviceId } = req.params;
+    const { date } = req.body;
+
+    if (!date) {
+      return res.status(400).json({ message: 'Date is required in body' });
+    }
+
+    const start = new Date(date);
+    const end = new Date(date);
+    end.setDate(end.getDate() + 1); // include the whole day
+
+    const reports = await Report.find({
+      deviceId,
+      time_created: {
+        $gte: start,
+        $lt: end
+      }
+    });
+
+    res.status(200).json(reports);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching report by date', error });
+  }
+});
+/**
+ * @swagger
+ * /api/report/detailReportByWeek/{deviceId}:
+ *   post:
+ *     summary: Get report details for a device by ISO week (e.g., 2025-W17)
+ *     tags: [Reports]
+ *     parameters:
+ *       - in: path
+ *         name: deviceId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Device ID to get reports for
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               week:
+ *                 type: string
+ *                 example: "2025-W17"
+ *     responses:
+ *       200:
+ *         description: List of reports for the device during the given ISO week
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Report'
+ *       404:
+ *         description: No reports found for this device in that week
+ *       500:
+ *         description: Server error
+ */
+app.post('/detailReportByWeek/:deviceId', async (req, res) => {
+  try {
+    const { deviceId } = req.params;
+    const { week } = req.body;
+
+    if (!week || !/^(\d{4})-W(\d{2})$/.test(week)) {
+      return res.status(400).json({ message: 'Invalid or missing week format (expected YYYY-Wxx)' });
+    }
+
+    const [_, year, weekNum] = week.match(/^(\d{4})-W(\d{2})/);
+    const weekNumber = parseInt(weekNum, 10);
+
+    // Get first day of the ISO week
+    const simple = new Date(year, 0, 1 + (weekNumber - 1) * 7);
+    const dayOfWeek = simple.getDay();
+    const ISOWeekStart = new Date(simple);
+    if (dayOfWeek <= 4) {
+      ISOWeekStart.setDate(simple.getDate() - simple.getDay() + 1);
+    } else {
+      ISOWeekStart.setDate(simple.getDate() + 8 - simple.getDay());
+    }
+
+    const ISOWeekEnd = new Date(ISOWeekStart);
+    ISOWeekEnd.setDate(ISOWeekStart.getDate() + 7);
+
+    const reports = await Report.find({
+      deviceId,
+      time_created: {
+        $gte: ISOWeekStart,
+        $lt: ISOWeekEnd,
+      },
+    });
+
+    res.status(200).json(reports);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching report by week', error });
+  }
+});
+/**
+ * @swagger
+ * /api/report/detailReportByMonth/{deviceId}:
+ *   post:
+ *     summary: Get report details for a device by month (e.g., 2025-06)
+ *     tags: [Reports]
+ *     parameters:
+ *       - in: path
+ *         name: deviceId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Device ID to get reports for
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               month:
+ *                 type: string
+ *                 example: "2025-06"
+ *                 description: Month in YYYY-MM format
+ *     responses:
+ *       200:
+ *         description: List of reports for the device in the given month
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Report'
+ *       404:
+ *         description: No reports found for this device in that month
+ *       500:
+ *         description: Server error
+ */
+app.post('/detailReportByMonth/:deviceId', async (req, res) => {
+  try {
+    const { deviceId } = req.params;
+    const { month } = req.body;
+
+    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+      return res.status(400).json({ message: 'Invalid or missing month format (expected YYYY-MM)' });
+    }
+
+    const [year, monthNum] = month.split('-').map(Number);
+    const start = new Date(year, monthNum - 1, 1);
+    const end = new Date(year, monthNum, 1); // first day of next month
+
+    const reports = await Report.find({
+      deviceId,
+      time_created: {
+        $gte: start,
+        $lt: end
+      }
+    });
+
+    res.status(200).json(reports);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching report by month', error });
+  }
+});
+
+
+
+
+
 module.exports = app;
