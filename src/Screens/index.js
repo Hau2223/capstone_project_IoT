@@ -11,7 +11,6 @@ import GeneralSettingScreen from './GeneralSetting/GeneralSettingScreen';
 import LanguageSettingScreen from './LanguageSetting/LanguageSettingScreen';
 import EditProfileScreen from './EditProfile/EditProfileScreen';
 
-
 export {
   OnBoardingScreen,
   LoginScreen,

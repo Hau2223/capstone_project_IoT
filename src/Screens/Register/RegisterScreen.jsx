@@ -147,7 +147,7 @@ const RegisterScreen = () => {
           barStyle={'light-content'}
         />
       )}
-      <HeaderCompo isPress={handleBack} color={colors.white} />
+      <HeaderCompo isPress={handleBack} color={colors.white} bgcolor={colors.bg_NaN}/>
       {step === 'request' && (
         <Request
           data={data}

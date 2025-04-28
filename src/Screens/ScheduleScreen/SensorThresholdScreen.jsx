@@ -11,6 +11,7 @@ import {
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAllDevices } from '../../../services/deviceServices';
+import colors from '../../../assets/common/colorCss';
 
 const screenWidth = Dimensions.get('window').width;
 const itemSpacing = 10;
@@ -28,6 +29,7 @@ const SensorThresholdScreen = ({ navigation, route }) => {
       const userData = await AsyncStorage.getItem('user');
       if (userData) {
         const parsedData = JSON.parse(userData);
+        console.log(parsedData);
         setIdUser(parsedData.idUser || route.params?.idUser || '67f9ff224c36c6ad57e60434');
       } else {
         setIdUser(route.params?.idUser || '67f9ff224c36c6ad57e60434');
@@ -216,7 +218,7 @@ export default SensorThresholdScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EAEAEA',
+    backgroundColor: colors.white,
     padding: itemSpacing,
   },
   header: {

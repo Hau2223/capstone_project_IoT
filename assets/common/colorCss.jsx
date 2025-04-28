@@ -19,7 +19,7 @@ const colors = {
 
   loginTxt: '#8F8F8F',
   loginBtn: '#8359E3',
-  
+
   loginbtnGG: '#D83E36',
   txtLoginWith: '#787878',
   txtForget: '#379F45',
@@ -33,10 +33,13 @@ const colors = {
   liner_dark1: '#74C174',
   liner_dark2: '#217E54',
 
-// ---------------
+  bg_modal: 'rgba(0,0,0,0.5)',
+  btn_Cancel: '#DC8011',
+
+  // ---------------
   ic_navbar: '#515151',
   ic_navbarDark: '#F9F9F9',
-  borderWithRed: '#C96666',  
+  borderWithRed: '#C96666',
   borderWithGreen: '#3F9D52',
   header1: '#217E54',
   header2: '#000000',
@@ -51,8 +54,6 @@ const colors = {
   ic_light: '#FFEB3B',
   ic_wind: '#90A4AE',
   ic_user: '#D9D9D9',
-
-
 };
 
 export default colors;
