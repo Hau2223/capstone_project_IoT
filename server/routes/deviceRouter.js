@@ -106,13 +106,15 @@ app.get('/detailDeviceBy/:id_esp', async (req, res) => {
  *       500:
  *         description: Server error
  */
-app.get('/membersDetail/:id_esp', async (req, res) => {
+app.get('/membersDetail/:id_esp', authenticateJWT, async (req, res) => {
   try {
-    const device = await Device.findOne({id_esp: req.params.id_esp});
+    const device = await Device.findOne({ id_esp: req.params.id_esp });
 
     if (!device) {
-      return res.status(404).json({message: 'Device not found'});
+      return res.status(404).json({ message: 'Device not found' });
     }
+
+    const userId = req.user.userId; // Lấy userId từ token
 
     const membersInfo = await Promise.all(
       device.members.map(async member => {
@@ -122,15 +124,18 @@ app.get('/membersDetail/:id_esp', async (req, res) => {
           userId: user ? user._id : member.userId,
           name: user ? user.name : 'Unknown',
           role: member.role,
+          isMe: (member.userId.toString() === userId.toString()) // So sánh
         };
       }),
     );
-    res.json({members: membersInfo});
+
+    res.json({ members: membersInfo });
   } catch (err) {
     console.error(err);
-    res.status(500).json({message: 'Server error'});
+    res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 /**
  * @swagger
@@ -271,7 +276,7 @@ app.post('/addMember/:id_esp', authenticateJWT, async (req, res) => {
   try {
     const { id_esp } = req.params;
     const { role } = req.body;
-    const userId = req.user.userId; // lấy từ token
+    const userId = req.user.userId;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -750,5 +755,196 @@ app.put('/upload-img/:id_esp', upload.single('img_area'), async (req, res) => {
     });
   }
 });
+
+/**
+ * @swagger
+ * /api/device/leaveDevice/{id_esp}:
+ *   delete:
+ *     summary: User leaves the device
+ *     description: Allows a user to leave a device, including the owner.
+ *     tags: [Members]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id_esp
+ *         in: path
+ *         required: true
+ *         description: ID of the device the user wants to leave
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successfully left the device
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Successfully left the device
+ *                 device:
+ *                   type: object
+ *                   description: The updated device object
+ *       403:
+ *         description: Forbidden - User is not a member
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: You are not a member of this device
+ *       404:
+ *         description: Not Found - User or Device not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Device not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Server error
+ */
+app.delete('/leaveDevice/:id_esp', authenticateJWT, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id_esp } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const device = await Device.findOne({ id_esp });
+    if (!device) {
+      return res.status(404).json({ message: 'Device not found' });
+    }
+
+    const currentUser = device.members.find(
+      (member) => member.userId.toString() === userId.toString()
+    );
+
+    if (!currentUser) {
+      return res.status(403).json({ message: 'You are not a member of this device' });
+    }
+
+    device.members = device.members.filter(
+      (member) => member.userId.toString() !== userId.toString()
+    );
+
+    await device.save();
+
+    await User.updateOne(
+      { _id: userId },
+      { $pull: { gardenId: id_esp } }
+    );
+
+    return res.status(200).json({ message: 'Successfully left the device', device });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /api/device/membersWithoutUserLogin/{id_esp}:
+ *   get:
+ *     summary: Get members of a device excluding the logged-in user
+ *     description: Retrieves the list of device members except for the currently authenticated user.
+ *     tags: [Members]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id_esp
+ *         in: path
+ *         required: true
+ *         description: The device ID to retrieve members from.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of members excluding logged-in user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 members:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       userId:
+ *                         type: string
+ *                         description: ID of the member
+ *                       name:
+ *                         type: string
+ *                         description: Name of the member
+ *                       role:
+ *                         type: string
+ *                         description: Role of the member (e.g., member, owner)
+ *       404:
+ *         description: Device not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Device not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Server error
+ */
+app.get('/membersWithoutUserLogin/:id_esp', authenticateJWT, async (req, res) => {
+  try {
+    const device = await Device.findOne({ id_esp: req.params.id_esp });
+
+    if (!device) {
+      return res.status(404).json({ message: 'Device not found' });
+    }
+
+    const filteredMembers = device.members.filter(member => member.userId.toString() !== req.user.userId);
+
+    const membersInfo = await Promise.all(
+      filteredMembers.map(async member => {
+        const user = await User.findById(member.userId);
+
+        return {
+          userId: user ? user._id : member.userId,
+          name: user ? user.name : 'Unknown',
+          role: member.role,
+        };
+      })
+    );
+
+    res.json({ members: membersInfo });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 module.exports = app;

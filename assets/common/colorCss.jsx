@@ -32,6 +32,9 @@ const colors = {
   liner_dark1: '#74C174',
   liner_dark2: '#217E54',
 
+  bg_modal: 'rgba(0,0,0,0.5)',
+  btn_Cancel: '#DC8011'
+
 
 
 };
