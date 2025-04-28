@@ -947,4 +947,135 @@ app.get('/membersWithoutUserLogin/:id_esp', authenticateJWT, async (req, res) =>
 });
 
 
+/**
+ * @swagger
+ * /api/device/userDevices:
+ *   get:
+ *     summary: Lấy danh sách tất cả thiết bị của người dùng
+ *     description: Trả về danh sách các thiết bị mà người dùng hiện tại là thành viên, dựa trên userId từ token JWT.
+ *     tags: [Devices]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Danh sách thiết bị của người dùng
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id_esp:
+ *                         type: string
+ *                         example: "ESP123456"
+ *                       name_area:
+ *                         type: string
+ *                         example: "Khu A"
+ *                       create_at:
+ *                         type: string
+ *                         format: date-time
+ *                       update_at:
+ *                         type: string
+ *                         format: date-time
+ *                       sensors:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             type:
+ *                               type: string
+ *                               example: "moisture"
+ *                             value:
+ *                               type: number
+ *                               example: 55
+ *                       controls:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             name:
+ *                               type: string
+ *                               example: "Pump"
+ *                             status:
+ *                               type: boolean
+ *                               example: true
+ *                       members:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             userId:
+ *                               type: string
+ *                               example: "60d5f9b7e1d4a029c8dcb123"
+ *                             role:
+ *                               type: string
+ *                               example: "owner"
+ *                       img_area:
+ *                         type: string
+ *                         example: "https://res.cloudinary.com/dzgvy2rlt/image/upload/v1744970883/uploads/example.jpg"
+ *       404:
+ *         description: Không tìm thấy thiết bị nào
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: "No devices found for this user"
+ *       500:
+ *         description: Lỗi server
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Error retrieving devices"
+ *                 error:
+ *                   type: string
+ *                   example: "Detailed error message"
+ */
+app.get('/userDevices', authenticateJWT, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Tìm tất cả thiết bị mà userId nằm trong mảng members
+    const devices = await Device.find({ 'members.userId': userId });
+
+    if (!devices || devices.length === 0) {
+      return res.status(404).json({
+        status: 404,
+        message: 'No devices found for this user',
+      });
+    }
+
+    res.status(200).json({
+      status: 200,
+      data: devices,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message: 'Error retrieving devices',
+      error: error.message,
+    });
+  }
+});
+
+
 module.exports = app;

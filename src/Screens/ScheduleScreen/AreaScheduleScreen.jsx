@@ -1,52 +1,65 @@
-import { StyleSheet, View } from 'react-native';
-import React from 'react';
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import ManualControlScreen from './ManualControlScreen';
+import {StyleSheet, View, StatusBar} from 'react-native';
+import React, {useContext} from 'react';
+import {useFocusEffect, useIsFocused} from '@react-navigation/native';
+import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
+import {useTranslation} from 'react-i18next';
 import ScheduleScreen from './ScheduleScreen';
-import { useTranslation } from 'react-i18next';
+import SensorThresholdScreen from './SensorThresholdScreen';
+import colors from '../../../assets/common/colorCss';
+import {ThemeContext} from '../../../assets/common/themeProvider';
+import {createStyle} from './style';
 
 const TopTab = createMaterialTopTabNavigator();
 
-const AreaScheduleScreen = ({ navigation, route }) => {
-  const { t } = useTranslation();
+const AreaScheduleScreen = ({navigation, route}) => {
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  // const styles = createStyle(theme);
+  const isFocused = useIsFocused();
 
   return (
     <View style={styles.container}>
+      {isFocused && (
+        <StatusBar
+          backgroundColor={theme === 'light' ? colors.white : colors.bg_dark}
+          barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+        />
+      )}
       <TopTab.Navigator
         screenOptions={{
-          tabBarActiveTintColor: '#4CAF50',
+          tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: '#666',
           tabBarIndicatorStyle: {
-            backgroundColor: '#4CAF50',
+            backgroundColor: colors.primary,
           },
           tabBarStyle: {
-            backgroundColor: '#EAEAEA',
+            backgroundColor: colors.white,
           },
           tabBarLabelStyle: {
-            fontSize: 16,
+            fontSize: 20,
             fontWeight: 'bold',
             textTransform: 'none',
           },
-        }}
-      >
+        }}>
         <TopTab.Screen
-          name="ScheduleScreen"
+          name="Schedule"
           component={ScheduleScreen}
-          options={{ tabBarLabel: t('Lịch tưới') }}
-          initialParams={{ ...route.params }}
+          options={{tabBarLabel: t('Lịch tưới')}}
+          initialParams={{...route.params}}
         />
         <TopTab.Screen
-          name="ManualControl"
-          component={ManualControlScreen}
-          options={{ tabBarLabel: t('Cảm biến') }}ư
-          initialParams={{ ...route.params }}
+          name="SensorThreshold"
+          component={SensorThresholdScreen}
+          options={{tabBarLabel: t('Cảm biến')}}
+          ư
+          initialParams={{...route.params}}
         />
       </TopTab.Navigator>
     </View>
   );
 };
 
-export default AreaScheduleScreen ;
+export default AreaScheduleScreen;
 
 export const styles = StyleSheet.create({
   container: {

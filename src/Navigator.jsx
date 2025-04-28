@@ -43,14 +43,6 @@ import AreaScheduleScreen from './Screens/ScheduleScreen/AreaScheduleScreen';
 const Tab = createBottomTabNavigator();
 const StackNav = createNativeStackNavigator();
 
-const DetailsScreen = ({navigation}) => {
-  return (
-    <View style={styles.container}>
-      <Button title="Go back" />
-    </View>
-  );
-};
-
 const LoadingScreen = ({navigation}) => (
   <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
     <ActivityIndicator size="large" color="tomato" />
