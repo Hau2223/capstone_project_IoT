@@ -63,7 +63,8 @@ const ReportScreen = ({navigation}) => {
     }, [idUser, fetchDevices]);
 
     const handleGoToDetail = (item) => {
-        navigation.navigate('ReportDetail', { item });
+        console.log('Device data when navigating:', item);
+        navigation.navigate('ReportDetail', { deviceId: item.id_esp || item._id });
     };
 
     const getDeviceImage = (device) => {

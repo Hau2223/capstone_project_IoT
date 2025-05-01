@@ -5,6 +5,7 @@ import {scheduleId} from '../../../services/scheduleServices';
 import {delSchedule} from '../../../services/scheduleServices';
 import {updateSchedule} from '../../../services/scheduleServices';
 import Icon from 'react-native-vector-icons/Ionicons';
+import colors from '../../../assets/common/colorCss';
 
 const AlarmScreen = ({route, navigation}) => {
   const [schedules, setSchedules] = useState([]);
@@ -27,59 +28,62 @@ const AlarmScreen = ({route, navigation}) => {
 
   const fetchSchedules = async (isBackgroundRefresh = false) => {
     try {
-      // Only show loading indicator on initial load
       if (!isBackgroundRefresh) {
         setLoading(true);
       }
       
       setError(null);
       
-      // Make sure we have the required parameters
       if (!item?.id_esp) {
         throw new Error('Missing device ID');
       }
 
       const controlName = item.controlName || 'water';
-      // console.log('Fetching schedules for:', { id_esp: item.id_esp, controlName }); // Debug log
 
       const response = await scheduleId({
         id_esp: item.id_esp,
         name: controlName
       });
       
-      // console.log('Schedule API response:', response); // Debug log
-
       if (response?.data) {
-        const formattedSchedules = response.data.map((schedule, index) => ({
-          id: schedule._id || index.toString(),
-          numbClock: schedule.startTime,
-          timer: `${schedule.duration} phút`,
-          calendar: formatRepeatDays(schedule.repeat),
-          isWatering: schedule.status,
-          // Add raw data for sorting
-          rawTime: schedule.startTime,
-          rawRepeat: schedule.repeat
-        }));
+        const formattedSchedules = response.data.map((schedule, index) => {
+          // Parse time and AM/PM
+          const [time, ampm] = schedule.startTime.split(' ');
+          const [hours, minutes] = time.split(':');
+          const hour24 = ampm === 'PM' && parseInt(hours) < 12 ? 
+            parseInt(hours) + 12 : 
+            ampm === 'AM' && parseInt(hours) === 12 ? 
+              0 : 
+              parseInt(hours);
+
+          return {
+            id: schedule._id || index.toString(),
+            numbClock: schedule.startTime,
+            timer: `${schedule.duration} phút`,
+            calendar: formatRepeatDays(schedule.repeat),
+            isWatering: schedule.status,
+            // Add raw data for sorting
+            rawTime: schedule.startTime,
+            rawRepeat: schedule.repeat,
+            // Add sorting fields
+            ampm: ampm,
+            hour: hour24,
+            minute: parseInt(minutes)
+          };
+        });
         
-        // Sort schedules by time and days
+        // Sort schedules by AM/PM, then hour, then minute
         const sortedSchedules = formattedSchedules.sort((a, b) => {
-          // First sort by time
-          const timeA = a.rawTime.split(':').map(Number);
-          const timeB = b.rawTime.split(':').map(Number);
-          
-          if (timeA[0] !== timeB[0]) {
-            return timeA[0] - timeB[0];
+          // First sort by AM/PM (AM comes before PM)
+          if (a.ampm !== b.ampm) {
+            return a.ampm === 'AM' ? -1 : 1;
           }
-          if (timeA[1] !== timeB[1]) {
-            return timeA[1] - timeB[1];
+          // Then sort by hour
+          if (a.hour !== b.hour) {
+            return a.hour - b.hour;
           }
-          
-          // If times are equal, sort by days
-          const daysOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-          const firstDayA = a.rawRepeat[0] || '';
-          const firstDayB = b.rawRepeat[0] || '';
-          
-          return daysOrder.indexOf(firstDayA) - daysOrder.indexOf(firstDayB);
+          // Finally sort by minute
+          return a.minute - b.minute;
         });
         
         // Compare with previous schedules to avoid unnecessary updates
@@ -90,7 +94,6 @@ const AlarmScreen = ({route, navigation}) => {
           previousSchedulesRef.current = sortedSchedules;
         }
       } else {
-        // Only update if there's a change
         if (schedules.length > 0) {
           setSchedules([]);
           previousSchedulesRef.current = [];
@@ -98,11 +101,9 @@ const AlarmScreen = ({route, navigation}) => {
       }
     } catch (err) {
       console.error('Error fetching schedules:', err);
-      // Only show error on initial load
       if (!isBackgroundRefresh) {
         setError('Không thể tải lịch trình. Vui lòng thử lại sau.');
       }
-      // Only clear schedules on initial load
       if (!isBackgroundRefresh && schedules.length > 0) {
         setSchedules([]);
         previousSchedulesRef.current = [];
@@ -141,6 +142,15 @@ const AlarmScreen = ({route, navigation}) => {
 
   const toggleSwitch = async (id) => {
     try {
+      // Optimistically update UI first
+      setSchedules(prevSchedules =>
+        prevSchedules.map(schedule =>
+          schedule.id === id
+            ? {...schedule, isWatering: !schedule.isWatering}
+            : schedule
+        )
+      );
+
       // Find the schedule to update
       const scheduleToUpdate = schedules.find(schedule => schedule.id === id);
       if (!scheduleToUpdate) {
@@ -160,20 +170,27 @@ const AlarmScreen = ({route, navigation}) => {
         }
       });
 
-      if (response && response.message === "Schedule updated successfully") {
-        // Update local state
+      if (!response || response.message !== "Schedule updated successfully") {
+        // Revert the change if API call fails
         setSchedules(prevSchedules =>
           prevSchedules.map(schedule =>
             schedule.id === id
-              ? {...schedule, isWatering: !schedule.isWatering}
+              ? {...schedule, isWatering: scheduleToUpdate.isWatering}
               : schedule
           )
         );
-      } else {
         console.error('Failed to update schedule status');
       }
     } catch (err) {
       console.error('Error toggling schedule:', err);
+      // Revert the change if there's an error
+      setSchedules(prevSchedules =>
+        prevSchedules.map(schedule =>
+          schedule.id === id
+            ? {...schedule, isWatering: !schedule.isWatering}
+            : schedule
+        )
+      );
     }
   };
 
@@ -260,12 +277,6 @@ const AlarmScreen = ({route, navigation}) => {
         <View style={styles.header1}>
           <Text style={styles.textHeader}>{item.tenKhu}</Text>
         </View>
-        <TouchableOpacity 
-          style={styles.addButton} 
-          onPress={handleAddNewSchedule}
-        >
-          <Icon name="add-circle" size={40} color="#63A776" />
-        </TouchableOpacity>
       </View>
       <View style={styles.itemAlarm}>
         {schedules.length === 0 ? (
@@ -275,6 +286,7 @@ const AlarmScreen = ({route, navigation}) => {
             data={schedules}
             numColumns={1}
             keyExtractor={item => item.id}
+            contentContainerStyle={{ paddingBottom: 150 }}
             renderItem={({item}) => (
               <View style={styles.itemWrapper}>
                 <ItemAlarm
@@ -291,6 +303,13 @@ const AlarmScreen = ({route, navigation}) => {
           />
         )}
       </View>
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={handleAddNewSchedule}
+        activeOpacity={0.8}
+      >
+        <Icon name="add" size={36} color="#fff" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -318,9 +337,9 @@ const ItemAlarm = ({isWatering, toggleSwitch, numbClock, timer, calendar, onPres
           <Switch
             value={isWatering}
             onValueChange={toggleSwitch}
-            trackColor={{false: 'white', true: 'white'}}
-            thumbColor={isWatering ? '#63A776' : '#ACACAC'}
-            style={{transform: [{scale: 1.7}]}}
+            trackColor={{false: '#F6F6F6', true: 'white'}}
+            thumbColor={isWatering ? colors.primary : '#ACACAC'}
+            style={{transform: [{scale: 1.6}]}}
           />
         </View>
       </View>
@@ -355,15 +374,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 20,
   },
-  addButton: {
-    padding: 5,
-  },
   itemAlarm: {
     height: "auto",
     width: '100%',
     alignItems: 'center',
     marginTop: 10,
-    marginBottom: 0
   },
   frameItem: {
     height: 90,
@@ -413,6 +428,7 @@ const styles = StyleSheet.create({
     width: '50%',
     alignItems: 'center',
     justifyContent: 'center',
+
   },
   itemWrapper: {
     alignItems: 'center',
@@ -429,5 +445,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     color: '#666',
+  },
+  fab: {
+    position: 'absolute',
+    right: 24,
+    bottom: 32,
+    backgroundColor: '#63A776',
+    borderRadius: 32,
+    width: 64,
+    height: 64,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
   },
 });

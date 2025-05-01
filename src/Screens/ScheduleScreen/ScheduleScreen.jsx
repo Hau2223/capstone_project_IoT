@@ -5,6 +5,7 @@ import { getAllDevices } from '../../../services/deviceServices';
 import { profile } from '../../../services/authServices';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
+import HeaderCompo from '../../components/HeaderCompo';
 
 const screenWidth = Dimensions.get('window').width;
 const itemSpacing = 15;
@@ -42,8 +43,6 @@ const ScheduleScreen = ({ navigation, route }) => {
       setError(null);
       const response = await getAllDevices();
       const allDevices = response?.data || [];
-
-      // console.log('Tất cả thiết bị từ API:', allDevices);
 
       const counts = {
         water: 0,

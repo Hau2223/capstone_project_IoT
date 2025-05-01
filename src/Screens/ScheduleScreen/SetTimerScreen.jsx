@@ -16,9 +16,17 @@ const SetTimerScreen = ({ route, navigation }) => {
 
   const [selectedTime, setSelectedTime] = useState(() => {
     if (existingSchedule?.numbClock) {
-      const [hours, minutes] = existingSchedule.numbClock.split(':');
+      const [time, ampm] = existingSchedule.numbClock.split(' ');
+      const [hours, minutes] = time.split(':');
       const date = new Date();
-      date.setHours(parseInt(hours));
+      // Convert to 24-hour format
+      let hour24 = parseInt(hours);
+      if (ampm === 'PM' && hour24 < 12) {
+        hour24 += 12;
+      } else if (ampm === 'AM' && hour24 === 12) {
+        hour24 = 0;
+      }
+      date.setHours(hour24);
       date.setMinutes(parseInt(minutes));
       return date;
     }
@@ -26,6 +34,10 @@ const SetTimerScreen = ({ route, navigation }) => {
   });
 
   const [isAM, setIsAM] = useState(() => {
+    if (existingSchedule?.numbClock) {
+      const [time, ampm] = existingSchedule.numbClock.split(' ');
+      return ampm === 'AM';
+    }
     const hours = selectedTime.getHours();
     return hours < 12;
   });
@@ -88,6 +100,7 @@ const SetTimerScreen = ({ route, navigation }) => {
     setIsAM(isAM);
     const newTime = new Date(selectedTime);
     const currentHours = newTime.getHours();
+    
     if (isAM && currentHours >= 12) {
       newTime.setHours(currentHours - 12);
     } else if (!isAM && currentHours < 12) {
@@ -107,10 +120,13 @@ const SetTimerScreen = ({ route, navigation }) => {
       };
       const repeatDays = selectedDays.map(day => dayMap[day]);
 
-      // Format time to 24-hour format (HH:mm)
+      // Format time to 12-hour format with AM/PM
       let hours = selectedTime.getHours();
       const minutes = selectedTime.getMinutes();
-      const formattedTime = `${formatTimeUnit(hours)}:${formatTimeUnit(minutes)}`;
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12; // the hour '0' should be '12'
+      const formattedTime = `${formatTimeUnit(hours)}:${formatTimeUnit(minutes)} ${ampm}`;
 
       if (!isNewSchedule && existingSchedule) {
         // Prepare update data
@@ -200,7 +216,14 @@ const SetTimerScreen = ({ route, navigation }) => {
 
       const newTime = new Date(selectedTime);
       if (isHourMode) {
-        newTime.setHours(value === 0 ? 12 : value);
+        // Convert 12-hour to 24-hour format while maintaining AM/PM
+        let hour24 = value;
+        if (!isAM && value < 12) {
+          hour24 += 12;
+        } else if (isAM && value === 12) {
+          hour24 = 0;
+        }
+        newTime.setHours(hour24);
       } else {
         newTime.setMinutes(value);
       }
@@ -224,6 +247,9 @@ const SetTimerScreen = ({ route, navigation }) => {
       const x = radius * Math.cos(angle);
       const y = radius * Math.sin(angle);
 
+      // For hours, show AM times first (1-12)
+      const displayNum = isHourMode ? num : num;
+
       return (
         <View
           key={num}
@@ -239,10 +265,10 @@ const SetTimerScreen = ({ route, navigation }) => {
         >
           <Text style={[
             styles.clockNumberText,
-            selectedTime.getHours() === num && isHourMode && styles.selectedNumber,
+            selectedTime.getHours() % 12 === num && isHourMode && styles.selectedNumber,
             selectedTime.getMinutes() === num && !isHourMode && styles.selectedNumber,
           ]}>
-            {num}
+            {displayNum}
           </Text>
         </View>
       );
@@ -250,7 +276,9 @@ const SetTimerScreen = ({ route, navigation }) => {
   };
 
   const renderClockHand = () => {
-    const value = isHourMode ? selectedTime.getHours() : selectedTime.getMinutes();
+    const value = isHourMode ? 
+      (selectedTime.getHours() % 12 || 12) : 
+      selectedTime.getMinutes();
     const angle = ((value * (360 / (isHourMode ? 12 : 60))) - 90) * Math.PI / 180;
     const radius = isHourMode ? CLOCK_INNER_RADIUS : CLOCK_RADIUS - 30;
     const x = radius * Math.cos(angle);
