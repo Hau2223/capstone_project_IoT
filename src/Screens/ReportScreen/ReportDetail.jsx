@@ -13,8 +13,12 @@ const getWeekday = dateString => {
 };
 
 const getWeekRange = selectedDate => {
-  let startOfWeek = new Date(selectedDate);
-  startOfWeek.setDate(startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7));
+  let date = new Date(selectedDate);
+  const day = date.getDay(); // 0: Chủ nhật, 1: Thứ hai, ...
+  // Nếu là Chủ nhật thì lùi về thứ Hai tuần trước, còn lại lùi về thứ Hai tuần này
+  const diff = day === 0 ? -6 : 1 - day;
+  let startOfWeek = new Date(date);
+  startOfWeek.setDate(date.getDate() + diff);
   let endOfWeek = new Date(startOfWeek);
   endOfWeek.setDate(startOfWeek.getDate() + 6);
   return { startOfWeek, endOfWeek };
@@ -217,7 +221,8 @@ const ModeSelector = ({ mode, setMode }) => (
 
 const ReportDetail = ({ route }) => {
   const { deviceId } = route.params;
-  const [weekRange, setWeekRange] = useState(null);
+  const initialWeek = getWeekRange(new Date());
+  const [weekRange, setWeekRange] = useState(initialWeek);
   const [filteredData1, setFilteredData1] = useState([]);
   const [filteredData2, setFilteredData2] = useState([]);
   const [summary, setSummary] = useState({
@@ -229,7 +234,7 @@ const ReportDetail = ({ route }) => {
     totalWaterUsage: 0,
   });
   const [mode, setMode] = useState('week');
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(initialWeek.startOfWeek);
   const [selectedMetric, setSelectedMetric] = useState('water_usage');
   const [chartData, setChartData] = useState([]);
 
@@ -249,22 +254,20 @@ const ReportDetail = ({ route }) => {
 
   const handleSelectDate = (rangeOrDate) => {
     if (mode === 'week') {
-      setWeekRange(rangeOrDate);
-      setSelectedDate(rangeOrDate.startOfWeek);
+      const week = getWeekRange(rangeOrDate);
+      setWeekRange(week);
+      setSelectedDate(week.startOfWeek);
     } else {
       setSelectedDate(rangeOrDate);
     }
   };
 
   useEffect(() => {
-    const currentDate = selectedDate || new Date();
     if (mode === 'week') {
-      const currentWeek = getWeekRange(currentDate);
-      handleSelectDate(currentWeek);
-    } else {
-      handleSelectDate(currentDate);
+      const week = getWeekRange(selectedDate);
+      setWeekRange(week);
+      setSelectedDate(week.startOfWeek);
     }
-    // eslint-disable-next-line
   }, [mode]);
 
   useEffect(() => {
