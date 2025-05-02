@@ -3,9 +3,9 @@ import React, { memo } from 'react';
 import IconOni from 'react-native-vector-icons/Ionicons';
 import colors from '../../assets/common/colorCss';
 
-const HeaderCompo = ({name, isPress, color, bgcolor}) => {
+const HeaderCompo = ({name, isPress, color, bgcolor, height}) => {
   return (
-    <View style={[styles.container, {backgroundColor: bgcolor || colors.white }]}>
+    <View style={[styles.container, {backgroundColor: bgcolor || colors.white, height: height || 60,}]}>
       <IconOni
         name="chevron-back"
         size={24}
@@ -24,7 +24,6 @@ export default memo(HeaderCompo);
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',

@@ -1,4 +1,4 @@
-import {get, post} from '../utils/axios';
+import {get, patch, post, put} from '../utils/axios';
 
 export const getAllDevices = async () => {
   return await get('/device/detailDevice');
@@ -8,10 +8,13 @@ export const detailDevice = async params => {
   return await get(`/device/detailDeviceBy/${params.id}`);
 };
 
-// export const createDevice = async params => {
-//   console.log(params);
+export const updateNameDevice = async params => {  
+  return await patch(`/device/updateName/${params.id_esp}`, {
+    name_area: params.name_area,
+  });
+};
 
-//   return await post(`/device/createDevice`, {
-//     id_esp: params.id_esp,
-//   });
-// };
+export const uploadImgDevice = async (params, form, options = {}) => {
+  return await put(`/device/upload-img/${params.id_esp}`, form, options);
+};
+

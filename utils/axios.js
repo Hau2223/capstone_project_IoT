@@ -26,7 +26,7 @@ export const get = async (path, options = {}) => {
 };
 
 export const post = async (path, data, options = {}) => {
-  const response = await httpRequest.post(CONFIG.baseUrl + path, data, options);
+  const response = await httpRequest.post(path, data, options);
   return response.data;
 };
 export const patch = async (path, data, options = {}) => {

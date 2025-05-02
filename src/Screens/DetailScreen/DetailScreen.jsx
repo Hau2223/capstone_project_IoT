@@ -3,35 +3,73 @@ import {
   Text,
   View,
   FlatList,
-  ScrollView,
   Animated,
+  Image,
+  TouchableOpacity,
+  StatusBar,
+  Modal,
+  TextInput,
+  Alert,
+  PermissionsAndroid,
+  Platform,
+  Linking,
+  Pressable,
 } from 'react-native';
-import React, {memo, useState, useEffect, useCallback, useRef} from 'react';
-// import OnOffBtn from '../../components/Button/OnOff';
-import {Switch} from 'react-native-paper';
-import FastImage from 'react-native-fast-image';
+import React, {
+  memo,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useContext,
+} from 'react';
+import {launchImageLibrary} from 'react-native-image-picker';
+import {useFocusEffect, useIsFocused} from '@react-navigation/native';
+import {useTranslation} from 'react-i18next';
+import {ThemeContext} from '../../../assets/common/themeProvider';
+import {Switch, Menu} from 'react-native-paper';
 import colors from '../../../assets/common/colorCss';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {memberId} from '../../../services/menberServices';
+import IconMa from 'react-native-vector-icons/MaterialIcons';
+import IconFo from 'react-native-vector-icons/FontAwesome';
+import {
+  leaveMembertDevive,
+  memberId,
+  updateMember,
+} from '../../../services/menberServices';
 import {gardenId} from '../../../services/authServices';
+import HeaderCompo from '../../components/HeaderCompo';
+import {
+  updateNameDevice,
+  uploadImgDevice,
+} from '../../../services/deviceServices';
+import {createStyle} from './style';
+import {updateControl} from '../../../services/controlServices';
 
-const DetailScreen = ({route}) => {
-  const {item} = route.params;
-  const {deviceId} = route.params;
-  const [isWatering, setIsWatering] = useState(false);
-  const [isFan, setIsFan] = useState(false);
-  const [member, setMember] = useState(null);
+const DetailScreen = ({navigation, route}) => {
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
+  const {item: initialItem, deviceId} = route.params;
+  const isFocused = useIsFocused();
+  const [item, setItem] = useState(initialItem);
+  const [nameDevice, setNameDevice] = useState(item.data.name_area || '');
+  const [modalDevice, setModalDevice] = useState(false);
+  const [modalMember, setModalMember] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const scrollY = useRef(new Animated.Value(1)).current;
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [otherUsers, setOtherUsers] = useState([]);
+  const [menuVisible, setMenuVisible] = useState(false); // State để kiểm soát hiển thị Menu
 
   const sensors = item?.data?.sensors || [];
   const controls = item?.data?.controls || [];
 
-  // console.log("sensor", sensors);
-  // console.log("controls",controls);
-
   const sensorMap = Object.fromEntries(sensors.map(s => [s.type, s]));
   const controlMap = Object.fromEntries(controls.map(c => [c.name, c]));
-  // const memberMap = Object.fromEntries(members.map(m => [m.userId, m]));
 
   const {
     temperature: temperatureSensor,
@@ -41,36 +79,112 @@ const DetailScreen = ({route}) => {
     stream: streamSensor,
   } = sensorMap;
 
-  // console.log("sensorMap", sensorMap);
-
   const {
     water: waterControl,
     light: lightControl,
     wind: windControl,
   } = controlMap;
 
-  const [userInfo, setUserInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const requestGalleryPermission = async () => {
+    if (Platform.OS === 'android') {
+      const sdkInt = Platform.Version;
+      let permission;
 
-  const fetchUserProfile = useCallback(async () => {
+      if (sdkInt >= 33) {
+        permission = PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES;
+      } else {
+        permission = PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
+      }
+
+      const alreadyGranted = await PermissionsAndroid.check(permission);
+      if (alreadyGranted) return true;
+
+      const result = await PermissionsAndroid.request(permission, {
+        title: t('selectImagePermissionTitle'),
+        message: t('selectImagePermissionMessage'),
+        buttonNeutral: t('ask_later'),
+        buttonNegative: t('deny'),
+        buttonPositive: t('agree'),
+      });
+
+      return result === PermissionsAndroid.RESULTS.GRANTED;
+    }
+    return true;
+  };
+
+  const pickImage = async () => {
+    const hasPermission = await requestGalleryPermission();
+    if (!hasPermission) {
+      Alert.alert(t('permissionDenied'), t('grant_photo_access'), [
+        {text: t('cancel')},
+        {text: t('open_settings'), onPress: () => Linking.openSettings()},
+      ]);
+      return;
+    }
+
+    launchImageLibrary({mediaType: 'photo'}, async response => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorMessage) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+      } else if (response.assets && response.assets.length > 0) {
+        const selectedImage = response.assets[0];
+
+        if (selectedImage.uri) {
+          const form = new FormData();
+          form.append('img_area', {
+            uri: selectedImage.uri,
+            name: selectedImage.fileName || 'avatar.jpg',
+            type: selectedImage.type || 'image/jpeg',
+          });
+
+          try {
+            const uploadRes = await uploadImgDevice({id_esp: deviceId}, form, {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            });
+            if (uploadRes.message === 'Device image updated') {
+              handleChangeImage('img_area', selectedImage.uri);
+              Alert.alert(t('alert_success'), t('image_updated_successfully'), [
+                {text: t('ok')},
+              ]);
+            }
+          } catch (err) {
+            console.error('Lỗi khi lưu thông tin:', err);
+            Alert.alert(t('alert_error'), t('image_upload_failed'));
+          }
+        }
+      }
+    });
+  };
+
+  const handleChangeImage = (field, value) => {
+    setItem(prev => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        [field]: value,
+      },
+    }));
+  };
+
+  const fetchDetailGarden = useCallback(async () => {
     try {
       const data = await gardenId();
       const ids = data?.data || [];
-
       if (!ids.includes(deviceId)) {
-        setError(
-          `Device ID "${deviceId}" không hợp lệ hoặc không tồn tại trong danh sách`,
-        );
+        Alert.alert(t('alert_info'), (`${t('invalid_device_id1')} ${deviceId} ${t('invalid_device_id2')}')`), [
+          {text: t('ok'), onPress: () => navigation.goBack()},
+        ]);
         setLoading(false);
         return;
       }
-
       const res = await memberId({id: deviceId});
-      // console.log('Member response:', res);
       if (res?.members) {
         setUserInfo(res.members);
       }
+      setLoading(false);
     } catch (err) {
       console.error('Error fetching user profile:', err);
       setError(err.message || 'Error fetching user data');
@@ -79,61 +193,20 @@ const DetailScreen = ({route}) => {
     }
   }, [deviceId]);
 
-  useEffect(() => {
-    // console.log('Current deviceId:', deviceId);
-    fetchUserProfile();
-    // const interval = setInterval(() => {
-    //   fetchUserProfile();
-    // }, 5000);
+  useFocusEffect(
+    useCallback(() => {
+      fetchDetailGarden();
+      const interval = setInterval(() => {
+        fetchDetailGarden();
+      }, 5000);
 
-    // return () => clearInterval(interval);
-  }, [fetchUserProfile]); // Lắng nghe sự thay đổi của deviceId
-
-  const names = userInfo
-    ?.flat()
-    ?.map(member => member.name)
-    .join(', ');
-  const roles = userInfo
-    ?.flat()
-    ?.map(member => member.role)
-    .join(', ');
-
-  // useEffect(() => {
-  //   const fetchMemberNames = async () => {
-  //     try {
-  //       const userIds = members.map(m => m.userId.$oid || m.userId); // Lấy danh sách userId
-
-  //       const dataMember = await Promise.all(
-  //         userIds.map(async id => {
-  //           // const res = await memberId({ id.$oid: id });
-  //           console.log(id.userId);
-
-  //           return res.data.members; // Trả về user info
-  //         })
-  //       );
-  //       setMember(dataMember); // Lưu mảng user info
-  //     } catch (err) {
-  //       console.error('Error fetching member info:', err);
-  //     }
-  //   };
-
-  //   fetchMemberNames();
-  // }, [members]);
-
-  // member.map((item) => {
-  //   console.log("item", item);
-  // }
-  // );
-
-  const headerHeight = scrollY.interpolate({
-    inputRange: [0, 200],
-    outputRange: [350, 200],
-    extrapolate: 'clamp',
-  });
+      return () => clearInterval(interval);
+    }, [fetchDetailGarden]),
+  );
 
   const imageHeight = scrollY.interpolate({
     inputRange: [0, 200],
-    outputRange: [263, 150],
+    outputRange: [265, 150],
     extrapolate: 'clamp',
   });
 
@@ -143,40 +216,184 @@ const DetailScreen = ({route}) => {
     extrapolate: 'clamp',
   });
 
-  const headerMarginTop = scrollY.interpolate({
+  const headerBottom = scrollY.interpolate({
     inputRange: [0, 200],
-    outputRange: [10, 5],
+    outputRange: [0, 60],
     extrapolate: 'clamp',
   });
-  console.log(controlMap);
+
+  const numberBottom = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [2, 1],
+    extrapolate: 'clamp',
+  });
+
+  const refreshData = updates => {
+    setItem(prev => ({
+      ...prev,
+      data: {...prev.data, ...updates},
+    }));
+  };
+
+  const handleChangeNameDevices = useCallback(async name_area => {
+    try {
+      const res = await updateNameDevice({
+        id_esp: deviceId,
+        name_area: name_area,
+      });
+      if (res.message === 'Garden name updated successfully') {
+        Alert.alert(t('alert_info'), t('garden_name_updated_successfully'));
+        refreshData({name_area});
+      }
+    } catch (err) {
+      console.log(err.response.data.message);
+    }
+  }, []);
+
+  const handlePromoteMember = () => {
+    if (userInfo && userInfo.length > 1) {
+      const currentUser = userInfo.find(
+        user => user.isMe && user.role === 'owner',
+      );
+      if (currentUser) {
+        const otherUsersList = userInfo.filter(u => !u.isMe);
+        setOtherUsers(otherUsersList);
+        if (otherUsersList.length > 0) {
+          setShowDropdown(true);
+        }
+      }
+    }
+  };
+
+  const updateControlMap = (controlType, newValue) => {
+    setItem(prev => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        controls: prev.data.controls.map(control =>
+          control.name === controlType
+            ? {...control, status: newValue}
+            : control,
+        ),
+      },
+    }));
+  };
+
+  // Hàm xử lý khi chọn một thành viên từ Menu
+  const handleSelectUser = user => {
+    setSelectedUser(user);
+    setMenuVisible(false); // Đóng Menu sau khi chọn
+  };
+
+  const handleTransferOwnership = async selectedUser => {
+    try {
+      const res = await updateMember({
+        id_esp: deviceId,
+        userId: selectedUser.userId,
+      });
+      if (res.message === 'User promoted to owner successfully') {
+        console.log('Chuyển quyền cho thành viên thành công');
+        Alert.alert(t('success'), t('ownership_transferred'));
+        await fetchDetailGarden();
+      }
+      // Ví dụ: Gọi API để rời thiết bị
+      // await leaveDeviceApi({ deviceId, userId: currentUser.userId });
+    } catch (error) {
+      console.error('Lỗi khi rời thiết bị:', error);
+    }
+  };
+
+  const handleLeaveDevice = async () => {
+    try {
+      const res = await leaveMembertDevive({
+        id_esp: deviceId,
+      });
+      if (res.message === 'Successfully left the device') {
+        navigation.goBack();
+        console.log('Người dùng rời thiết bị', deviceId);
+      }
+
+      Alert.alert(t('alert_success'), t('device_left_successfully'));
+    } catch (error) {
+      console.error('Lỗi khi rời thiết bị:', error);
+      Alert.alert(t('alert_error'), t('leave_device_failed'));
+    }
+  };
 
   return (
     <View style={styles.frame}>
-      <Animated.View style={[styles.container1, {height: headerHeight}]}>
+      {isFocused && (
+        <StatusBar
+          backgroundColor={theme === 'light' ? colors.white : colors.bg_dark}
+          barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+        />
+      )}
+      <HeaderCompo
+        name={t('garden_info')}
+        color={theme === 'light' ? colors.black : colors.white}
+        bgcolor={theme === 'light' ? colors.white : colors.bg_dark}
+        height={40}
+        isPress={() => navigation.goBack()}
+      />
+
+      <Animated.View style={[styles.container1]}>
         <Animated.View style={[styles.img, {height: imageHeight}]}>
-          <FastImage
+          <Image
             style={styles.imgStyle}
-            source={{
-              uri: item.data.img_area,
-              priority: FastImage.priority.normal,
-            }}
-            resizeMode={FastImage.resizeMode.cover}
+            source={{uri: item.data.img_area}}
+            resizeMode="cover"
           />
+          <Pressable style={styles.cameraIcon} onPress={pickImage}>
+            <IconFo name="camera" style={styles.icCamera} />
+          </Pressable>
         </Animated.View>
-        <Animated.Text
+        <Animated.View
           style={[
-            styles.header2,
+            styles.titleContainer,
             {
-              fontSize: headerFontSize,
-              marginTop: headerMarginTop,
+              bottom: headerBottom,
             },
           ]}>
-          {item?.data?.name_area}
-        </Animated.Text>
+          <Animated.Text
+            style={[
+              styles.header2,
+              {
+                fontSize: headerFontSize,
+              },
+            ]}
+            numberOfLines={numberBottom}>
+            {item?.data?.name_area}
+          </Animated.Text>
+          <Animated.View style={[styles.headerButton]}>
+            <TouchableOpacity
+              style={styles.btnChange}
+              onPress={() => setModalDevice(true)}>
+              <Icon
+                name="pencil"
+                size={24}
+                color="#FFFFFF"
+                style={styles.buttonIcon}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.btnChange}
+              onPress={() => {
+                setModalMember(true);
+                handlePromoteMember();
+              }}>
+              <IconMa
+                name="person-remove"
+                size={24}
+                color="#FFFFFF"
+                style={styles.buttonIcon}
+              />
+            </TouchableOpacity>
+          </Animated.View>
+        </Animated.View>
       </Animated.View>
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
-        style={styles.ScrollView}
+        contentContainerStyle={styles.ScrollView}
         onScroll={Animated.event(
           [{nativeEvent: {contentOffset: {y: scrollY}}}],
           {useNativeDriver: false},
@@ -189,19 +406,164 @@ const DetailScreen = ({route}) => {
           txtHumidity={humiditySensor?.value ?? 0}
           txtStream={streamSensor?.value ?? 0}
           txtLuminosity={luminositySensor?.value ?? 0}
-          style={styles.containerFrame}></FrameItem1>
+        />
         <FrameItem2
-          style={styles.containerFrame}
+          deviceId={deviceId}
+          controlMap={controlMap}
           waterStatus={waterControl?.status}
           lightStatus={lightControl?.status}
-          windStatus={windControl?.status}></FrameItem2>
-        <FrameItem3 header3={'THÀNH VIÊN'} users={userInfo || []} />
+          windStatus={windControl?.status}
+          updateControlMap={updateControlMap}
+        />
+        <FrameItem3 users={userInfo || []} />
+        <View style={{height: 20}} />
       </Animated.ScrollView>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        statusBarTranslucent={true}
+        visible={modalDevice}
+        onRequestClose={() => setModalDevice(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>{t('enter_new_name_prompt')}</Text>
+            <TextInput
+              placeholder={t('enter_new_name_placeholder')}
+              placeholderTextColor="#999"
+              keyboardType="default"
+              value={nameDevice}
+              onChangeText={text => {
+                setError(null);
+                setNameDevice(text);
+              }}
+              style={styles.modalInput}
+            />
+            <View style={styles.modalButtonGroup}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setModalDevice(false)}>
+                <Text style={styles.modalButtonText}>{t('cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonPrimary}
+                onPress={() => {
+                  handleChangeNameDevices(nameDevice);
+                  setModalDevice(false);
+                }}>
+                <Text style={styles.modalButtonText}>{t('rename')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        statusBarTranslucent={true}
+        visible={modalMember}
+        onRequestClose={() => setModalMember(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>
+              {showDropdown
+                ? t('select_member_to_transfer')
+                : t('leave_device_confirm')}
+            </Text>
+
+            {showDropdown && (
+              <View style={styles.menuContainer}>
+                {selectedUser && (
+                  <Text style={styles.selectedUserText}>
+                    {t('selected_member')} {selectedUser.name}
+                  </Text>
+                )}
+                {/* Nút để hiển thị/ẩn FlatList */}
+                <TouchableOpacity
+                  style={styles.menuAnchor}
+                  onPress={() => setMenuVisible(!menuVisible)}>
+                  <Text style={styles.menuAnchorText}>
+                    {selectedUser ? selectedUser.name : t('select_member')}
+                  </Text>
+                  <Icon
+                    name={menuVisible ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    color={colors.primary}
+                    style={styles.menuIcon}
+                  />
+                </TouchableOpacity>
+
+                {/* Hiển thị FlatList chỉ khi menuVisible là true */}
+                {menuVisible && (
+                  <FlatList
+                    data={otherUsers}
+                    showsVerticalScrollIndicator={false}
+                    keyExtractor={(item, index) =>
+                      (item.userId || index).toString()
+                    }
+                    renderItem={({item}) => (
+                      <TouchableOpacity
+                        style={styles.menuItem}
+                        onPress={() => {
+                          handleSelectUser(item); // Chọn thành viên
+                          setMenuVisible(false); // Ẩn FlatList sau khi chọn
+                        }}>
+                        <Text style={styles.menuItemText}>{item.name}</Text>
+                      </TouchableOpacity>
+                    )}
+                    ListEmptyComponent={
+                      <Text style={styles.noMembersText}>
+                        {t('no_members')}
+                      </Text>
+                    }
+                    style={styles.flatList} // Thêm style cho FlatList
+                  />
+                )}
+              </View>
+            )}
+
+            <View style={styles.modalButtonGroup}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => {
+                  setModalMember(false);
+                  setShowDropdown(false);
+                  setSelectedUser(null);
+                  setMenuVisible(false);
+                }}>
+                <Text style={styles.modalButtonText}>{t('cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonPrimary}
+                onPress={() => {
+                  if (showDropdown) {
+                    if (!selectedUser) {
+                      Alert.alert(t('alert_info'), t('select_member_required'));
+                      return;
+                    }
+                    handleTransferOwnership(selectedUser); // Gọi hàm chuyển quyền
+                  } else {
+                    handleLeaveDevice(); // Gọi hàm rời thiết bị
+                  }
+                  setModalMember(false);
+                  setShowDropdown(false);
+                  setSelectedUser(null);
+                  setMenuVisible(false);
+                }}>
+                <Text style={styles.modalButtonText}>{t('confirm')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
 
 const Header3 = ({header3}) => {
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
   return (
     <View>
       <Text style={styles.textHeader3}>{header3}</Text>
@@ -216,43 +578,48 @@ const FrameItem1 = ({
   txtStream,
   txtLuminosity,
 }) => {
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
   return (
     <View style={styles.containerFrame}>
-      <Header3 header3={'CẢM BIẾN'} />
+      <Header3 header3={t('sensors')} />
       <SensorComponent
         nameIcon={'water-percent'}
         colorIcon={'#2196F3'}
-        txtSensor={'Độ ẩm đất'}
+        txtSensor={t('soil_moisture')}
         txtNumb={txtMoisture + '%'}></SensorComponent>
       <SensorComponent
         nameIcon={'temperature-celsius'}
         colorIcon={'#FF8A65'}
-        txtSensor={'Nhiệt độ'}
+        txtSensor={t('temperature')}
         txtNumb={txtTemp + '°C'}></SensorComponent>
       <SensorComponent
         nameIcon={'weather-partly-cloudy'}
         colorIcon={'#4FC3F7'}
-        txtSensor={'Độ ẩm không khí'}
+        txtSensor={t('air_humidity')}
         txtNumb={txtHumidity + '%'}></SensorComponent>
       <SensorComponent
         nameIcon={'water-pump'}
         colorIcon={'#00BCD4'}
-        txtSensor={'Lưu lượng nước'}
+        txtSensor={t('water_flow')}
         txtNumb={txtStream + '%'}></SensorComponent>
       <SensorComponent
         nameIcon={'white-balance-sunny'}
         colorIcon={'#FFD54F'}
-        txtSensor={'Cường độ ánh sáng'}
+        txtSensor={t('light_intensity')}
         txtNumb={txtLuminosity + '%'}></SensorComponent>
     </View>
   );
 };
 
 const SensorComponent = ({nameIcon, colorIcon, txtSensor, txtNumb}) => {
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
   return (
     <View style={styles.contentFrame}>
       <View style={styles.iconContent}>
-        <Icon name={nameIcon} size={50} color={colorIcon} />
+        <Icon name={nameIcon} size={35} color={colorIcon} />
       </View>
       <View style={styles.textContent}>
         <Text style={styles.textStyle}>{txtSensor}</Text>
@@ -264,40 +631,84 @@ const SensorComponent = ({nameIcon, colorIcon, txtSensor, txtNumb}) => {
   );
 };
 
-const FrameItem2 = ({waterStatus, lightStatus, windStatus}) => {
-  const [water, setWater] = useState(waterStatus);
-  const [light, setLight] = useState(lightStatus);
-  const [wind, setWind] = useState(windStatus);
+const FrameItem2 = ({
+  deviceId,
+  controlMap,
+  waterStatus,
+  lightStatus,
+  windStatus,
+}) => {
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
+  const [controls, setControls] = useState({
+    water: waterStatus,
+    light: lightStatus,
+    wind: windStatus,
+  });
 
   useEffect(() => {
-    setWater(waterStatus);
-    setLight(lightStatus);
-    setWind(windStatus);
+    setControls({
+      water: waterStatus,
+      light: lightStatus,
+      wind: windStatus,
+    });
   }, [waterStatus, lightStatus, windStatus]);
+
+  const handleSwitchChange = async (controlType, controlId, currentValue) => {
+    const newValue = !currentValue;
+
+    setControls(prev => ({
+      ...prev,
+      [controlType]: newValue,
+    }));
+
+    try {
+      await updateControl({
+        id_esp: deviceId,
+        controlId: controlId,
+        status: newValue,
+        mode: 'manual',
+      });
+    } catch (error) {
+      console.error('Lỗi khi cập nhật:', error);
+      setControls(prev => ({
+        ...prev,
+        [controlType]: currentValue,
+      }));
+      Alert.alert(t('alert_error'), t('control_update_failed'));
+    }
+  };
 
   return (
     <View style={styles.containerFrame}>
-      <Header3 header3={'ĐIỀU KHIỂN'} />
+      <Header3 header3={t('controls')} />
       <StatusComponent
         nameIcon="water"
         colorIcon="#03A9F4"
-        txtStatus="Nước"
-        valueStatus={water}
-        onChange={setWater}
+        txtStatus={t('water')}
+        valueStatus={controls.water}
+        onChange={() => {
+          handleSwitchChange('water', controlMap?.water?._id, controls.water);
+        }}
       />
       <StatusComponent
         nameIcon="lightbulb-on-outline"
         colorIcon="#FFEB3B"
-        txtStatus="Đèn"
-        valueStatus={light}
-        onChange={setLight}
+        txtStatus={t('light')}
+        valueStatus={controls.light}
+        onChange={() => {
+          handleSwitchChange('light', controlMap?.light?._id, controls.light);
+        }}
       />
       <StatusComponent
         nameIcon="weather-windy"
         colorIcon="#90A4AE"
-        txtStatus="Gió"
-        valueStatus={wind}
-        onChange={setWind}
+        txtStatus={t('wind')}
+        valueStatus={controls.wind}
+        onChange={() => {
+          handleSwitchChange('wind', controlMap?.wind?._id, controls.wind);
+        }}
       />
     </View>
   );
@@ -309,56 +720,69 @@ const StatusComponent = ({
   txtStatus,
   valueStatus,
   onChange,
-}) => (
-  <View style={styles.contentFrame}>
-    <View style={styles.iconContent}>
-      <Icon name={nameIcon} size={50} color={colorIcon} />
+}) => {
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
+  return (
+    <View style={styles.contentFrame}>
+      <View style={styles.iconContent}>
+        <Icon name={nameIcon} size={40} color={colorIcon} />
+      </View>
+      <View style={styles.textContent}>
+        <Text style={styles.textStyle}>{txtStatus}</Text>
+      </View>
+      <View style={styles.valueContent}>
+        <Switch
+          value={valueStatus}
+          onValueChange={onChange}
+          trackColor={{false: '#F6F6F6', true: 'white'}}
+          thumbColor={valueStatus ? colors.primary : '#ACACAC'}
+          style={{transform: [{scale: 1.5}]}}
+        />
+      </View>
     </View>
-    <View style={styles.textContent}>
-      <Text style={styles.textStyle}>{txtStatus}</Text>
-    </View>
-    <View style={styles.valueContent}>
-      <Switch
-        value={valueStatus}
-        onValueChange={onChange}
-        trackColor={{false: '#F6F6F6', true: 'white'}}
-        thumbColor={valueStatus ? colors.primary : '#ACACAC'}
-        style={{transform: [{scale: 1.5}]}}
-      />
-    </View>
-  </View>
-);
+  );
+};
 
-const FrameItem3 = ({header3, users = []}) => {
+const FrameItem3 = ({users = []}) => {
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
   return (
     <View style={styles.containerFrame}>
-      <Header3 header3={header3} />
+      <Header3 header3={t('members')} />
       {users && users.length > 0 ? (
         <FlatList
-          data={users}
+          data={users.sort((a, b) => (a.isMe ? -1 : 1))}
           keyExtractor={(item, index) => index.toString()}
           renderItem={({item}) => (
             <UserComponent
               nameIcon={'account-circle'}
               colorIcon={'#D9D9D9'}
-              txtUser={item.name || 'Chưa có tên'}
-              txtRole={item.role || 'Chưa có vai trò'}
+              txtUser={item.isMe ? t('you') : item.name}
+              txtRole={
+                item.role === 'owner' ? t('role_owner') : t('role_member')
+              }
             />
           )}
           scrollEnabled={false}
         />
       ) : (
-        <Text style={styles.noMembersText}>Không có thành viên nào</Text>
+        <Text style={styles.noMembersText}>{t('no_members')}</Text>
       )}
     </View>
   );
 };
 
 const UserComponent = ({nameIcon, colorIcon, txtUser, txtRole}) => {
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
   return (
     <View style={styles.UserFrame}>
       <View style={styles.iconContent}>
-        <Icon name={nameIcon} size={50} color={colorIcon} />
+        <Icon name={nameIcon} size={35} color={colorIcon} />
       </View>
       <View style={styles.textUser}>
         <Text style={styles.textStyle}>{txtUser}</Text>
@@ -371,178 +795,3 @@ const UserComponent = ({nameIcon, colorIcon, txtUser, txtRole}) => {
 };
 
 export default memo(DetailScreen);
-
-const styles = StyleSheet.create({
-  frame: {
-    height: '100%',
-    width: '100%',
-    backgroundColor: '#F5F5F5',
-    alignItems: 'center',
-  },
-  container1: {
-    width: '100%',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    overflow: 'hidden',
-  },
-  img: {
-    width: '95%',
-    borderRadius: 5,
-    marginTop: 10,
-    overflow: 'hidden',
-  },
-  ScrollView: {
-    height: 'auto',
-    width: '95%',
-    backgroundColor: '#F5F5F5',
-    marginHorizontal: 20,
-    marginTop: 10,
-  },
-  content: {},
-  imgStyle: {
-    width: '100%',
-    height: 263,
-    borderRadius: 5,
-  },
-  header2: {
-    color: '#206477',
-    fontWeight: 'bold',
-    marginTop: 10,
-    marginLeft: 10,
-    position: 'absolute',
-    bottom: 20,
-    left: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    padding: 10,
-    borderRadius: 8,
-  },
-  content1: {
-    height: 'auto',
-    width: '100%',
-    padding: 10,
-    paddingLeft: 15,
-  },
-  content2: {
-    height: 'auto',
-    width: '100%',
-    marginTop: 10,
-  },
-  frameTuoiQuat: {
-    height: 60,
-    width: '100%',
-    flexDirection: 'row',
-    paddingLeft: 15,
-    marginTop: 5,
-  },
-  contentTuoiQuat: {
-    height: '100%',
-    width: '70%',
-    justifyContent: 'center',
-  },
-  buttonTuoiQuat: {
-    height: '100%',
-    width: '30%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 20,
-  },
-
-  textStyle: {
-    color: '#636363',
-    fontSize: 25,
-    marginTop: 5,
-    marginBottom: 5,
-  },
-  line: {
-    height: 2,
-    backgroundColor: '#000000',
-    marginVertical: 10,
-    marginLeft: 15,
-    marginRight: 15,
-  },
-  settingOnOff: {
-    flexDirection: 'row',
-    width: '100%',
-    height: 'auto',
-    alignItems: 'center',
-  },
-  frameIconLight: {
-    height: 25,
-    width: 25,
-  },
-  iconLight: {
-    height: 25,
-    width: 'auto',
-  },
-  txtLightLevel: {
-    color: '#636363',
-    fontSize: 18,
-    marginLeft: 7,
-    // color: '#5787E5',
-    textDecorationLine: 'underline',
-  },
-  containerFrame: {
-    height: 'auto',
-    width: '100%',
-    marginVertical: 15,
-    borderRadius: 15,
-    borderWidth: 3,
-    borderColor: '#E8E8E8',
-    paddingHorizontal: 15,
-    paddingVertical: 50,
-    backgroundColor: 'white',
-  },
-  textHeader3: {
-    textAlign: 'center',
-    color: '#217E54',
-    fontSize: 30,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  contentFrame: {
-    height: 'auto',
-    width: '100%',
-    flexDirection: 'row',
-    marginVertical: 5,
-  },
-  UserFrame: {
-    height: 'auto',
-    width: '100%',
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E8E8E8',
-    paddingVertical: 20,
-  },
-  iconContent: {
-    width: '15%',
-    justifyContent: 'center',
-  },
-  textContent: {
-    width: '65%',
-    justifyContent: 'center',
-    paddingLeft: 15,
-  },
-  valueContent: {
-    width: '20%',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    paddingRight: 10,
-  },
-  textUser: {
-    width: '55%',
-    justifyContent: 'center',
-    paddingLeft: 15,
-  },
-  textRole: {
-    width: '30%',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    paddingRight: 10,
-  },
-  noMembersText: {
-    textAlign: 'center',
-    color: '#636363',
-    fontSize: 20,
-    marginTop: 20,
-  },
-});
