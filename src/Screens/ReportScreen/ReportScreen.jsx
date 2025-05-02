@@ -1,116 +1,149 @@
-import {onPress,TouchableOpacity,FlatList,Image, StyleSheet, Text, View} from 'react-native';
-import React from 'react';
-
-const data = [
-  {
-    id: '1',
-    tenKhu: '1',
-    nhietDo: '19°C',
-    doAm: '25%',
-    trangThaiTuoi: 'OFF',
-    quat: 'ON',
-    imageSource: require('../../../assets/img/1.png'),
-    anhSang: '20%',
-  },
-  {
-    id: '2',
-    tenKhu: '2',
-    nhietDo: '21°C',
-    doAm: '30%',
-    trangThaiTuoi: 'ON',
-    quat: 'OFF',
-    imageSource: require('../../../assets/img/1.png'),
-    anhSang: '30%',
-  },
-  {
-    id: '3',
-    tenKhu: '3',
-    nhietDo: '18°C',
-    doAm: '28%',
-    trangThaiTuoi: 'OFF',
-    quat: 'ON',
-    imageSource: require('../../../assets/img/1.png'),
-    anhSang: '10%',
-  },
-  {
-    id: '4',
-    tenKhu: '4',
-    nhietDo: '20°C',
-    doAm: '35%',
-    trangThaiTuoi: 'ON',
-    quat: 'OFF',
-    imageSource: require('../../../assets/img/1.png'),
-    anhSang: '20%',
-  },
-  {
-    id: '5',
-    tenKhu: '5',
-    nhietDo: '22°C',
-    doAm: '40%',
-    trangThaiTuoi: 'OFF',
-    quat: 'ON',
-    imageSource: require('../../../assets/img/1.png'),
-    anhSang: '30%',
-  },
-  {
-    id: '6',
-    tenKhu: '6',
-    nhietDo: '22°C',
-    doAm: '40%',
-    trangThaiTuoi: 'OFF',
-    quat: 'ON',
-    imageSource: require('../../../assets/img/1.png'),
-    anhSang: '40%',
-  },
-];
+import {
+  onPress,
+  TouchableOpacity,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  View,
+  StatusBar,
+} from 'react-native';
+import React, {useState, useEffect, useCallback, useContext} from 'react';
+import {useFocusEffect, useIsFocused} from '@react-navigation/native';
+import {getAllDevices} from '../../../services/deviceServices';
+import {profile} from '../../../services/authServices';
+import Icon from 'react-native-vector-icons/Ionicons';
+import {useTranslation} from 'react-i18next';
+import colors from '../../../assets/common/colorCss';
+import {ThemeContext} from '../../../assets/common/themeProvider';
+import {createStyle} from './style';
 
 const ReportScreen = ({navigation}) => {
-    const handleGoToDetail = (item) => {
-        navigation.navigate('ReportDetail', { item }); // Chuyển dữ liệu sang DetailItem
-      };
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  // const styles = createStyle(theme);
+  const isFocused = useIsFocused();
+  const [devices, setDevices] = useState([]);
+  const [error, setError] = useState(null);
+  const [idUser, setIdUser] = useState(null);
+
+  useEffect(() => {
+    const loadIdUser = async () => {
+      try {
+        const response = await profile();
+        if (response?.data) {
+          setIdUser(response.data._id);
+          // console.log('ID User từ API:', response.data._id);
+        }
+      } catch (err) {
+        console.error('Lỗi khi lấy idUser:', err);
+      }
+    };
+
+    loadIdUser();
+  }, []);
+
+  const fetchDevices = useCallback(async () => {
+    if (!idUser) return;
+
+    try {
+      setError(null);
+      const response = await getAllDevices();
+      const allDevices = response?.data || [];
+
+      // console.log('Tất cả thiết bị từ API:', allDevices);
+
+      const userDevices = allDevices.filter(device =>
+        device.members?.some(member => member.userId === idUser),
+      );
+
+      // console.log('Thiết bị của user:', userDevices);
+      setDevices(userDevices);
+    } catch (err) {
+      console.error('Error details:', {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
+      });
+      setError(err.response?.data?.message || 'Lỗi khi lấy dữ liệu thiết bị');
+      setDevices([]);
+    }
+  }, [idUser]);
+
+  useEffect(() => {
+    if (idUser) {
+      fetchDevices();
+      const interval = setInterval(() => {
+        fetchDevices();
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [idUser, fetchDevices]);
+
+  const handleGoToDetail = item => {
+    navigation.navigate('ReportDetail', {item});
+  };
+
+  const getDeviceImage = device => {
+    // Nếu thiết bị có hình ảnh từ API, sử dụng nó
+    if (device.img_area) {
+      return {uri: device.img_area};
+    }
+    // Nếu không có, sử dụng hình mặc định
+    return require('../../../assets/img/1.png');
+  };
 
   return (
     <View style={styles.frame}>
+      {isFocused && (
+        <StatusBar
+          backgroundColor={theme === 'light' ? colors.white : colors.bg_dark}
+          barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+        />
+      )}
       <View style={styles.header}>
         <View style={styles.header1}>
           <Text style={styles.textHeader}>Phân tích dữ liệu</Text>
         </View>
       </View>
       <View style={styles.container}>
-        <FlatList
-          data={data}
-          numColumns={2}
-          keyExtractor={item => item.id}
-          renderItem={({item}) => (
-            <View style={styles.itemWrapper}>
-              <ItemArea
-                nameArea={'Khu ' + item.tenKhu}
-                nhietDo={'Nhiệt độ: ' + item.nhietDo}
-                doAm={'Độ ẩm: ' + item.doAm}
-                trangThaiTuoi={'Trạng thái tưới: ' + item.trangThaiTuoi}
-                quat={'Quạt: ' + item.quat}
-                imageSource={item.imageSource}
-                anhSang={item.anhSang}
-                onPress={() => handleGoToDetail(item)}
-              />
-            </View>
-          )}
-          contentContainerStyle={styles.listContainer}
-        />
+        {error ? (
+          <Text style={styles.errorText}>Lỗi: {error}</Text>
+        ) : devices.length === 0 ? (
+          <Text style={styles.emptyText}>Không có thiết bị nào</Text>
+        ) : (
+          <FlatList
+            data={devices}
+            numColumns={2}
+            keyExtractor={item => item._id}
+            renderItem={({item}) => (
+              <View style={styles.itemWrapper}>
+                <ItemArea
+                  nameArea={item.name_area || 'Thiết bị không tên'}
+                  imageSource={getDeviceImage(item)}
+                  onPress={() => handleGoToDetail(item)}
+                />
+              </View>
+            )}
+            contentContainerStyle={styles.listContainer}
+          />
+        )}
       </View>
     </View>
   );
 };
 
-const ItemArea = ({nameArea, imageSource,onPress}) => {
+const ItemArea = ({nameArea, imageSource, onPress}) => {
   return (
     <TouchableOpacity style={styles.frameItem} onPress={onPress}>
-      <Image
-        style={styles.img}
-        source={imageSource}
-        blurRadius={1}
-      />
+      <Image style={styles.img} source={imageSource} blurRadius={1} />
       <View style={styles.overlay}>
+        <Icon
+          name="bar-chart-outline"
+          size={30}
+          color="white"
+          style={styles.icon}
+        />
         <Text style={styles.txtArea}>{nameArea}</Text>
       </View>
     </TouchableOpacity>
@@ -123,7 +156,7 @@ const styles = StyleSheet.create({
   frame: {
     height: '100%',
     width: '100%',
-    backgroundColor: '#EAEAEA',
+    backgroundColor: colors.white,
   },
   header: {
     height: 70,
@@ -147,15 +180,15 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 5,
   },
-
   frameItem: {
-    height: 170,
-    width: 170,
+    height: 200,
+    width: '100%',
     borderRadius: 15,
     position: 'relative',
-    margin:15
-    
+    overflow: 'hidden',
   },
   img: {
     height: '100%',
@@ -166,22 +199,38 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: '100%',
     height: '100%',
-    backgroundColor: 'rgba(131, 120, 120, 0.09)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 15,
+  },
+  icon: {
+    marginBottom: 10,
   },
   txtArea: {
     color: 'white',
-    fontSize: 25,
+    fontSize: 22,
     fontWeight: 'bold',
   },
-
   itemWrapper: {
     alignItems: 'center',
-    width: '50%',
+    width: '50%', // Each item takes exactly 50% of the layout
+    paddingHorizontal: 5,
+    marginVertical: 5, // Maintain vertical spacing between rows
   },
-  listContainer: { 
-    paddingHorizontal: 10, 
-    paddingVertical: 10 
+  listContainer: {
+    paddingBottom: 20,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#666',
   },
 });

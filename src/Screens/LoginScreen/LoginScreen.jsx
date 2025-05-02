@@ -23,19 +23,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {login, loginGoogle} from '../../../services/authServices';
 import {UserContext} from '../../../utils/UserContext';
 import LinearGradient from 'react-native-linear-gradient';
-// import auth from '@react-native-firebase/auth';
-// import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
 
 import colors from '../../../assets/common/colorCss';
 import {useTranslation} from 'react-i18next';
 import {ThemeContext} from '../../../assets/common/themeProvider';
 import {createStyle} from './style';
-
-// GoogleSignin.configure({
-//   webClientId:
-//     '1028552878321-9502prl6iadm8mgs3gn3n9tjokrniigi.apps.googleusercontent.com',
-//   offlineAccess: true,
-// });
 
 const LoginScreen = () => {
   const navigation = useNavigation();

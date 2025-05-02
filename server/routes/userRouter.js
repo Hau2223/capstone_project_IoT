@@ -540,7 +540,7 @@ app.get('/getGardenby', authenticateJWT, async (req, res) => {
     if (!user) {
       return res.status(404).json({message: 'User not found'});
     }
-    res.status(200).json({status: 200, data: user.gardenId});
+    res.status(200).json({status: 200, data: user.gardenId, role: user.role});
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({status: 500, message: 'Internal server error'});
