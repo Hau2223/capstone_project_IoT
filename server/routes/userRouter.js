@@ -102,8 +102,8 @@ app.post('/login', async (req, res) => {
 
     res.status(200).json({data: token, role: user.role,  status: 200});
   } catch (err) {
-    console.error('Error logging in user:', err);
-    res.status(500).json({status: 500, message: 'Internal server error'});
+      console.error('Error logging in user:', err);
+      res.status(500).json({status: 500, message: 'Internal server error'});
   }
 });
 

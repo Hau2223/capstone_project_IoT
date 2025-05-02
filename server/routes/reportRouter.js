@@ -2,6 +2,8 @@ const express = require('express');
 const Report = require('../models/reportModel');
 const app = express();
 const bodyParser = require('body-parser');
+const authenticateJWT = require('../middlewares/authMiddleware');
+const User = require('../models/userModel');
 app.use(bodyParser.json());
 
 /**
@@ -300,10 +302,28 @@ app.delete('/deleteReport/:id', async (req, res) => {
  *       500:
  *         description: Server error
  */
-app.get('/listReport', async (req, res) => {
+app.get('/listReport',authenticateJWT, async (req, res) => {
   try {
-    const reports = await Report.find();
-    res.status(200).json(reports);
+    const userID = req.user.userId;
+    const user = await User.findById(userID);
+    if(user.role !== 'admin'){
+      res.status(400).json({
+        message:"You not have permisson to access !!"
+      })
+    }
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const totalReports = await Report.countDocuments();
+
+    const reports = await Report.find().skip(skip).limit(limit);
+    res.status(200).json({
+      currentPage: page,
+      totalPages: Math.ceil(totalReports / limit),
+      totalReports,
+      length:reports.length,
+      data:reports  
+    });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching data', error });
   }
