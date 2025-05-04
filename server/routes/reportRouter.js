@@ -219,7 +219,7 @@ app.put('/updateReport/:deviceId', async (req, res) => {
       }
 
       
-      report.water_usage = water_usage;
+      report.water_usage += water_usage;
       report.moisture_avg = replaceAtIndex(report.moisture_avg, index, moisture_avg);
       report.luminosity_avg = replaceAtIndex(report.luminosity_avg, index, luminosity_avg);
       report.tempurature_avg = replaceAtIndex(report.tempurature_avg, index, tempurature_avg);
