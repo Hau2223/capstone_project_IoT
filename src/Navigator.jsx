@@ -6,17 +6,18 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
-import React, {useContext} from 'react';
+import React, {memo, useContext} from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {UserProvider} from '../utils/UserContext';
+import {UserContext, UserProvider} from '../utils/UserContext';
 import {ThemeContext, ThemeProvider} from '../assets/common/themeProvider';
 import {LanguageProvider} from '../assets/common/translation';
 import {useTranslation} from 'react-i18next';
 import {PaperProvider} from 'react-native-paper';
 
 import {
+  LoadingScreen,
   OnBoardingScreen,
   LoginScreen,
   RegisterScreen,
@@ -25,29 +26,21 @@ import {
   DetailScreen,
   SettingScreen,
   AccountInfoScreen,
+  EditProfileScreen,
   ChangePasswordScreen,
   GeneralSettingScreen,
   LanguageSettingScreen,
+  SetTimerScreen,
+  DevicesListScreen,
+  AlarmScreen,
+  AreaScheduleScreen,
 } from './Screens';
-
-import ScheduleScreen from './Screens/ScheduleScreen/ScheduleScreen';
-import DevicesListScreen from './Screens/ScheduleScreen/DevicesListScreen';
-import AlarmScreen from './Screens/ScheduleScreen/AlarmScreen';
-import SetTimerScreen from './Screens/ScheduleScreen/SetTimerScreen';
 import ReportScreen from './Screens/ReportScreen/ReportScreen';
-import ReportDetail from './Screens/ReportScreen/ReportDetail';
+import ReportDetail from './Screens/ReportScreen/components/ReportDetail';
 import colors from '../assets/common/colorCss';
-import EditProfileScreen from './Screens/EditProfile/EditProfileScreen';
-import AreaScheduleScreen from './Screens/ScheduleScreen/AreaScheduleScreen';
 
 const Tab = createBottomTabNavigator();
 const StackNav = createNativeStackNavigator();
-
-const LoadingScreen = ({navigation}) => (
-  <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-    <ActivityIndicator size="large" color="tomato" />
-  </View>
-);
 
 // Hàm lấy icon
 const getTabBarIcon = (name, focused, theme) => {
@@ -158,17 +151,17 @@ const Navigator = () => {
                 <StackNav.Screen
                   name="Loading"
                   component={LoadingScreen}
-                  options={{headerShown: false, animation: 'fade_from_bottom'}}
+                  options={{headerShown: false, animation: 'fade'}}
                 />
                 <StackNav.Screen
                   name="OnBoarding"
                   component={OnBoardingScreen}
-                  options={{headerShown: false, animation: 'fade_from_bottom'}}
+                  options={{headerShown: false, animation: 'fade'}}
                 />
                 <StackNav.Screen
                   name="Login"
                   component={LoginScreen}
-                  options={{headerShown: false, animation: 'fade_from_bottom'}}
+                  options={{headerShown: false, animation: 'fade'}}
                 />
                 <StackNav.Screen
                   name="Register"
@@ -183,23 +176,12 @@ const Navigator = () => {
                 <StackNav.Screen
                   name="Tabs"
                   component={MyTabs}
-                  options={{headerShown: false, animation: 'fade_from_bottom'}}
+                  options={{headerShown: false, animation: 'slide_from_right'}}
                 />
-                {/* <StackNav.Screen
-                name="Test"
-                component={TestScreen}
-                options={{headerShown: false, animation: 'fade_from_bottom'}}
-              /> */}
                 <StackNav.Screen
                   name="DetailScreen"
                   component={DetailScreen}
                   options={{headerShown: false, animation: 'fade'}}
-                />
-
-                <StackNav.Screen
-                  name="ScheduleScreen"
-                  component={ScheduleScreen}
-                  options={{headerShown: false, animation: 'fade_from_bottom'}}
                 />
                 <StackNav.Screen
                   name="DevicesListScreen"
@@ -255,7 +237,7 @@ const Navigator = () => {
   );
 };
 
-export default Navigator;
+export default memo(Navigator);
 
 const styles = StyleSheet.create({
   container: {

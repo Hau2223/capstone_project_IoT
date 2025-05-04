@@ -1,5 +1,5 @@
 import i18n from 'i18next';
-import {initReactI18next} from 'react-i18next';
+import { initReactI18next } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const en = require('../../assets/common/locales/en.json');
@@ -11,7 +11,7 @@ const languageDetector = {
   async: true,
   detect: async callback => {
     const lang = await AsyncStorage.getItem('language');
-    callback(lang || 'vi'); // Mặc định là tiếng Việt nếu chưa có
+    callback(lang || 'en'); // Mặc định là Tiếng Anh nếu chưa có
   },
   init: () => {},
   cacheUserLanguage: lang => {
@@ -25,11 +25,11 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      en: {translation: en},
-      vi: {translation: vi},
+      en: { translation: en },
+      vi: { translation: vi },
     },
-    fallbackLng: 'vi', // Ngôn ngữ dự phòng nếu không tìm thấy
-    interpolation: {escapeValue: false}, // Không escape ký tự đặc biệt
+    fallbackLng: 'en', // Ngôn ngữ dự phòng là Tiếng Anh
+    interpolation: { escapeValue: false }, // Không escape ký tự đặc biệt
   });
 
 export default i18n;

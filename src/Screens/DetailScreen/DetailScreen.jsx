@@ -1,5 +1,4 @@
 import {
-  StyleSheet,
   Text,
   View,
   FlatList,
@@ -174,9 +173,11 @@ const DetailScreen = ({navigation, route}) => {
       const data = await gardenId();
       const ids = data?.data || [];
       if (!ids.includes(deviceId)) {
-        Alert.alert(t('alert_info'), (`${t('invalid_device_id1')} ${deviceId} ${t('invalid_device_id2')}')`), [
-          {text: t('ok'), onPress: () => navigation.goBack()},
-        ]);
+        Alert.alert(
+          t('alert_info'),
+          `${t('invalid_device_id1')} ${deviceId} ${t('invalid_device_id2')}')`,
+          [{text: t('ok'), onPress: () => navigation.goBack()}],
+        );
         setLoading(false);
         return;
       }
@@ -212,13 +213,13 @@ const DetailScreen = ({navigation, route}) => {
 
   const headerFontSize = scrollY.interpolate({
     inputRange: [0, 200],
-    outputRange: [32, 24],
+    outputRange: [24, 20],
     extrapolate: 'clamp',
   });
 
   const headerBottom = scrollY.interpolate({
     inputRange: [0, 200],
-    outputRange: [0, 60],
+    outputRange: [0, 50],
     extrapolate: 'clamp',
   });
 
@@ -332,7 +333,6 @@ const DetailScreen = ({navigation, route}) => {
         name={t('garden_info')}
         color={theme === 'light' ? colors.black : colors.white}
         bgcolor={theme === 'light' ? colors.white : colors.bg_dark}
-        height={40}
         isPress={() => navigation.goBack()}
       />
 
@@ -581,6 +581,15 @@ const FrameItem1 = ({
   const {t} = useTranslation();
   const {theme} = useContext(ThemeContext);
   const styles = createStyle(theme);
+  const displayMois =
+    txtMoisture === 2147483647 || txtMoisture == 0 ? '0.0%' : `${txtMoisture}%`;
+  const displayTemp =
+    txtTemp === 2147483647 || txtTemp == 0 ? '0.0°C' : `${txtTemp}°C`;
+  const displayHum =
+    txtHumidity === 2147483647 || txtHumidity == 0
+      ? '0.0°C'
+      : `${txtHumidity}°C`;
+
   return (
     <View style={styles.containerFrame}>
       <Header3 header3={t('sensors')} />
@@ -588,27 +597,32 @@ const FrameItem1 = ({
         nameIcon={'water-percent'}
         colorIcon={'#2196F3'}
         txtSensor={t('soil_moisture')}
-        txtNumb={txtMoisture + '%'}></SensorComponent>
+        txtNumb={displayMois}
+      />
       <SensorComponent
         nameIcon={'temperature-celsius'}
         colorIcon={'#FF8A65'}
         txtSensor={t('temperature')}
-        txtNumb={txtTemp + '°C'}></SensorComponent>
+        txtNumb={displayTemp}
+      />
       <SensorComponent
         nameIcon={'weather-partly-cloudy'}
         colorIcon={'#4FC3F7'}
         txtSensor={t('air_humidity')}
-        txtNumb={txtHumidity + '%'}></SensorComponent>
+        txtNumb={displayHum}
+      />
       <SensorComponent
         nameIcon={'water-pump'}
         colorIcon={'#00BCD4'}
         txtSensor={t('water_flow')}
-        txtNumb={txtStream + '%'}></SensorComponent>
+        txtNumb={`${txtStream}%`}
+      />
       <SensorComponent
         nameIcon={'white-balance-sunny'}
         colorIcon={'#FFD54F'}
         txtSensor={t('light_intensity')}
-        txtNumb={txtLuminosity + '%'}></SensorComponent>
+        txtNumb={`${txtLuminosity}%`}
+      />
     </View>
   );
 };
@@ -738,7 +752,7 @@ const StatusComponent = ({
           onValueChange={onChange}
           trackColor={{false: '#F6F6F6', true: 'white'}}
           thumbColor={valueStatus ? colors.primary : '#ACACAC'}
-          style={{transform: [{scale: 1.5}]}}
+          style={{transform: [{scale: 1.2}]}}
         />
       </View>
     </View>
@@ -759,6 +773,7 @@ const FrameItem3 = ({users = []}) => {
           renderItem={({item}) => (
             <UserComponent
               nameIcon={'account-circle'}
+              img={item.img}
               colorIcon={'#D9D9D9'}
               txtUser={item.isMe ? t('you') : item.name}
               txtRole={
@@ -775,14 +790,32 @@ const FrameItem3 = ({users = []}) => {
   );
 };
 
-const UserComponent = ({nameIcon, colorIcon, txtUser, txtRole}) => {
+const UserComponent = ({nameIcon, img, colorIcon, txtUser, txtRole}) => {
   const {t} = useTranslation();
   const {theme} = useContext(ThemeContext);
   const styles = createStyle(theme);
+
+  // Default fallback image if img is invalid or undefined
+  const defaultImage =
+    'https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg';
+
   return (
     <View style={styles.UserFrame}>
       <View style={styles.iconContent}>
-        <Icon name={nameIcon} size={35} color={colorIcon} />
+        <Image
+          source={{uri: img && img !== 'Unknown' ? img : defaultImage}}
+          style={{
+            height: 40,
+            width: 40,
+            borderRadius: 20,
+            borderWidth: 1.5,
+            borderColor: theme === 'light' ? colors.primary : colors.bg_NaN,
+          }}
+          resizeMode="contain"
+          onError={error =>
+            console.log('Image load error:', error.nativeEvent.error)
+          }
+        />
       </View>
       <View style={styles.textUser}>
         <Text style={styles.textStyle}>{txtUser}</Text>

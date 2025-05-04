@@ -4,6 +4,11 @@ export const getAllDevices = async () => {
   return await get('/device/detailDevice');
 };
 
+export const getUserDevices = async () => {
+  return await get('/device/userDevices');
+};
+
+
 export const detailDevice = async params => {
   return await get(`/device/detailDeviceBy/${params.id}`);
 };

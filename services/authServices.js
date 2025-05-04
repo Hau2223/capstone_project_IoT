@@ -8,6 +8,10 @@ export const login = async params => {
   });
 };
 
+export const logout = async params => {
+  return await post('/user/logout');
+};
+
 export const loginGoogle = async idToken => {
   return await post('/user/googlemobile', {idToken});
 };

@@ -28,13 +28,27 @@ const colors = {
   bg_setting: '#F0F4F3',
   txtSetting: '#15B392',
 
-  liner_light1: '#74C174',
+  liner_light1: '#8BDA47',
   liner_light2: '#217E54',
   liner_dark1: '#74C174',
   liner_dark2: '#217E54',
 
   bg_modal: 'rgba(0,0,0,0.5)',
+  bg_ic: 'rgba(255, 255, 255, 0.2)',
   btn_Cancel: '#DC8011',
+  btn_saveDisabled: '#7CAB96',
+  bg_InActopTab: '#666',
+  bg_clock: '#EFEFEF',
+  bg_selectClock: '#f0f0f0',
+  bg_SwitchInAC: '#ACACAC',
+  txtSchedule: 'rgba(255, 255, 255, 0.85)',
+  txtSelectTex: '#FF9500',
+  txtSetting: '#666666',
+  bg_primary: '#B5C7BF',
+  bg_cardReport: '#E2FFE6',
+  bg_cardReport_dark: '#494949',
+  txt_cardReport: '#888',
+  bg_modeAct: '#4ECB71',
 
   // ---------------
   ic_navbar: '#515151',
