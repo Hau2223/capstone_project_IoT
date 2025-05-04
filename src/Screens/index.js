@@ -10,8 +10,14 @@ import ChangePasswordScreen from './ChangePassword/ChangePasswordScreen';
 import GeneralSettingScreen from './GeneralSetting/GeneralSettingScreen';
 import LanguageSettingScreen from './LanguageSetting/LanguageSettingScreen';
 import EditProfileScreen from './EditProfile/EditProfileScreen';
+import SetTimerScreen from './SetTimer/SetTimerScreen';
+import DevicesListScreen from './DeviceSchedule/DevicesListScreen';
+import AlarmScreen from './Alarm/AlarmScreen';
+import AreaScheduleScreen from './AreaSchedule/AreaScheduleScreen';
+import LoadingScreen from './Loading/LoadingScreen';
 
 export {
+  LoadingScreen,
   OnBoardingScreen,
   LoginScreen,
   RegisterScreen,
@@ -24,4 +30,8 @@ export {
   ChangePasswordScreen,
   GeneralSettingScreen,
   LanguageSettingScreen,
+  SetTimerScreen,
+  DevicesListScreen,
+  AlarmScreen,
+  AreaScheduleScreen,
 };

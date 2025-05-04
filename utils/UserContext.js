@@ -9,25 +9,12 @@ export const UserContext = createContext(null);
 export const UserProvider = ({children}) => {
   const navigation = useNavigation();
   const [userToken, setUserToken] = useState(null);
-  const [isOnboarded, setIsOnboarded] = useState(null);
   const [loading, setLoading] = useState(true); // Đặt mặc định là true
-
-  // const isTokenValid = token => {
-  //   try {
-  //     const decoded = jwtDecode(token);
-  //     return decoded.exp * 1000 > Date.now();
-  //   } catch (err) {
-  //     return false;
-  //   }
-  // };
 
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
-        // Hiển thị Loading trong 2 giây
-        await new Promise(resolve => setTimeout(resolve, 1000));
         const token = await AsyncStorage.getItem('authToken');
-        // console.log('Token đã lấy:', token);
         const onboarded = await AsyncStorage.getItem('onboarded');
         if (onboarded === '1') {
           if (token) {

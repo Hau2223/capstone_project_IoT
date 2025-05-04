@@ -117,16 +117,17 @@ app.get('/membersDetail/:id_esp', authenticateJWT, async (req, res) => {
     const userId = req.user.userId; // Lấy userId từ token
 
     const membersInfo = await Promise.all(
-      device.members.map(async member => {
-        const user = await User.findById(member.userId);
+      device.members.map(async (member) => {
+        const user = await User.findById(member.userId).select('name avatar'); // Chỉ lấy các trường cần thiết
 
         return {
-          userId: user ? user._id : member.userId,
-          name: user ? user.name : 'Unknown',
+          userId: member.userId, // Luôn trả về userId từ member
+          name: user ? user.name : 'Unknown', // Nếu không có user, trả về 'Unknown'
           role: member.role,
-          isMe: (member.userId.toString() === userId.toString()) // So sánh
+          img: user && user.avatar ? user.avatar : 'https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg', // Trả về avatar mặc định nếu không có
+          isMe: member.userId.toString() === userId.toString(), // So sánh
         };
-      }),
+      })
     );
 
     res.json({ members: membersInfo });
@@ -135,7 +136,6 @@ app.get('/membersDetail/:id_esp', authenticateJWT, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 /**
  * @swagger
@@ -274,18 +274,18 @@ app.post('/createDevice', async (req, res) => {
  */
 app.post('/addMember/:id_esp', authenticateJWT, async (req, res) => {
   try {
-    const { id_esp } = req.params;
-    const { role } = req.body;
+    const {id_esp} = req.params;
+    const {role} = req.body;
     const userId = req.user.userId;
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({message: 'User not found'});
     }
 
-    const device = await Device.findOne({ id_esp });
+    const device = await Device.findOne({id_esp});
     if (!device) {
-      return res.status(404).json({ message: 'Device not found' });
+      return res.status(404).json({message: 'Device not found'});
     }
 
     // Lọc thành viên không hợp lệ
@@ -293,7 +293,7 @@ app.post('/addMember/:id_esp', authenticateJWT, async (req, res) => {
 
     const isExist = device.members.some(m => m.userId.toString() === userId);
     if (isExist) {
-      return res.status(400).json({ message: 'Member already exists' });
+      return res.status(400).json({message: 'Member already exists'});
     }
 
     const ownerExists = device.members.some(m => m.role === 'owner');
@@ -306,11 +306,12 @@ app.post('/addMember/:id_esp', authenticateJWT, async (req, res) => {
       notice = 'First member added as owner';
     } else if (finalRole === 'owner' && ownerExists) {
       finalRole = 'member';
-      notice = 'Owner already exists. Role changed to member and added successfully';
+      notice =
+        'Owner already exists. Role changed to member and added successfully';
     }
 
     // Thêm user vào thiết bị
-    device.members.push({ userId, role: finalRole });
+    device.members.push({userId, role: finalRole});
 
     // Thêm id_esp vào gardenId của user nếu chưa có
     if (!user.gardenId.includes(id_esp)) {
@@ -336,7 +337,6 @@ app.post('/addMember/:id_esp', authenticateJWT, async (req, res) => {
     });
   }
 });
-
 
 /**
  * @swagger
@@ -820,41 +820,42 @@ app.put('/upload-img/:id_esp', upload.single('img_area'), async (req, res) => {
 app.delete('/leaveDevice/:id_esp', authenticateJWT, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { id_esp } = req.params;
+    const {id_esp} = req.params;
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({message: 'User not found'});
     }
 
-    const device = await Device.findOne({ id_esp });
+    const device = await Device.findOne({id_esp});
     if (!device) {
-      return res.status(404).json({ message: 'Device not found' });
+      return res.status(404).json({message: 'Device not found'});
     }
 
     const currentUser = device.members.find(
-      (member) => member.userId.toString() === userId.toString()
+      member => member.userId.toString() === userId.toString(),
     );
 
     if (!currentUser) {
-      return res.status(403).json({ message: 'You are not a member of this device' });
+      return res
+        .status(403)
+        .json({message: 'You are not a member of this device'});
     }
 
     device.members = device.members.filter(
-      (member) => member.userId.toString() !== userId.toString()
+      member => member.userId.toString() !== userId.toString(),
     );
 
     await device.save();
 
-    await User.updateOne(
-      { _id: userId },
-      { $pull: { gardenId: id_esp } }
-    );
+    await User.updateOne({_id: userId}, {$pull: {gardenId: id_esp}});
 
-    return res.status(200).json({ message: 'Successfully left the device', device });
+    return res
+      .status(200)
+      .json({message: 'Successfully left the device', device});
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({message: 'Server error'});
   }
 });
 
@@ -917,35 +918,40 @@ app.delete('/leaveDevice/:id_esp', authenticateJWT, async (req, res) => {
  *                   type: string
  *                   example: Server error
  */
-app.get('/membersWithoutUserLogin/:id_esp', authenticateJWT, async (req, res) => {
-  try {
-    const device = await Device.findOne({ id_esp: req.params.id_esp });
+app.get(
+  '/membersWithoutUserLogin/:id_esp',
+  authenticateJWT,
+  async (req, res) => {
+    try {
+      const device = await Device.findOne({id_esp: req.params.id_esp});
 
-    if (!device) {
-      return res.status(404).json({ message: 'Device not found' });
+      if (!device) {
+        return res.status(404).json({message: 'Device not found'});
+      }
+
+      const filteredMembers = device.members.filter(
+        member => member.userId.toString() !== req.user.userId,
+      );
+
+      const membersInfo = await Promise.all(
+        filteredMembers.map(async member => {
+          const user = await User.findById(member.userId);
+
+          return {
+            userId: user ? user._id : member.userId,
+            name: user ? user.name : 'Unknown',
+            role: member.role,
+          };
+        }),
+      );
+
+      res.json({members: membersInfo});
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({message: 'Server error'});
     }
-
-    const filteredMembers = device.members.filter(member => member.userId.toString() !== req.user.userId);
-
-    const membersInfo = await Promise.all(
-      filteredMembers.map(async member => {
-        const user = await User.findById(member.userId);
-
-        return {
-          userId: user ? user._id : member.userId,
-          name: user ? user.name : 'Unknown',
-          role: member.role,
-        };
-      })
-    );
-
-    res.json({ members: membersInfo });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
+  },
+);
 
 /**
  * @swagger
@@ -1053,9 +1059,8 @@ app.get('/membersWithoutUserLogin/:id_esp', authenticateJWT, async (req, res) =>
 app.get('/userDevices', authenticateJWT, async (req, res) => {
   try {
     const userId = req.user.userId;
-
     // Tìm tất cả thiết bị mà userId nằm trong mảng members
-    const devices = await Device.find({ 'members.userId': userId });
+    const devices = await Device.find({'members.userId': userId});
 
     if (!devices || devices.length === 0) {
       return res.status(404).json({
@@ -1064,9 +1069,21 @@ app.get('/userDevices', authenticateJWT, async (req, res) => {
       });
     }
 
+    // Xử lý dữ liệu để thêm trường isCurrentUser vào members
+    const processedDevices = devices.map(device => {
+      const deviceObj = device.toObject();
+      deviceObj.members = deviceObj.members.map(member => {
+        return {
+          ...member,
+          isCurrentUser: member.userId.toString() === userId,
+        };
+      });
+      return deviceObj;
+    });
+
     res.status(200).json({
       status: 200,
-      data: devices,
+      data: processedDevices,
     });
   } catch (error) {
     res.status(500).json({
@@ -1076,6 +1093,5 @@ app.get('/userDevices', authenticateJWT, async (req, res) => {
     });
   }
 });
-
 
 module.exports = app;

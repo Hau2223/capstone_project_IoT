@@ -23,7 +23,7 @@ import {ThemeContext} from '../../../assets/common/themeProvider';
 import colors from '../../../assets/common/colorCss';
 import HeaderCompo from '../../components/HeaderCompo';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import {format} from 'date-fns';
+import {format, isValid} from 'date-fns';
 
 const EditProfileScreen = ({navigation, route}) => {
   const {userInfo} = route.params;
@@ -37,7 +37,7 @@ const EditProfileScreen = ({navigation, route}) => {
     phone: userInfo?.phone || '',
     gender: userInfo?.gender || '',
     address: userInfo?.address || '',
-    dob: userInfo?.dob || '',
+    dob: userInfo?.dob && isValid(new Date(userInfo.dob)) ? userInfo.dob : null,
     avatar: userInfo?.avatar || null,
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -57,11 +57,11 @@ const EditProfileScreen = ({navigation, route}) => {
       if (alreadyGranted) return true;
 
       const result = await PermissionsAndroid.request(permission, {
-        title: 'Cho phép truy cập ảnh',
-        message: 'Ứng dụng cần quyền để chọn ảnh từ thư viện',
-        buttonNeutral: 'Hỏi lại sau',
-        buttonNegative: 'Từ chối',
-        buttonPositive: 'Đồng ý',
+        title: t('selectImagePermissionTitle'),
+        message: t('selectImagePermissionMessage'),
+        buttonNeutral: t('ask_later'),
+        buttonNegative: t('deny'),
+        buttonPositive: t('agree'),
       });
 
       return result === PermissionsAndroid.RESULTS.GRANTED;
@@ -73,11 +73,11 @@ const EditProfileScreen = ({navigation, route}) => {
     const hasPermission = await requestGalleryPermission();
     if (!hasPermission) {
       Alert.alert(
-        'Quyền bị từ chối',
-        'Vui lòng cấp quyền truy cập ảnh trong cài đặt thiết bị',
+        t('permissionDenied'),
+        t('grant_photo_access'),
         [
-          {text: 'Hủy'},
-          {text: 'Mở cài đặt', onPress: () => Linking.openSettings()},
+          {text: t('cancel')},
+          {text: t('open_settings'), onPress: () => Linking.openSettings()},
         ],
       );
       return;
@@ -103,7 +103,7 @@ const EditProfileScreen = ({navigation, route}) => {
 
   const handleSave = async () => {
     try {
-      console.log('Dữ liệu gửi đi:', formData);
+      // console.log('Dữ liệu gửi đi:', formData);
 
       if (formData.avatar && !formData.avatar.startsWith('http')) {
         const form = new FormData();
@@ -127,26 +127,36 @@ const EditProfileScreen = ({navigation, route}) => {
         phone: formData?.phone,
         gender: formData?.gender,
         address: formData?.address,
-        dob: formData?.dob,
+        dob: formData?.dob
+          ? format(new Date(formData.dob), 'yyyy-MM-dd')
+          : null,
       });
 
-      // console.log('Update profile response:', updateRes);
-
-      Alert.alert('Thành công', 'Cập nhật hồ sơ thành công', [
-        {text: 'OK', onPress: () => navigation.goBack()},
+      Alert.alert(t('success'), t('updateSuccess'), [
+        {text: t('ok'), onPress: () => navigation.goBack()},
       ]);
     } catch (err) {
       console.error('Lỗi khi lưu thông tin:', err);
-      Alert.alert('Lỗi', 'Không thể cập nhật thông tin. Vui lòng thử lại.');
+      Alert.alert(t('error'),  t('updateFailed'));
     }
+  };
+
+  // Safe date formatting for display
+  const formatDate = date => {
+    if (!date) return '';
+    const parsedDate = new Date(date);
+    if (!isValid(parsedDate)) return '';
+    return format(parsedDate, 'dd/MM/yyyy');
   };
 
   const onChangeDate = (event, selectedDate) => {
     setShowDatePicker(false);
-    if (selectedDate) {
-      // Vẫn lưu dạng YYYY-MM-DD trong state để xử lý backend
-      const formattedDate = format(selectedDate, 'dd/MM/yyyy');
-      handleChange('dob', formattedDate);
+    if (event.type === 'dismissed') return; // Ignore if canceled (iOS)
+    if (selectedDate && isValid(selectedDate)) {
+      // Store as ISO string for consistency
+      handleChange('dob', selectedDate.toISOString());
+    } else {
+      console.warn('Invalid date selected:', selectedDate);
     }
   };
 
@@ -191,10 +201,14 @@ const EditProfileScreen = ({navigation, route}) => {
               placeholder={t('enter_name')}
               value={formData.name}
               onChangeText={value => handleChange('name', value)}
+              textColor={theme === 'light' ? colors.black : colors.white}
               style={styles.input}
               mode="outlined"
               activeOutlineColor={colors.primary}
-              outlineColor={colors.black}
+              placeholderTextColor={
+                theme === 'light' ? colors.black : colors.white
+              }
+              outlineColor={theme === 'light' ? colors.black : colors.white}
             />
           </View>
 
@@ -205,12 +219,16 @@ const EditProfileScreen = ({navigation, route}) => {
               placeholder={t('enter_email')}
               editable={false}
               value={formData.email}
+              textColor={theme === 'light' ? colors.black : colors.white}
               onChangeText={value => handleChange('email', value)}
               keyboardType="email-address"
               style={styles.input}
               mode="outlined"
               activeOutlineColor={colors.primary}
-              outlineColor={colors.black}
+              placeholderTextColor={
+                theme === 'light' ? colors.black : colors.white
+              }
+              outlineColor={theme === 'light' ? colors.black : colors.white}
             />
           </View>
 
@@ -219,6 +237,11 @@ const EditProfileScreen = ({navigation, route}) => {
             <Text style={styles.label}>{t('phone')}</Text>
             <TextInput
               placeholder={t('enter_phone')}
+              placeholderTextColor={
+                theme === 'light' ? colors.black : colors.white
+              }
+              textColor={theme === 'light' ? colors.black : colors.white}
+              outlineColor={theme === 'light' ? colors.black : colors.white}
               value={formData.phone}
               onChangeText={value => handleChange('phone', value)}
               keyboardType="number-pad"
@@ -226,8 +249,14 @@ const EditProfileScreen = ({navigation, route}) => {
               style={styles.input}
               mode="outlined"
               activeOutlineColor={colors.primary}
-              outlineColor={colors.black}
-              right={<TextInput.Affix text={`${formData?.phone.length}/10`} />}
+              right={
+                <TextInput.Affix
+                  text={`${formData?.phone.length}/10`}
+                  textStyle={{
+                    color: theme === 'light' ? colors.black : colors.white
+                  }}
+                />
+              }
             />
           </View>
 
@@ -239,7 +268,8 @@ const EditProfileScreen = ({navigation, route}) => {
                 selectedValue={formData.gender}
                 onValueChange={value => handleChange('gender', value)}
                 style={styles.picker}
-                dropdownIconColor={colors.black}>
+                
+                dropdownIconColor={theme === 'light' ? colors.black : colors.white}>
                 <Picker.Item label={t('male')} value="male" />
                 <Picker.Item label={t('female')} value="female" />
                 <Picker.Item label={t('other')} value="other" />
@@ -253,20 +283,22 @@ const EditProfileScreen = ({navigation, route}) => {
             <TouchableOpacity onPress={() => setShowDatePicker(true)}>
               <TextInput
                 pointerEvents="none"
-                placeholder="Chọn ngày sinh"
-                value={
-                  formData.dob
-                    ? format(new Date(formData.dob), 'dd/MM/yyyy')
-                    : ''
+                placeholder={t('choose_dob')}
+                placeholderTextColor={
+                  theme === 'light' ? colors.black : colors.white
                 }
+                textColor={theme === 'light' ? colors.black : colors.white}
+                value={formatDate(formData.dob)}
                 editable={false}
                 style={styles.input}
                 mode="outlined"
                 activeOutlineColor={colors.primary}
+                outlineColor={theme === 'light' ? colors.black : colors.white}
                 right={
                   <TextInput.Icon
                     icon="calendar"
                     onPress={() => setShowDatePicker(true)}
+                    color={theme === 'light' ? colors.black : colors.white}
                   />
                 }
               />
@@ -274,7 +306,11 @@ const EditProfileScreen = ({navigation, route}) => {
 
             {showDatePicker && (
               <DateTimePicker
-                value={formData.dob ? new Date(formData.dob) : new Date()}
+                value={
+                  formData.dob && isValid(new Date(formData.dob))
+                    ? new Date(formData.dob)
+                    : new Date()
+                }
                 mode="date"
                 display="default"
                 maximumDate={new Date()}
@@ -287,12 +323,17 @@ const EditProfileScreen = ({navigation, route}) => {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>{t('address')}</Text>
             <TextInput
-              placeholder="Nhập địa chỉ"
+              placeholder={t('enter_address')}
+              placeholderTextColor={
+                theme === 'light' ? colors.black : colors.white
+              }
+              textColor={theme === 'light' ? colors.black : colors.white}
               value={formData.address}
               onChangeText={value => handleChange('address', value)}
               style={styles.input}
               mode="outlined"
               activeOutlineColor={colors.primary}
+              outlineColor={theme === 'light' ? colors.black : colors.white}
             />
           </View>
         </View>

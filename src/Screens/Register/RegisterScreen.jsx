@@ -100,11 +100,11 @@ const RegisterScreen = () => {
   const handleVerifyOTP = otp => {
     verifyOTP({email: data.email, code: otp})
       .then(res => {
-        console.log('Xác minh thành công:', res);
+        // console.log('Xác minh thành công:', res);
         showAlert(t('alert_success'), t('otp_verification_success'));
         signUp({name: data.name, email: data.email, password: data.password})
           .then(res => {
-            console.log('Xác minh thành công:', res);
+            // console.log('Xác minh thành công:', res);
             showAlert(t('alert_success'), t('registration_success_message'));
             setData('');
             setOnConfirmAction(() => () => {

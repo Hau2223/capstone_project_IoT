@@ -189,7 +189,7 @@ const HomeScreen = ({navigation}) => {
         <View style={styles.header1}>
           <Text style={styles.textHeader}>{t('your_garden')}</Text>
         </View>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.header2}
           onPress={() => setModalVisible(true)}>
           <View style={styles.iconContainer}>
@@ -200,7 +200,7 @@ const HomeScreen = ({navigation}) => {
               </View>
             )}
           </View>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <CustomAlert
           visible={modalVisible}
           onClose={() => setModalVisible(false)}

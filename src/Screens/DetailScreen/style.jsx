@@ -74,12 +74,12 @@ const light = StyleSheet.create({
   },
   textStyle: {
     color: colors.black,
-    fontSize: 20,
+    fontSize: 17,
   },
   containerFrame: {
     flex: 1,
     borderRadius: 15,
-    borderWidth: 3,
+    borderWidth: 1.5,
     borderColor: colors.borderColor,
     padding: 10,
     backgroundColor: colors.white,
@@ -87,7 +87,7 @@ const light = StyleSheet.create({
   textHeader3: {
     textAlign: 'center',
     color: colors.primary,
-    fontSize: 30,
+    fontSize: 24,
     fontWeight: 'bold',
   },
   contentFrame: {
@@ -268,8 +268,12 @@ const dark = StyleSheet.create({
   },
   containerFrame: {
     ...light.containerFrame,
-    borderColor: colors.primary,
+    borderColor: colors.white,
     backgroundColor: colors.bg_dark,
+  },
+  textHeader3: {
+    ...light.textHeader3,
+    color: colors.white
   },
   noMembersText: {
     ...light.noMembersText,

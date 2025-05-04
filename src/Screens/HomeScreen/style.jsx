@@ -152,7 +152,8 @@ const light = StyleSheet.create({
     backgroundColor: colors.white,
     flexDirection: 'column',
     borderRadius: 7,
-    borderColor: colors.primary,
+    borderWidth: 2,
+    borderColor: colors.bg_NaN,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
@@ -211,7 +212,7 @@ const dark = StyleSheet.create({
   item: {
     ...light.item,
     backgroundColor: colors.bg_dark,
-    shadowColor: colors.white,
+    borderColor: colors.white,
   },
   textStyle: {
     ...light.textStyle,
