@@ -1,14 +1,27 @@
-import { StyleSheet, Text, View, Dimensions } from 'react-native';
-import React, { useState, useEffect, useCallback } from 'react';
-import ItemSortSchedule from '../../components/ItemSortSchedule';
-import { getAllDevices } from '../../../services/deviceServices';
-import { profile } from '../../../services/authServices';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Dimensions,
+  TouchableOpacity,
+} from 'react-native';
+import React, {useState, useEffect, useCallback, useContext, memo} from 'react';
+import {getAllDevices} from '../../../services/deviceServices';
+import {profile} from '../../../services/authServices';
+import Icon from 'react-native-vector-icons/Ionicons';
+import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
+import {ThemeContext} from '../../../assets/common/themeProvider';
+import {createStyle} from './style';
+import {useTranslation} from 'react-i18next';
 
 const screenWidth = Dimensions.get('window').width;
-const itemSpacing = 20;
-const itemWidth = (screenWidth - itemSpacing * 3) / 2;
+const itemSpacing = 15;
+const itemWidth = screenWidth - itemSpacing * 2;
 
-const ScheduleScreen = ({ navigation, route }) => {
+const ScheduleScreen = ({navigation, route}) => {
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
   const [scheduleCounts, setScheduleCounts] = useState({
     water: 0,
     light: 0,
@@ -50,19 +63,30 @@ const ScheduleScreen = ({ navigation, route }) => {
       };
 
       allDevices
-        .filter(device => device.members?.some(member => member.userId === idUser))
+        .filter(device =>
+          device.members?.some(member => member.userId === idUser),
+        )
         .forEach(device => {
           device.controls?.forEach(control => {
             if (control.schedules?.length > 0) {
-              if (control.name === 'water' && !counts.waterMarked?.includes(device._id)) {
+              if (
+                control.name === 'water' &&
+                !counts.waterMarked?.includes(device._id)
+              ) {
                 counts.water += 1;
                 counts.waterMarked = counts.waterMarked || [];
                 counts.waterMarked.push(device._id);
-              } else if (control.name === 'light' && !counts.lightMarked?.includes(device._id)) {
+              } else if (
+                control.name === 'light' &&
+                !counts.lightMarked?.includes(device._id)
+              ) {
                 counts.light += 1;
                 counts.lightMarked = counts.lightMarked || [];
                 counts.lightMarked.push(device._id);
-              } else if (control.name === 'wind' && !counts.windMarked?.includes(device._id)) {
+              } else if (
+                control.name === 'wind' &&
+                !counts.windMarked?.includes(device._id)
+              ) {
                 counts.wind += 1;
                 counts.windMarked = counts.windMarked || [];
                 counts.windMarked.push(device._id);
@@ -84,7 +108,7 @@ const ScheduleScreen = ({ navigation, route }) => {
         message: err.message,
       });
       setError(err.response?.data?.message || 'Lỗi khi lấy dữ liệu thiết bị');
-      setScheduleCounts({ water: 0, light: 0, wind: 0 });
+      setScheduleCounts({water: 0, light: 0, wind: 0});
     }
   }, [idUser]);
 
@@ -105,55 +129,48 @@ const ScheduleScreen = ({ navigation, route }) => {
     });
   };
 
-  const getIconForControl = name => {
-    try {
-      switch (name) {
-        case 'light':
-          return require('../../../assets/icon/iconLightYellow.png');
-        case 'water':
-          return require('../../../assets/icon/iconWaring.png');
-        case 'wind':
-          return require('../../../assets/icon/iconFan.png');
-        default:
-          return require('../../../assets/icon/iconLightYellow.png');
-      }
-    } catch (e) {
-      console.warn(`Icon not found for ${name}, using default icon`);
-      return require('../../../assets/icon/iconWaring.png');
-    }
-  };
-
   const controlItems = [
-    { name: 'water', label: 'Lịch tưới' },
-    { name: 'light', label: 'Lịch đèn' },
-    { name: 'wind', label: 'Lịch quạt' },
+    {name: 'water', label: t('watering_schedule'), icon: 'water', iconType: 'Ionicons'},
+    {name: 'light', label: t('light_schedule'), icon: 'sunny', iconType: 'Ionicons'},
+    {name: 'wind', label: t('fan_schedule'), icon: 'air', iconType: 'MaterialIcons'},
   ];
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.header1}>
-          <Text style={styles.textHeader}>Vườn tiêu Bình Phước</Text>
-        </View>
-      </View>
       <View style={styles.content}>
         {error ? (
-          <Text>Lỗi: {error}</Text>
-        ) : scheduleCounts.water + scheduleCounts.light + scheduleCounts.wind === 0 ? (
-          <Text>Không có khu vực nào có lịch trình</Text>
+          <Text style={styles.errorText}>{t('alert_error')}: {error}</Text>
+        ) : scheduleCounts.water +
+            scheduleCounts.light +
+            scheduleCounts.wind ===
+          0 ? (
+          <Text style={styles.emptyText}>
+            {t('no_schedule_available')}
+          </Text>
         ) : (
-          <View style={styles.itemRow}>
+          <View style={styles.itemColumn}>
             {controlItems.map((item, index) => (
-              <View
+              <TouchableOpacity
                 key={item.name}
-                style={[styles.itemWrapper, { width: itemWidth }]}
-              >
-                <ItemSortSchedule
-                  img={getIconForControl(item.name)}
-                  content={`${scheduleCounts[item.name]}`}
-                  onPress={() => handleGoToListDevices(item.name)}
-                />
-              </View>
+                style={styles.itemWrapper}
+                onPress={() => handleGoToListDevices(item.name)}>
+                <View
+                  style={[styles.itemContent, {backgroundColor: '#217E54'}]}>
+                  <View style={styles.textContainer}>
+                    <Text style={styles.itemLabel}>{item.label}</Text>
+                    <Text style={styles.itemCount}>
+                      {scheduleCounts[item.name]}
+                    </Text>
+                  </View>
+                  <View style={styles.iconContainer}>
+                    {item.iconType === 'Ionicons' ? (
+                      <Icon name={item.icon} size={40} color="#fff" />
+                    ) : (
+                      <MaterialIcon name={item.icon} size={40} color="#fff" />
+                    )}
+                  </View>
+                </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}
@@ -162,43 +179,5 @@ const ScheduleScreen = ({ navigation, route }) => {
   );
 };
 
-export default ScheduleScreen;
+export default memo(ScheduleScreen);
 
-export const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#EAEAEA',
-  },
-  header: {
-    height: 70,
-    width: '100%',
-    marginTop: 20,
-  },
-  header1: {
-    height: 70,
-    width: '100%',
-    justifyContent: 'center',
-  },
-  textHeader: {
-    color: '#000000',
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginLeft: 20,
-  },
-  content: {
-    flex: 1,
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-  },
-  itemRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 20,
-  },
-  itemWrapper: {
-    marginBottom: itemSpacing,
-  },
-});

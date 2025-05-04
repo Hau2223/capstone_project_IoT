@@ -102,8 +102,8 @@ app.post('/login', async (req, res) => {
 
     res.status(200).json({data: token, role: user.role,  status: 200});
   } catch (err) {
-    console.error('Error logging in user:', err);
-    res.status(500).json({status: 500, message: 'Internal server error'});
+      console.error('Error logging in user:', err);
+      res.status(500).json({status: 500, message: 'Internal server error'});
   }
 });
 
@@ -162,8 +162,17 @@ app.get('/sendCode/:email', async (req, res) => {
       from: process.env.EMAIL_USER,
       to: email,
       subject: 'Mã xác thực của bạn',
-      text: `Mã xác thực của bạn là: ${randomNumber}`,
-    };
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <p>Hi there,</p>
+          <p>This is your one time verification code:</p>
+          <div style="background-color: #f2f2f2; padding: 20px; text-align: center; border-radius: 8px; font-size: 32px; font-weight: bold; letter-spacing: 10px;">
+            ${randomNumber}
+          </div>
+          <p style="margin-top: 20px;">This code is only active for the next 2 minutes. Once the code expires you will have to resubmit a request for a code.</p>
+        </div>
+      `,
+    };    
 
     await transporter.sendMail(mailOptions);
 
@@ -377,8 +386,6 @@ app.post('/register', async (req, res) => {
  *             example:
  *               message: "Internal server error"
  */
-
-
 app.post('/resetPassword', async (req, res) => {
   const {email, newPassword} = req.body;
 
@@ -474,22 +481,31 @@ app.get('/profile', authenticateJWT, async (req, res) => {
  *         description: Logout successful
  *       401:
  *         description: Unauthorized
+ *       404:
+ *         description: User not found
  *       500:
  *         description: Internal server error
  */
 app.post('/logout', authenticateJWT, async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user.userId || req.user._id;
 
-    // Tìm người dùng và xóa token
-    await User.findOne({userId});
+    // Tìm người dùng
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ status: 404, message: 'User not found' });
+    }
+    // Cập nhật trạng thái
+    user.status = 'offline';
+    await user.save();
 
-    res.status(200).json({status: 200, message: 'Logout successful'});
+    res.status(200).json({ status: 200, message: 'Logout successful' });
   } catch (error) {
     console.error('Error logging out user:', error);
-    res.status(500).json({status: 500, message: 'Internal server error'});
+    res.status(500).json({ status: 500, message: 'Internal server error' });
   }
 });
+
 
 /**
  * @swagger
@@ -540,7 +556,7 @@ app.get('/getGardenby', authenticateJWT, async (req, res) => {
     if (!user) {
       return res.status(404).json({message: 'User not found'});
     }
-    res.status(200).json({status: 200, data: user.gardenId});
+    res.status(200).json({status: 200, data: user.gardenId, role: user.role});
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({status: 500, message: 'Internal server error'});

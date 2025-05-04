@@ -46,9 +46,9 @@ const light = StyleSheet.create({
     gap: 10,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: colors.txtSetting,
+    color: colors.primary,
     alignSelf: 'flex-start',
   },
 
@@ -71,7 +71,7 @@ const light = StyleSheet.create({
     borderBottomColor: colors.borderColor,
   },
   optionText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '500',
     color: colors.txtBtnSetting,
   },

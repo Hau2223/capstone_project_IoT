@@ -9,6 +9,7 @@ const colors = {
   txtdefault: '#515151',
   txtBtnSetting: '#383838',
   borderColor: '#CECECE',
+
   white: '#FFF',
   black: '#000',
   green: 'green',
@@ -18,7 +19,7 @@ const colors = {
 
   loginTxt: '#8F8F8F',
   loginBtn: '#8359E3',
-  
+
   loginbtnGG: '#D83E36',
   txtLoginWith: '#787878',
   txtForget: '#379F45',
@@ -27,13 +28,46 @@ const colors = {
   bg_setting: '#F0F4F3',
   txtSetting: '#15B392',
 
-  liner_light1: '#74C174',
+  liner_light1: '#8BDA47',
   liner_light2: '#217E54',
   liner_dark1: '#74C174',
   liner_dark2: '#217E54',
 
+  bg_modal: 'rgba(0,0,0,0.5)',
+  bg_ic: 'rgba(255, 255, 255, 0.2)',
+  btn_Cancel: '#DC8011',
+  btn_saveDisabled: '#7CAB96',
+  bg_InActopTab: '#666',
+  bg_clock: '#EFEFEF',
+  bg_selectClock: '#f0f0f0',
+  bg_SwitchInAC: '#ACACAC',
+  txtSchedule: 'rgba(255, 255, 255, 0.85)',
+  txtSelectTex: '#FF9500',
+  txtSetting: '#666666',
+  bg_primary: '#B5C7BF',
+  bg_cardReport: '#E2FFE6',
+  bg_cardReport_dark: '#494949',
+  txt_cardReport: '#888',
+  bg_modeAct: '#4ECB71',
 
+  // ---------------
+  ic_navbar: '#515151',
+  ic_navbarDark: '#F9F9F9',
+  borderWithRed: '#C96666',
+  borderWithGreen: '#3F9D52',
+  header1: '#217E54',
+  header2: '#000000',
+  header2Dark: '#E6E6E6',
 
+  ic_water_percent: '#2196F3',
+  ic_temperature: '#FF8A65',
+  ic_air_humidity: '#4FC3F7',
+  ic_water_pump: '#00BCD4',
+  ic_light_level: '#FFD54F',
+  ic_water: '#03A9F4',
+  ic_light: '#FFEB3B',
+  ic_wind: '#90A4AE',
+  ic_user: '#D9D9D9',
 };
 
 export default colors;

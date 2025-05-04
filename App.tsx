@@ -1,9 +1,10 @@
 import React, {useEffect} from 'react';
 import Navigator from './src/Navigator';
+
 export default function App() {
   return (
     <>
-      <Navigator />
+        <Navigator />
     </>
   );
 }

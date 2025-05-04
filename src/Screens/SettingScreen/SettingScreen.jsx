@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Pressable,
+  Alert,
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {ThemeContext} from '../../../assets/common/themeProvider';
@@ -14,7 +15,7 @@ import {IMAGES} from '../../../utils/constants';
 import colors from '../../../assets/common/colorCss';
 import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 import {createStyle} from './style';
-import {profile} from '../../../services/authServices';
+import {logout, profile} from '../../../services/authServices';
 import * as Animatable from 'react-native-animatable';
 import Icon from 'react-native-vector-icons/Feather';
 
@@ -42,18 +43,19 @@ const SettingsScreen = ({navigation}) => {
   useFocusEffect(
     useCallback(() => {
       fetchUserProfile();
-      const interval = setInterval(() => {
-        fetchUserProfile();
-      }, 5000);
-
-      return () => clearInterval(interval);
     }, [fetchUserProfile]),
   );
 
   const handleLogout = async () => {
-    await AsyncStorage.removeItem('authToken');
-    await navigation.navigate('Login');
-    console.log('Đăng xuất thành công');
+    try {
+      const res = await logout();
+      if (res.message === 'Logout successful') {
+        await AsyncStorage.removeItem('authToken');
+        await navigation.navigate('Login');
+      }
+    } catch (err) {
+      console.log('Đăng xuất thất bại');
+    }
   };
 
   return (
@@ -79,7 +81,7 @@ const SettingsScreen = ({navigation}) => {
         <View style={styles.settingBox}>
           <Pressable
             style={styles.optionContainer}
-            onPress={() => navigation.navigate('GeneralSetting')}>
+            onPress={() => Alert.alert('Thông Báo, Tính năng chưa phát triển')}>
             <Text style={styles.optionText}>{t('general_settings')}</Text>
           </Pressable>
 
@@ -96,7 +98,12 @@ const SettingsScreen = ({navigation}) => {
           </Pressable>
 
           <Pressable style={styles.optionContainer} onPress={toggleTheme}>
-            <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: "space-between"}}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
               <Text style={styles.optionText}>{t('interface')}</Text>
               <Animatable.View
                 animation="bounceIn"
@@ -110,8 +117,11 @@ const SettingsScreen = ({navigation}) => {
                   style={{marginRight: 10}}
                 /> */}
                 <Image
-                  source={theme === 'light' ? require('../../../assets/icon/ic_sun.png') : require('../../../assets/icon/ic_moon.png')}
-                  
+                  source={
+                    theme === 'light'
+                      ? require('../../../assets/icon/ic_sun.png')
+                      : require('../../../assets/icon/ic_moon.png')
+                  }
                   style={{height: 30, width: 30}}
                 />
               </Animatable.View>

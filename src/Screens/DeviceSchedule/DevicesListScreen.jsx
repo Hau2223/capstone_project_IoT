@@ -1,9 +1,19 @@
-import React, {useEffect, useState} from 'react';
-import {Image, StyleSheet, Text, View, FlatList} from 'react-native';
-import ItemSchedule from '../../components/ItemSchedule';
+import React, {memo, useEffect, useState, useContext} from 'react';
+import {Text, View, FlatList, StatusBar} from 'react-native';
+import {useIsFocused} from '@react-navigation/native';
+import ItemSchedule from './components/ItemSchedule';
 import {getAllDevices} from '../../../services/deviceServices';
+import {ThemeContext} from '../../../assets/common/themeProvider';
+import {createStyle} from './style';
+import {useTranslation} from 'react-i18next';
+import HeaderCompo from '../../components/HeaderCompo';
+import colors from '../../../assets/common/colorCss';
 
 const DevicesListScreen = ({navigation, route}) => {
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
+  const isFocused = useIsFocused();
   const controlName = route.params?.controlName;
   const [devices, setDevices] = useState([]);
   const idUser = route.params?.idUser;
@@ -64,15 +74,9 @@ const DevicesListScreen = ({navigation, route}) => {
             let statusText = 'Chưa có thiết bị';
             if (control) {
               if (hasSchedules) {
-                statusText = `Trạng thái ${
-                  controlName === 'water'
-                    ? 'tưới'
-                    : controlName === 'light'
-                    ? 'đèn'
-                    : 'quạt'
-                }: ${control.status ? 'ON' : 'OFF'}`;
+                statusText = `${t('status_label')} ${control.status ? t('status_on') : t('status_off') }`;
               } else {
-                statusText = `Trạng thái: - - -`;
+                statusText = `${t('status_label')} - - -`;
               }
             }
 
@@ -105,12 +109,14 @@ const DevicesListScreen = ({navigation, route}) => {
   };
 
   return (
-    <View>
-      <View style={styles.header}>
-        <View style={styles.header1}>
-          <Text style={styles.textHeader}>Vườn tiêu Bình Phước</Text>
-        </View>
-      </View>
+    <View style={styles.content}>
+      {isFocused && (
+        <StatusBar
+          backgroundColor={theme === 'light' ? colors.white : colors.bg_dark}
+          barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+        />
+      )}
+      <HeaderCompo isPress={() => navigation.goBack()} bgcolor={colors.bg_NaN} name={t('garden_schedule_list')} color={theme === 'light' ? colors.black : colors.white}/>
       <View style={styles.container}>
         <FlatList
           showsVerticalScrollIndicator={false}
@@ -137,37 +143,4 @@ const DevicesListScreen = ({navigation, route}) => {
   );
 };
 
-export default DevicesListScreen;
-
-export const styles = StyleSheet.create({
-  header: {
-    height: 70,
-    width: '100%',
-    marginTop: 20,
-  },
-  header1: {
-    height: 70,
-    width: '100%',
-    justifyContent: 'center',
-  },
-  textHeader: {
-    color: '#000000',
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginLeft: 20,
-  },
-  container: {
-    height: 'auto',
-    width: '100%',
-    flexDirection: 'column',
-    marginBottom: 180,
-  },
-  itemWrapper: {
-    alignItems: 'center',
-    width: '100%',
-  },
-  listContainer: {
-    paddingHorizontal: 0,
-    paddingVertical: 10,
-  },
-});
+export default memo(DevicesListScreen);  

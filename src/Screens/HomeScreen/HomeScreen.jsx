@@ -9,23 +9,33 @@ import {
   Platform,
   Modal,
   TextInput,
+  Alert,
 } from 'react-native';
-import React, {useState, useEffect, useCallback, memo, useRef} from 'react';
+import React, {useState, useContext, useCallback, memo, useRef} from 'react';
 import {useFocusEffect, useIsFocused} from '@react-navigation/native';
-import ItemHomePage from '../../components/ItemHomePage';
+import ItemHomePage from './components/ItemHomePage';
 import CustomAlert from '../../components/CustomAlert';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {gardenId} from '../../../services/authServices';
-import {createDevice, detailDevice} from '../../../services/deviceServices';
+import {detailDevice} from '../../../services/deviceServices';
 import colors from '../../../assets/common/colorCss';
 import * as Animatable from 'react-native-animatable';
 import {addMembertoDevice} from '../../../services/menberServices';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
+import LinearGradient from 'react-native-linear-gradient';
+import {useTranslation} from 'react-i18next';
+import {ThemeContext} from '../../../assets/common/themeProvider';
+import {createStyle} from './style';
 
 const HomeScreen = ({navigation}) => {
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
+  const isFocused = useIsFocused();
   const [modalVisible, setModalVisible] = useState(false);
   const [modalDevice, setModalDevice] = useState(false);
   const [notificationCount, setNotificationCount] = useState(20);
-  const isFocused = useIsFocused();
+
   const [deviceId, setDeviceId] = useState('');
 
   const handleGoToDetail = item => {
@@ -39,6 +49,7 @@ const HomeScreen = ({navigation}) => {
   const [garden, SetGarden] = useState(null);
 
   const fetchGarder = useCallback(async () => {
+    // console.log('Fetching garden data Home');
     try {
       const res = await gardenId();
       if (res.status === 200) {
@@ -57,15 +68,6 @@ const HomeScreen = ({navigation}) => {
       setLoading(false);
     }
   }, []);
-
-  // useEffect(() => {
-  //   fetchGarder();
-  //   const interval = setInterval(() => {
-  //     fetchGarder();
-  //   }, 5000);
-
-  //   return () => clearInterval(interval);
-  // }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -106,14 +108,24 @@ const HomeScreen = ({navigation}) => {
     }, [navigation]),
   );
   const handleCreateDevice = useCallback(
-    async idDevice => {
+    async id_esp => {
+      if (!id_esp) {
+        Alert.alert(t('alert_error'), t('enter_valid_device_code'));
+        return;
+      }
       try {
         setLoading(true);
-        const res = await addMembertoDevice({idDevice, userId: userID });
-        console.log('Thêm thành viên:', res.data);
-        await fetchGarder(); // cập nhật danh sách thiết bị ngay
+        const res = await addMembertoDevice({id_esp});
+        if (res.message === 'Member added successfully') {
+          await fetchGarder();
+          Alert.alert(t('alert_info'), t('garden_added_successfully'));
+          // console.log('Thêm Khu vườn thành công:', res.data);
+        }
       } catch (err) {
-        setError(err.message || 'Error fetching user data');
+        if (err.response.data.message === 'Member already exists') {
+          Alert.alert(t('alert_info'), t('device_already_added'));
+        }
+        setError(err.response.data.message || 'Error fetching user data');
       } finally {
         setLoading(false);
       }
@@ -121,78 +133,149 @@ const HomeScreen = ({navigation}) => {
     [fetchGarder],
   );
 
+  const renderSkeletonItem = () => (
+    <View style={styles.itemSkeleton}>
+      <SkeletonPlaceholder
+        backgroundColor={theme === 'light' ? '#d3d3d3' : '#444'}
+        highlightColor={theme === 'light' ? '#e8e8e8' : '#666'}
+        speed={1500}>
+        <View style={styles.contentSkeleton}>
+          <View style={{width: '100%', height: 130, borderRadius: 10}} />
+          <View style={{paddingHorizontal: 10, gap: 5}}>
+            <View
+              style={{
+                width: '50%',
+                height: 25,
+                borderRadius: 5,
+              }}
+            />
+            <View
+              style={{
+                width: '100%',
+                height: 15,
+                borderRadius: 5,
+              }}
+            />
+            <View
+              style={{
+                width: '100%',
+                height: 15,
+                borderRadius: 5,
+              }}
+            />
+            <View
+              style={{
+                width: '100%',
+                height: 15,
+                borderRadius: 5,
+              }}
+            />
+            <View style={{width: '100%', height: 15, borderRadius: 5}} />
+          </View>
+        </View>
+      </SkeletonPlaceholder>
+    </View>
+  );
+
   return (
     <View style={styles.frame}>
       {isFocused && (
-        <StatusBar backgroundColor={colors.secondary} barStyle="dark-content" />
+        <StatusBar
+          backgroundColor={theme === 'light' ? colors.white : colors.bg_dark}
+          barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+        />
       )}
       <View style={styles.header}>
         <View style={styles.header1}>
-          <Text style={styles.textHeader}>Vườn tiêu Bình Phước</Text>
+          <Text style={styles.textHeader}>{t('your_garden')}</Text>
         </View>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.header2}
           onPress={() => setModalVisible(true)}>
           <View style={styles.iconContainer}>
-            <Icon name="notifications" size={30} color="#206477" />
+            <Icon name="notifications" size={30} color={colors.primary} />
             {notificationCount > 0 && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>{notificationCount}</Text>
               </View>
             )}
           </View>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <CustomAlert
           visible={modalVisible}
           onClose={() => setModalVisible(false)}
         />
       </View>
       <View style={styles.container}>
-        <FlatList
-          data={garden}
-          showsVerticalScrollIndicator={false}
-          numColumns={2}
-          keyExtractor={(item, index) => item?.data?._id || index.toString()}
-          renderItem={({item}) => {
-            const sensors = item?.data?.sensors || [];
-            const controls = item?.data?.controls || [];
+        {loading ? (
+          <>
+            <FlatList
+              data={[...Array(6).keys()]}
+              keyExtractor={item => item.toString()}
+              numColumns={2}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.listSkeleton}
+              columnWrapperStyle={styles.columnSkeleton}
+              renderItem={renderSkeletonItem}
+              ListFooterComponent={<View style={{height: 20}} />}
+            />
+          </>
+        ) : (
+          <>
+            <FlatList
+              data={garden}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.listContainer}
+              numColumns={2}
+              keyExtractor={(item, index) =>
+                item?.data?._id || index.toString()
+              }
+              ListFooterComponent={<View style={{height: 20}} />}
+              renderItem={({item}) => {
+                const sensors = item?.data?.sensors || [];
+                const controls = item?.data?.controls || [];
 
-            const sensorMap = Object.fromEntries(sensors.map(s => [s.type, s]));
-            const controlMap = Object.fromEntries(
-              controls.map(c => [c.name, c]),
-            );
+                const sensorMap = Object.fromEntries(
+                  sensors.map(s => [s.type, s]),
+                );
+                const controlMap = Object.fromEntries(
+                  controls.map(c => [c.name, c]),
+                );
 
-            const {
-              temperature: temperatureSensor,
-              humidity: humiditySensor,
-              luminosity: luminositySensor,
-              moisture: moistureSensor,
-              stream: streamSensor,
-            } = sensorMap;
+                const {
+                  temperature: temperatureSensor,
+                  humidity: humiditySensor,
+                  luminosity: luminositySensor,
+                  moisture: moistureSensor,
+                  stream: streamSensor,
+                } = sensorMap;
 
-            const {
-              water: waterControl,
-              light: lightControl,
-              wind: windControl,
-            } = controlMap;
+                const {
+                  water: waterControl,
+                  light: lightControl,
+                  wind: windControl,
+                } = controlMap;
 
-            return (
-              <View style={styles.itemWrapper}>
-                <ItemHomePage
-                  name_area={item?.data?.name_area}
-                  temperature={`${temperatureSensor?.value ?? 0}`}
-                  moisture={`${moistureSensor?.value ?? 0}`}
-                  water={`${waterControl?.status === true ? 'ON' : 'OFF'}`}
-                  wind={`${windControl?.status === true ? 'ON' : 'OFF'}`}
-                  img_area={item?.data?.img_area}
-                  luminosity={`${luminositySensor?.value ?? 0}%`}
-                  onPress={() => handleGoToDetail(item, item?.data?._id)}
-                />
-              </View>
-            );
-          }}
-          contentContainerStyle={styles.listContainer}
-        />
+                return (
+                  <View style={styles.itemWrapper}>
+                    <ItemHomePage
+                      name_area={item?.data?.name_area}
+                      temperature={`${temperatureSensor?.value ?? 0}`}
+                      moisture={`${moistureSensor?.value ?? 0}`}
+                      water={`${waterControl?.status === true ? t('status_on') : t('status_off')}`}
+                      wind={`${windControl?.status === true ?  t('status_on') : t('status_off')}`}
+                      img_area={item?.data?.img_area}
+                      luminosity={`${luminositySensor?.value ?? 0}%`}
+                      onPress={() => handleGoToDetail(item, item?.data?._id)}
+                    />
+                  </View>
+                );
+              }}
+            />
+
+            
+          </>
+        )}
       </View>
 
       <Animatable.View
@@ -204,7 +287,7 @@ const HomeScreen = ({navigation}) => {
         <TouchableOpacity
           onPress={() => setModalDevice(true)}
           style={styles.floatingButton}>
-          <Icon name="add-circle" size={60} color="#206477" />
+          <Icon name="add-circle" size={60} color={colors.primary} />
         </TouchableOpacity>
       </Animatable.View>
 
@@ -216,29 +299,32 @@ const HomeScreen = ({navigation}) => {
         onRequestClose={() => setModalDevice(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Vui lòng nhập mã thiết bị</Text>
+            <Text style={styles.modalTitle}>{t('enter_device_code')}</Text>
             <TextInput
-              placeholder="Vui lòng nhập mã thiết bị"
+              placeholder={t('input_device_code')}
               placeholderTextColor="#999"
-              keyboardType="numeric"
+              keyboardType="default"
               value={deviceId}
-              onChangeText={setDeviceId}
+              onChangeText={text => {
+                setError(null);
+                setDeviceId(text);
+              }}
               style={styles.modalInput}
             />
             <View style={styles.modalButtonGroup}>
               <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setModalDevice(false)}>
+                <Text style={styles.modalButtonText}>{t('cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
                 style={styles.modalButtonPrimary}
                 onPress={() => {
-                  console.log('Đã nhập:', deviceId);
+                  // console.log('Đã nhập:', deviceId);
                   handleCreateDevice(deviceId);
                   setModalDevice(false);
                 }}>
-                <Text style={styles.modalButtonText}>Kết nối</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalButtonCancel}
-                onPress={() => setModalDevice(false)}>
-                <Text style={styles.modalButtonText}>Hủy</Text>
+                <Text style={styles.modalButtonText}>{t('connect')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -247,133 +333,5 @@ const HomeScreen = ({navigation}) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  frame: {
-    flex: 1,
-    backgroundColor: '#EAEAEA',
-  },
-  header: {
-    height: 70,
-    width: '100%',
-    flexDirection: 'row',
-    marginTop: 20,
-  },
-  header1: {
-    height: 70,
-    width: '80%',
-    justifyContent: 'center',
-  },
-  textHeader: {
-    color: '#206477',
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginLeft: 20,
-  },
-  header2: {
-    height: 70,
-    width: '20%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  iconContainer: {
-    position: 'relative',
-  },
-  badge: {
-    position: 'absolute',
-    right: -6,
-    top: -6,
-    backgroundColor: 'red',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badgeText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-    paddingHorizontal: 4,
-  },
-  container: {
-    height: 'auto',
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 80,
-  },
-  itemWrapper: {
-    alignItems: 'center',
-    width: '50%',
-    padding: 5,
-  },
-  listContainer: {
-    paddingHorizontal: 5,
-    paddingBottom: 10,
-  },
-
-  floatingButtonWrapper: {
-    position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 30 : 10,
-    right: 10,
-    zIndex: 1000,
-  },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    width: '85%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  modalInput: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: '#000',
-    marginBottom: 20,
-  },
-  modalButtonGroup: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  modalButtonPrimary: {
-    flex: 1,
-    backgroundColor: '#7964FA',
-    paddingVertical: 10,
-    borderRadius: 6,
-    marginRight: 10,
-    alignItems: 'center',
-  },
-  modalButtonCancel: {
-    flex: 1,
-    backgroundColor: '#6E6E6E',
-    paddingVertical: 10,
-    borderRadius: 6,
-    marginLeft: 10,
-    alignItems: 'center',
-  },
-  modalButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-});
 
 export default memo(HomeScreen);
