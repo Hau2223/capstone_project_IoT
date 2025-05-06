@@ -26,7 +26,7 @@ app.get('/detailDevice', async (req, res) => {
     res.status(200).json({status: 200, data: devices});
   } catch (error) {
     res.status(500).json({
-      status: 200,
+      status: 500,
       message: 'Error retrieving devices',
       error: error.message,
     });
@@ -136,6 +136,125 @@ app.get('/membersDetail/:id_esp', authenticateJWT, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+/**
+ * @swagger
+ * /api/device/blocksDetail/{id_esp}:
+ *   get:
+ *     summary: Lấy tất cả thông tin của blocks trong một Device
+ *     tags: [Members]
+ *     parameters:
+ *       - in: path
+ *         name: id_esp
+ *         required: true
+ *         description: id_esp của Device
+ *         schema:
+ *           type: string
+ *           example: "C1C93A7DBCC"
+ *     responses:
+ *       200:
+ *         description: Danh sách thông tin của các user bị block (trả về dạng mảng)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   userId:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   img:
+ *                     type: string
+ *                     example: "https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg"
+ *       404:
+ *         description: Device not found
+ *       500:
+ *         description: Server error
+ */
+
+app.get('/blocksDetail/:id_esp', authenticateJWT, async (req, res) => {
+  try {
+    const device = await Device.findOne({ id_esp: req.params.id_esp }).populate({
+      path: 'blocks',
+      select: 'name avatar',
+    });
+
+    if (!device) {
+      return res.status(404).json({ message: 'Device not found' });
+    }
+
+    const blocksInfo = device.blocks.map(user => ({
+      userId: user._id,
+      name: user.name || 'Unknown',
+      img: user.avatar || 'https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg',
+    }));
+    res.status(200).json({ message: 'Success', data: blocksInfo });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+/**
+ * @swagger
+ * /api/device/addBlock/{id_esp}:
+ *   post:
+ *     summary: Thêm một user vào danh sách block của Device
+ *     tags: [Members]
+ *     parameters:
+ *       - in: path
+ *         name: id_esp
+ *         required: true
+ *         description: id_esp của Device
+ *         schema:
+ *           type: string
+ *           example: "C1C93A7DBCC"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 example: "60d21b4667d0d8992e610c85"
+ *     responses:
+ *       200:
+ *         description: Thêm user vào danh sách block thành công
+ *       404:
+ *         description: Device không tìm thấy hoặc user không hợp lệ
+ *       500:
+ *         description: Lỗi server
+ */
+
+app.post('/addBlock/:id_esp', authenticateJWT, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const device = await Device.findOne({ id_esp: req.params.id_esp });
+
+    if (!device) {
+      return res.status(404).json({ message: 'Device not found' });
+    }
+
+    const user = await User.findById(userId);  // Assuming you have a User model
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (device.blocks.includes(userId)) {
+      return res.status(400).json({ message: 'User is already blockned' });
+    }
+
+    device.blocks.push(userId);
+    await device.save();
+
+    res.status(200).json({ message: 'User added to block list successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 /**
  * @swagger
@@ -231,6 +350,59 @@ app.post('/createDevice', async (req, res) => {
       message: 'Error processing device',
       error: error.message,
     });
+  }
+});
+/**
+ * @swagger
+ * /api/device/delBlock/{id_esp}:
+ *   delete:
+ *     summary: Xóa một user khỏi danh sách block của Device
+ *     tags: [Members]
+ *     parameters:
+ *       - in: path
+ *         name: id_esp
+ *         required: true
+ *         description: id_esp của Device
+ *         schema:
+ *           type: string
+ *           example: "C1C93A7DBCC"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 example: "60d21b4667d0d8992e610c85"
+ *     responses:
+ *       200:
+ *         description: Xóa user khỏi danh sách block thành công
+ *       404:
+ *         description: Device không tìm thấy hoặc user không hợp lệ
+ *       500:
+ *         description: Lỗi server
+ */
+app.delete('/delBlock/:id_esp', authenticateJWT, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const device = await Device.findOne({ id_esp: req.params.id_esp });
+
+    if (!device) {
+      return res.status(404).json({ message: 'Device not found' });
+    }
+    if (!device.blocks.includes(userId)) {
+      return res.status(404).json({ message: 'User is not blockned' });
+    }
+
+    device.blocks = device.blocks.filter(block => block.toString() !== userId);
+    await device.save();
+
+    res.status(200).json({ message: 'User removed from block list successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
