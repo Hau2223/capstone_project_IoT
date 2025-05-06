@@ -1,13 +1,30 @@
-import {StyleSheet, Text, View, FlatList, TouchableOpacity, Alert} from 'react-native';
-import React, {useState, useEffect, useRef} from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  TouchableOpacity,
+  Alert,
+  StatusBar,
+} from 'react-native';
+import React, {useState, useEffect, useRef, useContext, memo} from 'react';
+import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 import {Switch} from 'react-native-paper';
 import {scheduleId} from '../../../services/scheduleServices';
 import {delSchedule} from '../../../services/scheduleServices';
 import {updateSchedule} from '../../../services/scheduleServices';
 import Icon from 'react-native-vector-icons/Ionicons';
 import colors from '../../../assets/common/colorCss';
+import {ThemeContext} from '../../../assets/common/themeProvider';
+import {createStyle} from './style';
+import {useTranslation} from 'react-i18next';
+import HeaderCompo from '../../components/HeaderCompo';
 
 const AlarmScreen = ({route, navigation}) => {
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
+  const isFocused = useIsFocused();
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,9 +48,10 @@ const AlarmScreen = ({route, navigation}) => {
       if (!isBackgroundRefresh) {
         setLoading(true);
       }
-      
+
       setError(null);
-      
+
+      // Make sure we have the required parameters
       if (!item?.id_esp) {
         throw new Error('Missing device ID');
       }
@@ -42,53 +60,58 @@ const AlarmScreen = ({route, navigation}) => {
 
       const response = await scheduleId({
         id_esp: item.id_esp,
-        name: controlName
+        name: controlName,
       });
-      
-      if (response?.data) {
-        const formattedSchedules = response.data.map((schedule, index) => {
-          // Parse time and AM/PM
-          const [time, ampm] = schedule.startTime.split(' ');
-          const [hours, minutes] = time.split(':');
-          const hour24 = ampm === 'PM' && parseInt(hours) < 12 ? 
-            parseInt(hours) + 12 : 
-            ampm === 'AM' && parseInt(hours) === 12 ? 
-              0 : 
-              parseInt(hours);
 
-          return {
-            id: schedule._id || index.toString(),
-            numbClock: schedule.startTime,
-            timer: `${schedule.duration} phút`,
-            calendar: formatRepeatDays(schedule.repeat),
-            isWatering: schedule.status,
-            // Add raw data for sorting
-            rawTime: schedule.startTime,
-            rawRepeat: schedule.repeat,
-            // Add sorting fields
-            ampm: ampm,
-            hour: hour24,
-            minute: parseInt(minutes)
-          };
-        });
-        
-        // Sort schedules by AM/PM, then hour, then minute
+      // console.log('Schedule API response:', response); // Debug log
+
+      if (response?.data) {
+        const formattedSchedules = response.data.map((schedule, index) => ({
+          id: schedule._id || index.toString(),
+          numbClock: schedule.startTime,
+          timer: `${schedule.duration} ${t('minute')}`,
+          calendar: formatRepeatDays(schedule.repeat),
+          isWatering: schedule.status,
+          // Add raw data for sorting
+          rawTime: schedule.startTime,
+          rawRepeat: schedule.repeat,
+        }));
+
+        // Sort schedules by time and days
         const sortedSchedules = formattedSchedules.sort((a, b) => {
-          // First sort by AM/PM (AM comes before PM)
-          if (a.ampm !== b.ampm) {
-            return a.ampm === 'AM' ? -1 : 1;
+          // First sort by time
+          const timeA = a.rawTime.split(':').map(Number);
+          const timeB = b.rawTime.split(':').map(Number);
+
+          if (timeA[0] !== timeB[0]) {
+            return timeA[0] - timeB[0];
           }
           // Then sort by hour
           if (a.hour !== b.hour) {
             return a.hour - b.hour;
           }
-          // Finally sort by minute
-          return a.minute - b.minute;
+
+          // If times are equal, sort by days
+          const daysOrder = [
+            'Monday',
+            'Tuesday',
+            'Wednesday',
+            'Thursday',
+            'Friday',
+            'Saturday',
+            'Sunday',
+          ];
+          const firstDayA = a.rawRepeat[0] || '';
+          const firstDayB = b.rawRepeat[0] || '';
+
+          return daysOrder.indexOf(firstDayA) - daysOrder.indexOf(firstDayB);
         });
-        
+
         // Compare with previous schedules to avoid unnecessary updates
-        const hasChanges = JSON.stringify(sortedSchedules) !== JSON.stringify(previousSchedulesRef.current);
-        
+        const hasChanges =
+          JSON.stringify(sortedSchedules) !==
+          JSON.stringify(previousSchedulesRef.current);
+
         if (hasChanges) {
           setSchedules(sortedSchedules);
           previousSchedulesRef.current = sortedSchedules;
@@ -115,22 +138,30 @@ const AlarmScreen = ({route, navigation}) => {
     }
   };
 
-  const formatRepeatDays = (repeatDays) => {
+  const formatRepeatDays = repeatDays => {
     if (!repeatDays || !Array.isArray(repeatDays)) return '';
-    
+
     const dayMap = {
-      'Monday': 'T.2',
-      'Tuesday': 'T.3',
-      'Wednesday': 'T.4',
-      'Thursday': 'T.5',
-      'Friday': 'T.6',
-      'Saturday': 'T.7',
-      'Sunday': 'CN'
+      Monday: t('mon'),
+      Tuesday: t('tue'),
+      Wednesday: t('wed'),
+      Thursday: t('thu'),
+      Friday: t('fri'),
+      Saturday: t('sat'),
+      Sunday: t('sun'),
     };
 
     // Define the order of days
-    const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    
+    const dayOrder = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+
     // Sort the days according to the defined order
     const sortedDays = repeatDays.sort((a, b) => {
       return dayOrder.indexOf(a) - dayOrder.indexOf(b);
@@ -140,7 +171,7 @@ const AlarmScreen = ({route, navigation}) => {
     return sortedDays.map(day => dayMap[day] || day).join(', ');
   };
 
-  const toggleSwitch = async (id) => {
+  const toggleSwitch = async id => {
     try {
       // Optimistically update UI first
       setSchedules(prevSchedules =>
@@ -166,18 +197,18 @@ const AlarmScreen = ({route, navigation}) => {
           status: !scheduleToUpdate.isWatering,
           startTime: scheduleToUpdate.numbClock,
           duration: parseInt(scheduleToUpdate.timer),
-          repeat: scheduleToUpdate.rawRepeat
-        }
+          repeat: scheduleToUpdate.rawRepeat,
+        },
       });
 
-      if (!response || response.message !== "Schedule updated successfully") {
-        // Revert the change if API call fails
+      if (response && response.message === 'Schedule updated successfully') {
+        // Update local state
         setSchedules(prevSchedules =>
           prevSchedules.map(schedule =>
             schedule.id === id
-              ? {...schedule, isWatering: scheduleToUpdate.isWatering}
-              : schedule
-          )
+              ? {...schedule, isWatering: !schedule.isWatering}
+              : schedule,
+          ),
         );
         console.error('Failed to update schedule status');
       }
@@ -194,71 +225,67 @@ const AlarmScreen = ({route, navigation}) => {
     }
   };
 
-  const handleGoToSetTimer = (schedule) => {
-    navigation.navigate('SetTimerScreen', { 
+  const handleGoToSetTimer = schedule => {
+    navigation.navigate('SetTimerScreen', {
       item: {
         ...item,
-        schedule: schedule
-      }
+        schedule: schedule,
+      },
     });
   };
 
   const handleAddNewSchedule = () => {
-    navigation.navigate('SetTimerScreen', { 
+    navigation.navigate('SetTimerScreen', {
       item: {
         ...item,
-        isNewSchedule: true
-      }
+        isNewSchedule: true,
+      },
     });
   };
 
-  const handleDeleteSchedule = async (scheduleId) => {
-    Alert.alert(
-      "Xác nhận xóa",
-      "Bạn có chắc chắn muốn xóa lịch trình này?",
-      [
-        {
-          text: "Hủy",
-          style: "cancel"
+  const handleDeleteSchedule = async scheduleId => {
+    Alert.alert('Xác nhận xóa', 'Bạn có chắc chắn muốn xóa lịch trình này?', [
+      {
+        text: 'Hủy',
+        style: 'cancel',
+      },
+      {
+        text: 'Xóa',
+        onPress: async () => {
+          try {
+            // Call API to delete schedule
+            await delSchedule({
+              id_esp: item.id_esp,
+              name: item.controlName || 'water',
+              scheduleId: scheduleId,
+            });
+
+            // Update local state
+            setSchedules(prevSchedules =>
+              prevSchedules.filter(schedule => schedule.id !== scheduleId),
+            );
+
+            // Update previous schedules ref
+            previousSchedulesRef.current = previousSchedulesRef.current.filter(
+              schedule => schedule.id !== scheduleId,
+            );
+          } catch (err) {
+            console.error('Error deleting schedule:', err);
+            Alert.alert(
+              'Lỗi',
+              'Không thể xóa lịch trình. Vui lòng thử lại sau.',
+            );
+          }
         },
-        { 
-          text: "Xóa", 
-          onPress: async () => {
-            try {
-              // Call API to delete schedule
-              await delSchedule({
-                id_esp: item.id_esp,
-                name: item.controlName || 'water',
-                scheduleId: scheduleId
-              });
-              
-              // Update local state
-              setSchedules(prevSchedules => 
-                prevSchedules.filter(schedule => schedule.id !== scheduleId)
-              );
-              
-              // Update previous schedules ref
-              previousSchedulesRef.current = previousSchedulesRef.current.filter(
-                schedule => schedule.id !== scheduleId
-              );
-            } catch (err) {
-              console.error('Error deleting schedule:', err);
-              Alert.alert(
-                "Lỗi",
-                "Không thể xóa lịch trình. Vui lòng thử lại sau."
-              );
-            }
-          },
-          style: "destructive"
-        }
-      ]
-    );
+        style: 'destructive',
+      },
+    ]);
   };
 
   if (loading) {
     return (
       <View style={styles.container}>
-        <Text>Đang tải...</Text>
+        <Text>{t('saving')}</Text>
       </View>
     );
   }
@@ -273,14 +300,31 @@ const AlarmScreen = ({route, navigation}) => {
 
   return (
     <View style={styles.container}>
+      {isFocused && (
+        <StatusBar
+          backgroundColor={theme === 'light' ? colors.white : colors.bg_dark}
+          barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+        />
+      )}
+      <HeaderCompo
+        isPress={() => navigation.goBack()}
+        bgcolor={colors.bg_NaN}
+        name={item.tenKhu}
+        color={theme === 'light' ? colors.black : colors.white}
+      />
       <View style={styles.header}>
         <View style={styles.header1}>
-          <Text style={styles.textHeader}>{item.tenKhu}</Text>
+          <Text style={styles.textHeader}>{t('garden_schedule')}</Text>
         </View>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={handleAddNewSchedule}>
+          <Icon name="add-circle" size={40} color={colors.primary} />
+        </TouchableOpacity>
       </View>
       <View style={styles.itemAlarm}>
         {schedules.length === 0 ? (
-          <Text style={styles.emptyText}>Không có lịch trình nào</Text>
+          <Text style={styles.emptyText}>{t('no_schedule_available')}</Text>
         ) : (
           <FlatList
             data={schedules}
@@ -314,13 +358,23 @@ const AlarmScreen = ({route, navigation}) => {
   );
 };
 
-const ItemAlarm = ({isWatering, toggleSwitch, numbClock, timer, calendar, onPress, onLongPress}) => {
+const ItemAlarm = ({
+  isWatering,
+  toggleSwitch,
+  numbClock,
+  timer,
+  calendar,
+  onPress,
+  onLongPress,
+}) => {
+  const {t} = useTranslation();
+  const {theme} = useContext(ThemeContext);
+  const styles = createStyle(theme);
   return (
-    <TouchableOpacity 
-      style={styles.frameItem} 
+    <TouchableOpacity
+      style={styles.frameItem}
       onPress={onPress}
-      onLongPress={onLongPress}
-    >
+      onLongPress={onLongPress}>
       <View style={styles.content1}>
         <View style={styles.textNumClock}>
           <Text style={styles.txtNumClock}>{numbClock}</Text>
@@ -337,9 +391,9 @@ const ItemAlarm = ({isWatering, toggleSwitch, numbClock, timer, calendar, onPres
           <Switch
             value={isWatering}
             onValueChange={toggleSwitch}
-            trackColor={{false: '#F6F6F6', true: 'white'}}
-            thumbColor={isWatering ? colors.primary : '#ACACAC'}
-            style={{transform: [{scale: 1.6}]}}
+            trackColor={{false: theme === 'light' ? '#d3d3d3':  'white', true: theme === 'light' ? '#d3d3d3':  'white'}}
+            thumbColor={isWatering ? colors.primary : '#a0a0a0'}
+            style={{transform: [{scale: 1.2}]}}
           />
         </View>
       </View>
@@ -347,119 +401,4 @@ const ItemAlarm = ({isWatering, toggleSwitch, numbClock, timer, calendar, onPres
   );
 };
 
-export default AlarmScreen;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#EAEAEA',
-  },
-  header: {
-    height: 70,
-    width: '100%',
-    marginTop: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingRight: 20,
-  },
-  header1: {
-    height: 70,
-    flex: 1,
-    justifyContent: 'center',
-  },
-  textHeader: {
-    color: '#000000',
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginLeft: 20,
-  },
-  itemAlarm: {
-    height: "auto",
-    width: '100%',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  frameItem: {
-    height: 90,
-    width: '95%',
-    flexDirection: 'row',
-    borderBottomWidth: 2,
-    borderBottomColor: '#C8BFBF',
-    marginBottom: 10
-  },
-  content1: {
-    height: 'auto',
-    width: '50%',
-    flexDirection: 'column',
-  },
-  textNumClock: {
-    height: '50%',
-    width: '100%',
-    flexDirection: 'row',
-  },
-  textTimer: {
-    height: '50%',
-    width: '100%',
-  },
-  txtNumClock: {
-    fontSize: 35,
-    fontWeight: 'bold',
-    justifyContent: 'center',
-  },
-  txtTimer: {
-    fontSize: 18,
-    fontWeight: '500',
-    justifyContent: 'center',
-  },
-  content2: {
-    height: 'auto',
-    width: '50%',
-    flexDirection: 'row',
-  },
-  txtLich: {
-    height: '100%',
-    width: '50%',
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-  },
-  btnWatering: {
-    height: '100%',
-    width: '50%',
-    alignItems: 'center',
-    justifyContent: 'center',
-
-  },
-  itemWrapper: {
-    alignItems: 'center',
-    width: '100%',
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  emptyText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 20,
-    color: '#666',
-  },
-  fab: {
-    position: 'absolute',
-    right: 24,
-    bottom: 32,
-    backgroundColor: '#63A776',
-    borderRadius: 32,
-    width: 64,
-    height: 64,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-  },
-});
+export default memo(AlarmScreen);

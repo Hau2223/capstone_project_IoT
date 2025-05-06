@@ -16,6 +16,7 @@ const light = StyleSheet.create({
   body: {
     paddingBottom: 30,
     paddingHorizontal: 20,
+    gap: 15,
   },
   avatarWrapper: {
     alignItems: 'center',
@@ -41,16 +42,17 @@ const light = StyleSheet.create({
   },
   contentWrapper: {
     // paddingHorizontal: 20,
+    gap: 5,
   },
   inputGroup: {
-    gap: 5,
+    gap: 10,
   },
   input: {
     height: 45,
-    marginBottom: 10,
+    backgroundColor: colors.white,
   },
   label: {
-    fontSize: 18,
+    fontSize: 16,
     color: colors.black,
   },
   pickerWrapper: {
@@ -58,7 +60,6 @@ const light = StyleSheet.create({
     borderColor: colors.black,
     justifyContent: 'center',
     borderRadius: 4,
-    marginBottom: 15,
     overflow: 'hidden',
     paddingHorizontal: 5,
   },
@@ -97,11 +98,19 @@ const dark = StyleSheet.create({
   pickerWrapper: {
     ...light.pickerWrapper,
     borderColor: colors.white,
-    backgroundColor: colors.white,
+    backgroundColor: colors.bg_dark,
+  },
+  input: {
+    backgroundColor: colors.bg_dark,
+    color: colors.white,
   },
   picker: {
     ...light.picker,
-    color: colors.black,
+    color: colors.white,
+  },
+  label: {
+    ...light.label,
+    color: colors.white,
   }
 });
 

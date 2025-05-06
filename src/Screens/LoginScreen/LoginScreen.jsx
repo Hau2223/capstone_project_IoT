@@ -139,6 +139,7 @@ const LoginScreen = () => {
 
     return () => subscription.remove();
   }, [navigation, shouldExitApp]);
+  
   return (
     <LinearGradient
       colors={[colors.liner_light1, colors.liner_light2]}
