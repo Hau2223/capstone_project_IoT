@@ -128,6 +128,7 @@ const deviceSchema = new Schema({
       ],
     },
   ],
+  blocks: [{ type: Schema.Types.ObjectId, ref: 'User' }],
 });
 
 const Device = mongoose.model('Device', deviceSchema);
