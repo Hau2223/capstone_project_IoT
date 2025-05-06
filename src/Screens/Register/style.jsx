@@ -1,4 +1,4 @@
-import {StyleSheet} from 'react-native';
+import { StyleSheet } from 'react-native';
 import colors from '../../../assets/common/colorCss';
 
 const light = StyleSheet.create({
@@ -6,13 +6,30 @@ const light = StyleSheet.create({
     flex: 1,
     alignContent: 'center',
   },
-  //Request
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Nền mờ
+    zIndex: 1000, // Đảm bảo modal ở trên cùng
+  },
+  layoutLoad: {
+    width: '80%',
+    backgroundColor: colors.white,
+  },
+  loadingText: {
+    marginTop: 10,
+    color: colors.white || '#FFFFFF', // Fallback màu nếu colors.white không định nghĩa
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  // Request
   rqContainer: {
     flex: 0.85,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-  },  
+  },
   rqImg: {
     height: 120,
     width: 120,
@@ -34,26 +51,30 @@ const light = StyleSheet.create({
   },
   rqHeading: {
     fontSize: 26,
+    paddingVertical: 10,
+    width: '85%',
     color: colors.primary,
     fontWeight: 'bold',
-    alignSelf: "flex-start",
-    padding: 10
   },
   rqFormInner: {
     width: '80%',
     gap: 15,
   },
   rqInputGroup: {
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 5,
   },
   rqInputWrapper: {
     width: '100%',
+    alignSelf: 'center',
     height: 40,
     backgroundColor: colors.white,
-    borderRadius: 30,
+    borderRadius: 10,
     paddingHorizontal: 10,
   },
   rqTextInput: {
+    color: colors.black,
     maxWidth: '90%',
   },
   rqInputPasswordWrapper: {
@@ -68,7 +89,7 @@ const light = StyleSheet.create({
   rqErrorText: {
     color: 'red',
     fontSize: 13,
-    paddingHorizontal: 5
+    paddingHorizontal: 5,
   },
   rqButtonGroup: {
     width: '100%',
@@ -98,8 +119,7 @@ const light = StyleSheet.create({
     color: colors.primary,
     fontSize: 14,
   },
-
-  //ComfirmEmail
+  // ComfirmEmail
   ceContainer: {
     flex: 0.85,
     alignItems: 'center',
@@ -139,7 +159,6 @@ const light = StyleSheet.create({
     width: '100%',
     fontStyle: 'italic',
     fontWeight: '500',
-
     textDecorationStyle: 'solid',
     fontSize: 16,
     paddingHorizontal: 10,
@@ -160,9 +179,7 @@ const light = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  
-
-  //VerifyOTP
+  // VerifyOTP
   vrContainer: {
     flex: 0.85,
     alignItems: 'center',
@@ -221,10 +238,11 @@ const light = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
 const dark = StyleSheet.create({
   ...light,
 });
 
-export const createStyle = mode => {
-  return mode === 'light' ? light : dark;
+export const createStyle = theme => {
+  return theme === 'light' ? light : dark;
 };

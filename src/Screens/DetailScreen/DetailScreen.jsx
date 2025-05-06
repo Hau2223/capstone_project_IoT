@@ -32,8 +32,10 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import IconMa from 'react-native-vector-icons/MaterialIcons';
 import IconFo from 'react-native-vector-icons/FontAwesome';
 import {
+  delMember,
   leaveMembertDevive,
   memberId,
+  memBlockList,
   updateMember,
 } from '../../../services/menberServices';
 import {gardenId} from '../../../services/authServices';
@@ -56,13 +58,14 @@ const DetailScreen = ({navigation, route}) => {
   const [modalDevice, setModalDevice] = useState(false);
   const [modalMember, setModalMember] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
+  const [userBlock, setUserBlock] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const scrollY = useRef(new Animated.Value(1)).current;
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [otherUsers, setOtherUsers] = useState([]);
-  const [menuVisible, setMenuVisible] = useState(false); // State để kiểm soát hiển thị Menu
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const sensors = item?.data?.sensors || [];
   const controls = item?.data?.controls || [];
@@ -83,6 +86,7 @@ const DetailScreen = ({navigation, route}) => {
     light: lightControl,
     wind: windControl,
   } = controlMap;
+  const isOwner = userInfo?.some(user => user.isMe && user.role === 'owner');
 
   const requestGalleryPermission = async () => {
     if (Platform.OS === 'android') {
@@ -185,6 +189,10 @@ const DetailScreen = ({navigation, route}) => {
       if (res?.members) {
         setUserInfo(res.members);
       }
+      const block = await memBlockList({id_esp: deviceId});
+      if (block.message === 'Success') {
+        setUserBlock(block.data);
+      }
       setLoading(false);
     } catch (err) {
       console.error('Error fetching user profile:', err);
@@ -280,10 +288,9 @@ const DetailScreen = ({navigation, route}) => {
     }));
   };
 
-  // Hàm xử lý khi chọn một thành viên từ Menu
   const handleSelectUser = user => {
     setSelectedUser(user);
-    setMenuVisible(false); // Đóng Menu sau khi chọn
+    setMenuVisible(false);
   };
 
   const handleTransferOwnership = async selectedUser => {
@@ -292,13 +299,14 @@ const DetailScreen = ({navigation, route}) => {
         id_esp: deviceId,
         userId: selectedUser.userId,
       });
-      if (res.message === 'User promoted to owner successfully') {
+      ifHebrews: {
+        res.message === 'User promoted to owner successfully';
+      }
+      {
         console.log('Chuyển quyền cho thành viên thành công');
         Alert.alert(t('success'), t('ownership_transferred'));
         await fetchDetailGarden();
       }
-      // Ví dụ: Gọi API để rời thiết bị
-      // await leaveDeviceApi({ deviceId, userId: currentUser.userId });
     } catch (error) {
       console.error('Lỗi khi rời thiết bị:', error);
     }
@@ -313,11 +321,44 @@ const DetailScreen = ({navigation, route}) => {
         navigation.goBack();
         console.log('Người dùng rời thiết bị', deviceId);
       }
-
       Alert.alert(t('alert_success'), t('device_left_successfully'));
     } catch (error) {
       console.error('Lỗi khi rời thiết bị:', error);
       Alert.alert(t('alert_error'), t('leave_device_failed'));
+    }
+  };
+
+  const handleDeleteMember = async userId => {
+    try {
+      const res = await delMember({id_esp: deviceId, userId});
+      if (res.message === 'Member removed successfully') {
+        setUserInfo(prev => prev.filter(user => user.userId !== userId));
+        Alert.alert(t('alert_success'), t('member_removed_successfully'));
+      }
+    } catch (error) {
+      Alert.alert(t('alert_error'), t('member_remove_failed'));
+    }
+  };
+
+  const handleBlockMember = async userId => {
+    try {
+      // const res = await delMember({id_esp: deviceId, userId});
+      // if (res.message === 'Member removed successfully') {
+      //   setUserInfo(prev => prev.filter(user => user.userId !== userId));
+      //   Alert.alert(t('alert_success'), t('member_removed_successfully'));
+      // }
+      console.log('12333');
+      
+    } catch (error) {
+      Alert.alert(t('alert_error'), t('member_remove_failed'));
+    }
+  };
+
+  const handleUnblock = async userId => {
+    try {
+      console.log('123', userId);
+    } catch (error) {
+      Alert.alert(t('alert_error'), t('member_remove_failed'));
     }
   };
 
@@ -343,9 +384,11 @@ const DetailScreen = ({navigation, route}) => {
             source={{uri: item.data.img_area}}
             resizeMode="cover"
           />
-          <Pressable style={styles.cameraIcon} onPress={pickImage}>
-            <IconFo name="camera" style={styles.icCamera} />
-          </Pressable>
+          {isOwner && (
+            <Pressable style={styles.cameraIcon} onPress={pickImage}>
+              <IconFo name="camera" style={styles.icCamera} />
+            </Pressable>
+          )}
         </Animated.View>
         <Animated.View
           style={[
@@ -365,16 +408,18 @@ const DetailScreen = ({navigation, route}) => {
             {item?.data?.name_area}
           </Animated.Text>
           <Animated.View style={[styles.headerButton]}>
-            <TouchableOpacity
-              style={styles.btnChange}
-              onPress={() => setModalDevice(true)}>
-              <Icon
-                name="pencil"
-                size={24}
-                color="#FFFFFF"
-                style={styles.buttonIcon}
-              />
-            </TouchableOpacity>
+            {isOwner && (
+              <TouchableOpacity
+                style={styles.btnChange}
+                onPress={() => setModalDevice(true)}>
+                <Icon
+                  name="pencil"
+                  size={24}
+                  color="#FFFFFF"
+                  style={styles.buttonIcon}
+                />
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={styles.btnChange}
               onPress={() => {
@@ -415,7 +460,14 @@ const DetailScreen = ({navigation, route}) => {
           windStatus={windControl?.status}
           updateControlMap={updateControlMap}
         />
-        <FrameItem3 users={userInfo || []} />
+        <FrameItem3
+          users={userInfo || []}
+          isOwner={isOwner}
+          userBlock={userBlock}
+          handleDeleteMember={handleDeleteMember}
+          handleUnblock={handleUnblock}
+          handleBlockMember={handleBlockMember}
+        />
         <View style={{height: 20}} />
       </Animated.ScrollView>
 
@@ -479,7 +531,6 @@ const DetailScreen = ({navigation, route}) => {
                     {t('selected_member')} {selectedUser.name}
                   </Text>
                 )}
-                {/* Nút để hiển thị/ẩn FlatList */}
                 <TouchableOpacity
                   style={styles.menuAnchor}
                   onPress={() => setMenuVisible(!menuVisible)}>
@@ -494,7 +545,6 @@ const DetailScreen = ({navigation, route}) => {
                   />
                 </TouchableOpacity>
 
-                {/* Hiển thị FlatList chỉ khi menuVisible là true */}
                 {menuVisible && (
                   <FlatList
                     data={otherUsers}
@@ -506,8 +556,8 @@ const DetailScreen = ({navigation, route}) => {
                       <TouchableOpacity
                         style={styles.menuItem}
                         onPress={() => {
-                          handleSelectUser(item); // Chọn thành viên
-                          setMenuVisible(false); // Ẩn FlatList sau khi chọn
+                          handleSelectUser(item);
+                          setMenuVisible(false);
                         }}>
                         <Text style={styles.menuItemText}>{item.name}</Text>
                       </TouchableOpacity>
@@ -517,7 +567,7 @@ const DetailScreen = ({navigation, route}) => {
                         {t('no_members')}
                       </Text>
                     }
-                    style={styles.flatList} // Thêm style cho FlatList
+                    style={styles.flatList}
                   />
                 )}
               </View>
@@ -542,9 +592,9 @@ const DetailScreen = ({navigation, route}) => {
                       Alert.alert(t('alert_info'), t('select_member_required'));
                       return;
                     }
-                    handleTransferOwnership(selectedUser); // Gọi hàm chuyển quyền
+                    handleTransferOwnership(selectedUser);
                   } else {
-                    handleLeaveDevice(); // Gọi hàm rời thiết bị
+                    handleLeaveDevice();
                   }
                   setModalMember(false);
                   setShowDropdown(false);
@@ -759,26 +809,48 @@ const StatusComponent = ({
   );
 };
 
-const FrameItem3 = ({users = []}) => {
+const FrameItem3 = ({
+  users = [],
+  isOwner,
+  handleDeleteMember,
+  userBlock,
+  handleUnblock,
+  handleBlockMember
+}) => {
   const {t} = useTranslation();
   const {theme} = useContext(ThemeContext);
   const styles = createStyle(theme);
+  const [modalBlockMem, setModalBlockMem] = useState(false);
   return (
     <View style={styles.containerFrame}>
-      <Header3 header3={t('members')} />
+      <View style={styles.headerContainer}>
+        <Header3 header3={t('members')} />
+        <TouchableOpacity
+          style={styles.detailBlock}
+          onPress={() => setModalBlockMem(true)}>
+          <Icon name="account-details" size={24} color={colors.white} />
+        </TouchableOpacity>
+      </View>
       {users && users.length > 0 ? (
         <FlatList
           data={users.sort((a, b) => (a.isMe ? -1 : 1))}
           keyExtractor={(item, index) => index.toString()}
-          renderItem={({item}) => (
+          renderItem={({item, index}) => (
             <UserComponent
               nameIcon={'account-circle'}
+              isOwner={isOwner}
+              isMe={item.isMe}
+              role={item.role}
+              userId={item.userId}
+              handleDeleteMember={handleDeleteMember}
+              handleBlockMember={handleBlockMember}
               img={item.img}
               colorIcon={'#D9D9D9'}
               txtUser={item.isMe ? t('you') : item.name}
               txtRole={
                 item.role === 'owner' ? t('role_owner') : t('role_member')
               }
+              isLastItem={index === users.length - 1}
             />
           )}
           scrollEnabled={false}
@@ -786,21 +858,73 @@ const FrameItem3 = ({users = []}) => {
       ) : (
         <Text style={styles.noMembersText}>{t('no_members')}</Text>
       )}
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        statusBarTranslucent={true}
+        visible={modalBlockMem}
+        onRequestClose={() => setModalBlockMem(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>{t('block_list')}</Text>
+            {userBlock && userBlock.length > 0 ? (
+              <FlatList
+                data={userBlock}
+                style={{width: '100%'}}
+                contentContainerStyle={styles.ListBlock}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({item, index}) => (
+                  <View style={[styles.layoutBlock]}>
+                    <Image source={{uri: item.img}} style={styles.imgBlock} />
+                    <View style={styles.lotxtBlock}>
+                      <Text style={styles.textStyle}>{item.name}</Text>
+                      <Text style={styles.textStyle}>{t('blocks')}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.moveBlock}
+                      onPress={() => handleUnblock(item.userId)}>
+                      <Icon
+                        name="close-circle-outline"
+                        size={30}
+                        color={colors.red}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                )}
+                scrollEnabled={false}
+              />
+            ) : (
+              <Text style={styles.noMembersText}>{t('no_blocked_users')}</Text>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
 
-const UserComponent = ({nameIcon, img, colorIcon, txtUser, txtRole}) => {
+const UserComponent = ({
+  img,
+  txtUser,
+  txtRole,
+  role,
+  isOwner,
+  userId,
+  handleDeleteMember,
+  isLastItem,
+  handleBlockMember
+}) => {
   const {t} = useTranslation();
   const {theme} = useContext(ThemeContext);
   const styles = createStyle(theme);
-
-  // Default fallback image if img is invalid or undefined
+  const [modalDel, setModalDel] = useState(false);
+  const [modalConfirmDelete, setModalConfirmDelete] = useState(false); // Thêm state cho modal xác nhận
   const defaultImage =
     'https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg';
 
   return (
-    <View style={styles.UserFrame}>
+    <View style={[styles.UserFrame, isLastItem && styles.noBorderBottom]}>
       <View style={styles.iconContent}>
         <Image
           source={{uri: img && img !== 'Unknown' ? img : defaultImage}}
@@ -812,17 +936,88 @@ const UserComponent = ({nameIcon, img, colorIcon, txtUser, txtRole}) => {
             borderColor: theme === 'light' ? colors.primary : colors.bg_NaN,
           }}
           resizeMode="contain"
-          onError={error =>
-            console.log('Image load error:', error.nativeEvent.error)
-          }
         />
       </View>
       <View style={styles.textUser}>
-        <Text style={styles.textStyle}>{txtUser}</Text>
+        <Text style={styles.textStyle} ellipsizeMode="tail">
+          {txtUser}
+        </Text>
+        <View style={styles.textRole}>
+          <Text style={styles.textStyle}>{txtRole}</Text>
+        </View>
       </View>
-      <View style={styles.textRole}>
-        <Text style={styles.textStyle}>{txtRole}</Text>
+
+      <View style={styles.layout_role}>
+        {isOwner && role === 'member' && (
+          <TouchableOpacity onPress={() => setModalDel(true)}>
+            <Icon name="close-circle-outline" size={30} color={colors.red} />
+          </TouchableOpacity>
+        )}
       </View>
+
+      {/* Modal đầu tiên: Hỏi có muốn xóa không */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        statusBarTranslucent={true}
+        visible={modalDel}
+        onRequestClose={() => setModalDel(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Icon name="alert-circle" size={50} color={colors.btn_Cancel} />
+            <Text style={styles.modalTitle}>
+              bạn có chắc chắn muốn xóa {txtUser} khỏi
+            </Text>
+            <View style={styles.modalButtonGroup}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setModalDel(false)}>
+                <Text style={styles.modalButtonText}>{t('cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonPrimary}
+                onPress={() => {
+                  setModalDel(false);
+                  handleDeleteMember(userId);
+                  setModalConfirmDelete(true);
+                }}>
+                <Text style={styles.modalButtonText}>{t('ok')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        statusBarTranslucent={true}
+        visible={modalConfirmDelete}
+        onRequestClose={() => setModalConfirmDelete(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Icon name="alert-circle" size={50} color={colors.btn_Cancel} />
+            <Text style={styles.modalTitle}>
+              {t('confirm_delete_member', {name: txtUser})}
+            </Text>
+            <View style={styles.modalButtonGroup}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setModalConfirmDelete(false)}>
+                <Text style={styles.modalButtonText}>{t('cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonPrimary}
+                onPress={() => {
+                  setModalConfirmDelete(false); // Đóng modal xác nhận
+                  handleBlockMember(userId); // Gọi hàm xóa thành viên
+                }}>
+                <Text style={styles.modalButtonText}>{t('confirm')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

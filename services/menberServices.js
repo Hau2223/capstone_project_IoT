@@ -4,6 +4,10 @@ export const memberId = async params => {
   return await get(`/device/membersDetail/${params.id}`);
 };
 
+export const memBlockList = async params => {
+  return await get(`/device/blocksDetail/${params.id_esp}`);
+};
+
 export const memberBys = async params => {
   return await get(`/device/membersBy/${params.id_esp}`);
 };
@@ -14,6 +18,10 @@ export const addMembertoDevice = async params => {
 
 export const updateMember = async params => {
   return await put(`/device/updateMember/${params.id_esp}/${params.userId}`);
+};
+
+export const delMember = async params => {
+  return await del(`/device/delMember/${params.id_esp}/${params.userId}`);
 };
 
 export const leaveMembertDevive = async params => {

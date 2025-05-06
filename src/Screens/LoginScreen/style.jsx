@@ -47,7 +47,7 @@ const light = StyleSheet.create({
   },
   edtInput: {
     width: '100%',
-    height: 36,
+    height: 40,
     backgroundColor: colors.white,
     flexDirection: 'row',
     alignItems: 'center',
@@ -56,6 +56,7 @@ const light = StyleSheet.create({
     paddingHorizontal: 10,
   },
   txtInput: {
+    color: colors.black,
     maxWidth: '80%',
   },
   iconPass: {

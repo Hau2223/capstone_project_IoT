@@ -26,6 +26,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import {useTranslation} from 'react-i18next';
 import {ThemeContext} from '../../../assets/common/themeProvider';
 import {createStyle} from './style';
+import LoadingModal from '../../components/LoadingModal';
 
 const HomeScreen = ({navigation}) => {
   const {t} = useTranslation();
@@ -47,10 +48,13 @@ const HomeScreen = ({navigation}) => {
   const [error, setError] = useState(null);
   const viewRef = useRef(null);
   const [garden, SetGarden] = useState(null);
+  // console.log(garden);
+  
 
   const fetchGarder = useCallback(async () => {
     // console.log('Fetching garden data Home');
     try {
+
       const res = await gardenId();
       if (res.status === 200) {
         // SetGarden(res.data);
@@ -330,6 +334,8 @@ const HomeScreen = ({navigation}) => {
           </View>
         </View>
       </Modal>
+
+      <LoadingModal isLoading={loading}/>
     </View>
   );
 };

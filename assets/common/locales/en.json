@@ -259,5 +259,11 @@
   "cardAvgStream": "Average Flow Rate (L/min)",
   "pointerLabel": "Watering: ",
 
+  "block_list": "Blocked List",
+  "blocked_users": "Blocked Users",
+  "blocks": "Blocks",
+  "no_blocked_users": "No users have been blocked",
+  "unblock": "Unblock",
+
   "": ""
 }

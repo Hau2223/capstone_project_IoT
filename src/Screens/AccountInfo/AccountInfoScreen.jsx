@@ -21,6 +21,7 @@ import HeaderCompo from '../../components/HeaderCompo';
 import DeviceInfo from 'react-native-device-info';
 import {detailDevice} from '../../../services/deviceServices';
 import {gardenId, profile} from '../../../services/authServices';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import colors from '../../../assets/common/colorCss';
 import {format} from 'date-fns';
 
@@ -66,7 +67,6 @@ const AccountInfoScreen = ({navigation, route}) => {
       return () => clearInterval(interval);
     }, [fetchGarder]),
   );
-
   const profileFields = [
     {label: t('name'), value: currentUserInfo?.name, icon: 'account'},
     {label: t('email'), value: currentUserInfo?.email, icon: 'email'},
@@ -113,7 +113,7 @@ const AccountInfoScreen = ({navigation, route}) => {
               source={{
                 uri: currentUserInfo?.avatar
                   ? currentUserInfo.avatar
-                  : IMAGES.IMAGES_H,
+                  : IMAGES.BG_MOBILE,
               }}
             />
             <View style={styles.txtInfo}>

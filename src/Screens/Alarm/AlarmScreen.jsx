@@ -8,7 +8,7 @@ import {
   StatusBar,
 } from 'react-native';
 import React, {useState, useEffect, useRef, useContext, memo} from 'react';
-import {useFocusEffect, useIsFocused} from '@react-navigation/native';
+import {useIsFocused} from '@react-navigation/native';
 import {Switch} from 'react-native-paper';
 import {scheduleId} from '../../../services/scheduleServices';
 import {delSchedule} from '../../../services/scheduleServices';
@@ -19,6 +19,7 @@ import {createStyle} from './style';
 import {useTranslation} from 'react-i18next';
 import colors from '../../../assets/common/colorCss';
 import HeaderCompo from '../../components/HeaderCompo';
+import Toast from 'react-native-toast-message';
 
 const AlarmScreen = ({route, navigation}) => {
   const {t} = useTranslation();
