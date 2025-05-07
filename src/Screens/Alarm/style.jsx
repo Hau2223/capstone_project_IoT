@@ -12,6 +12,7 @@ const light = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
+    paddingVertical: 10,
   },
   header1: {
     flex: 1,
@@ -23,13 +24,11 @@ const light = StyleSheet.create({
     fontWeight: 'bold',
   },
   itemAlarm: {
-    height: 'auto',
+    flex: 1,
     width: '100%',
-    alignItems: 'center',
-
   },
   frameItem: {
-    height: 90,
+    height: 110,
     width: '95%',
     paddingVertical: 10,
     flexDirection: 'row',
@@ -41,6 +40,7 @@ const light = StyleSheet.create({
     width: '50%',
     flexDirection: 'column',
     gap: 5,
+    marginLeft: 10,
   },
   textNumClock: {
     height: '50%',
@@ -96,6 +96,26 @@ const light = StyleSheet.create({
     marginTop: 20,
     color: colors.black,
   },
+  fab: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: colors.primary,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    zIndex: 999,
+  },
 });
 
 const dark = StyleSheet.create({
@@ -111,6 +131,10 @@ const dark = StyleSheet.create({
   txtTimer: {
     ...light.txtTimer,
     color: colors.white,
+  },
+  fab: {
+    ...light.fab,
+    backgroundColor: colors.primary,
   },
 });
 
