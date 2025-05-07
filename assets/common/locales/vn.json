@@ -267,5 +267,11 @@
   "no_blocked_users": "Không có người dùng nào bị chặn",
   "unblock": "Bỏ chặn",
   
+  
+  "confirm_delete": "Bạn có chắc chắn muốn xóa",
+  "from_device": "khỏi thiết bị?",
+  "confirm_add": "Bán có muốn thêm",
+  "block_listmem": "dạnh sách chặn?",
+
   "": ""
 }

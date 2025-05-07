@@ -108,32 +108,35 @@ app.get('/detailDeviceBy/:id_esp', async (req, res) => {
  */
 app.get('/membersDetail/:id_esp', authenticateJWT, async (req, res) => {
   try {
-    const device = await Device.findOne({ id_esp: req.params.id_esp });
+    const device = await Device.findOne({id_esp: req.params.id_esp});
 
     if (!device) {
-      return res.status(404).json({ message: 'Device not found' });
+      return res.status(404).json({message: 'Device not found'});
     }
 
     const userId = req.user.userId; // Lấy userId từ token
 
     const membersInfo = await Promise.all(
-      device.members.map(async (member) => {
+      device.members.map(async member => {
         const user = await User.findById(member.userId).select('name avatar');
 
         return {
           userId: member.userId, // Luôn trả về userId từ member
           name: user ? user.name : 'Unknown', // Nếu không có user, trả về 'Unknown'
           role: member.role,
-          img: user && user.avatar ? user.avatar : 'https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg', // Trả về avatar mặc định nếu không có
+          img:
+            user && user.avatar
+              ? user.avatar
+              : 'https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg', // Trả về avatar mặc định nếu không có
           isMe: member.userId.toString() === userId.toString(), // So sánh
         };
-      })
+      }),
     );
 
-    res.json({ members: membersInfo });
+    res.json({members: membersInfo});
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({message: 'Server error'});
   }
 });
 /**
@@ -175,31 +178,34 @@ app.get('/membersDetail/:id_esp', authenticateJWT, async (req, res) => {
 
 app.get('/blocksDetail/:id_esp', authenticateJWT, async (req, res) => {
   try {
-    const device = await Device.findOne({ id_esp: req.params.id_esp }).populate({
+    const device = await Device.findOne({id_esp: req.params.id_esp}).populate({
       path: 'blocks',
       select: 'name avatar',
     });
 
     if (!device) {
-      return res.status(404).json({ message: 'Device not found' });
+      return res.status(404).json({message: 'Device not found'});
     }
 
     const blocksInfo = device.blocks.map(user => ({
       userId: user._id,
       name: user.name || 'Unknown',
-      img: user.avatar || 'https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg',
+      img:
+        user.avatar ||
+        'https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg',
     }));
-    res.status(200).json({ message: 'Success', data: blocksInfo });
+    res.status(200).json({message: 'Success', data: blocksInfo});
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({message: 'Server error'});
   }
 });
+
 /**
  * @swagger
  * /api/device/addBlock/{id_esp}:
  *   post:
- *     summary: Thêm một user vào danh sách block của Device
+ *     summary: Thêm một user vào danh sách block của Device và xóa khỏi danh sách members
  *     tags: [Members]
  *     parameters:
  *       - in: path
@@ -221,13 +227,14 @@ app.get('/blocksDetail/:id_esp', authenticateJWT, async (req, res) => {
  *                 example: "60d21b4667d0d8992e610c85"
  *     responses:
  *       200:
- *         description: Thêm user vào danh sách block thành công
+ *         description: Thêm user vào danh sách block và xóa khỏi danh sách members thành công
  *       404:
  *         description: Device không tìm thấy hoặc user không hợp lệ
+ *       400:
+ *         description: User đã bị chặn trước đó
  *       500:
  *         description: Lỗi server
  */
-
 app.post('/addBlock/:id_esp', authenticateJWT, async (req, res) => {
   try {
     const { userId } = req.body;
@@ -237,19 +244,36 @@ app.post('/addBlock/:id_esp', authenticateJWT, async (req, res) => {
       return res.status(404).json({ message: 'Device not found' });
     }
 
-    const user = await User.findById(userId);  // Assuming you have a User model
+    const user = await User.findById(userId); // Giả sử bạn có model User
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Kiểm tra xem user đã bị chặn chưa
     if (device.blocks.includes(userId)) {
-      return res.status(400).json({ message: 'User is already blockned' });
+      return res.status(400).json({ message: 'User is already blocked' });
     }
 
+    // Kiểm tra xem user có trong danh sách members không
+    const memberToRemove = device.members.find(member => member.userId.toString() === userId.toString());
+    if (!memberToRemove) {
+      return res.status(400).json({ message: 'User is not a member of this device' });
+    }
+
+    // Xóa user khỏi danh sách members (so sánh với member.userId)
+    device.members = device.members.filter(
+      member => member.userId.toString() !== userId.toString()
+    );
+
+    // Thêm user vào danh sách blocks
     device.blocks.push(userId);
+
+    // Lưu lại thay đổi
     await device.save();
 
-    res.status(200).json({ message: 'User added to block list successfully' });
+    res.status(200).json({
+      message: 'User added to block list and removed from members successfully',
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -387,23 +411,25 @@ app.post('/createDevice', async (req, res) => {
  */
 app.delete('/delBlock/:id_esp', authenticateJWT, async (req, res) => {
   try {
-    const { userId } = req.body;
-    const device = await Device.findOne({ id_esp: req.params.id_esp });
+    const {userId} = req.body;
+    const device = await Device.findOne({id_esp: req.params.id_esp});
 
     if (!device) {
-      return res.status(404).json({ message: 'Device not found' });
+      return res.status(404).json({message: 'Device not found'});
     }
     if (!device.blocks.includes(userId)) {
-      return res.status(404).json({ message: 'User is not blockned' });
+      return res.status(404).json({message: 'User is not blockned'});
     }
 
     device.blocks = device.blocks.filter(block => block.toString() !== userId);
     await device.save();
 
-    res.status(200).json({ message: 'User removed from block list successfully' });
+    res
+      .status(200)
+      .json({message: 'User removed from block list successfully'});
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({message: 'Server error'});
   }
 });
 

@@ -45,20 +45,19 @@ const light = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
     justifyContent: 'space-between',
+    backgroundColor: colors.white,
     alignItems: 'center',
   },
   header2: {
     maxWidth: '75%',
     color: colors.primary,
     fontWeight: 'bold',
-    backgroundColor: colors.white,
     borderTopRightRadius: 5,
     padding: 5,
   },
   headerButton: {
     maxWidth: '25%',
     flexDirection: 'row',
-    backgroundColor: colors.white,
     padding: 5,
     gap: 5,
   },
@@ -154,11 +153,20 @@ const light = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
+  loTitle: {
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: colors.black,
     textAlign: 'center',
+  },
+  btnCloseBlock: {
+    position: 'absolute',
+    alignSelf: 'flex-end',
   },
   modalInput: {
     width: '100%',

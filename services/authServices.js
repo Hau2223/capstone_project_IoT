@@ -51,6 +51,10 @@ export const profile = async () => {
   return await get('/user/profile');
 };
 
+export const me = async () => {
+  return await get('/user/me');
+};
+
 export const gardenId = async () => {
   return await get('/user/getGardenby');
 };

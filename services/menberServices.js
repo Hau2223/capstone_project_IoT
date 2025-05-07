@@ -16,6 +16,12 @@ export const addMembertoDevice = async params => {
   return await post(`/device/addMember/${params.id_esp}`);
 };
 
+export const addBlockMember = async params => {
+  return await post(`/device/addBlock/${params.id_esp}`, {
+    userId: params.userId,
+  });
+};
+
 export const updateMember = async params => {
   return await put(`/device/updateMember/${params.id_esp}/${params.userId}`);
 };

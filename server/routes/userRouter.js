@@ -22,6 +22,7 @@ app.use(passport.initialize());
 
 const authenticateJWT = require('../middlewares/authMiddleware');
 const {CONFIGURL} = require('../utils/constants');
+const Device = require('../models/deviceModel');
 const otpStore = {};
 const pendingRegistrations = {};
 const registeredUsers = {};
@@ -524,7 +525,7 @@ app.post('/logout', authenticateJWT, async (req, res) => {
  * @swagger
  * /api/user/getGardenby:
  *   get:
- *     summary: lấy thông tin garden theo id user
+ *     summary: Lấy thông tin garden theo id user, bỏ qua garden mà user bị chặn
  *     tags: [Information]
  *     security:
  *       - bearerAuth: [] # Bảo mật với JWT
@@ -540,15 +541,13 @@ app.post('/logout', authenticateJWT, async (req, res) => {
  *                   type: integer
  *                   example: 200
  *                 data:
- *                   type: object
- *                   properties:
- *                     name:
- *                       type: string
- *                       example: "Nguyen Van A"
- *                     email:
- *                       type: string
- *                       example: "vana@gmail.com"
- *                     # Thêm các trường khác nếu cần
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     example: "C1C93A7DBCC"
+ *                 role:
+ *                   type: string
+ *                   example: "user"
  *       401:
  *         description: Missing or invalid token
  *       403:
@@ -561,18 +560,34 @@ app.post('/logout', authenticateJWT, async (req, res) => {
 app.get('/getGardenby', authenticateJWT, async (req, res) => {
   try {
     const userId = req.user.userId;
-    // if (req.user.userId !== id) {
-    //   return res.status(403).json({message: 'Access denied'});
-    // }
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({message: 'User not found'});
+      return res.status(404).json({ message: 'User not found' });
     }
-    res.status(200).json({status: 200, data: user.gardenId, role: user.role});
+
+    // Lấy danh sách gardenId từ user
+    let gardenIds = user.gardenId || [];
+
+    // Nếu không có gardenId, trả về mảng rỗng
+    if (!gardenIds.length) {
+      return res.status(200).json({ status: 200, data: [], role: user.role });
+    }
+
+    // Lấy tất cả Devices tương ứng với gardenIds
+    const devices = await Device.find({ id_esp: { $in: gardenIds } });
+
+    // Lọc bỏ gardenId nếu userId nằm trong blocks của Device
+    const filteredGardenIds = gardenIds.filter(gardenId => {
+      const device = devices.find(dev => dev.id_esp === gardenId);
+      // Nếu không tìm thấy device hoặc userId không nằm trong blocks, giữ lại gardenId
+      return !device || !device.blocks.some(blockedId => blockedId.toString() === userId.toString());
+    });
+
+    res.status(200).json({ status: 200, data: filteredGardenIds, role: user.role });
   } catch (error) {
     console.error('Error fetching user:', error);
-    res.status(500).json({status: 500, message: 'Internal server error'});
+    res.status(500).json({ status: 500, message: 'Internal server error' });
   }
 });
 
@@ -791,6 +806,58 @@ app.put('/updateGardenId', authenticateJWT, async (req, res) => {
       status: 500,
       message: 'Internal server error',
     });
+  }
+});
+
+/**
+ * @swagger
+ * /api/user/me:
+ *   get:
+ *     summary: Lấy thông tin người dùng hiện tại
+ *     tags: [Information]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Thông tin người dùng được lấy thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: string
+ *                       example: "67fddaecfbaf81769b7d39c0"
+ *                     name:
+ *                       type: string
+ *                       example: "Nguyen Van A"
+ *                     role:
+ *                       type: string
+ *                       example: "user"
+ *       401:
+ *         description: Missing or invalid token
+ *       403:
+ *         description: Token is invalid or expired
+ *       500:
+ *         description: Internal server error
+ */
+app.get('/me', authenticateJWT, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const user = await User.findById(userId).select('_id name role');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.status(200).json({ status: 200, data: user });
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ status: 500, message: 'Internal server error' });
   }
 });
 

@@ -113,7 +113,7 @@ const AccountInfoScreen = ({navigation, route}) => {
               source={{
                 uri: currentUserInfo?.avatar
                   ? currentUserInfo.avatar
-                  : IMAGES.BG_MOBILE,
+                  : IMAGES.IMAGES_DF,
               }}
             />
             <View style={styles.txtInfo}>

@@ -235,7 +235,7 @@ const LoginScreen = () => {
             end={{ x: 1, y: 0 }}
             locations={[0, 0.6]}
             style={styles.btnLogin}>
-            <TouchableOpacity onPress={handleLogin}>
+            <TouchableOpacity style={styles.touchableArea} onPress={handleLogin}>
               <Text style={styles.txtBtn}>{t('login')}</Text>
             </TouchableOpacity>
           </LinearGradient>

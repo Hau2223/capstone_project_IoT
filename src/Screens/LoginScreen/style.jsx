@@ -74,7 +74,13 @@ const light = StyleSheet.create({
   btnLogin: {
     width: '80%',
     height: 36,
-    backgroundColor: colors.loginBtn,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 30,
+  },
+  touchableArea: {
+    width: '100%',
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 30,
