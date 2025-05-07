@@ -19,7 +19,7 @@ import {createStyle} from './style';
 import {useTranslation} from 'react-i18next';
 import colors from '../../../assets/common/colorCss';
 import HeaderCompo from '../../components/HeaderCompo';
-import Toast from 'react-native-toast-message';
+// import Toast from 'react-native-toast-message';
 
 const AlarmScreen = ({route, navigation}) => {
   const {t} = useTranslation();
@@ -82,15 +82,36 @@ const AlarmScreen = ({route, navigation}) => {
 
         // Sort schedules by time and days
         const sortedSchedules = formattedSchedules.sort((a, b) => {
-          // First sort by time
-          const timeA = a.rawTime.split(':').map(Number);
-          const timeB = b.rawTime.split(':').map(Number);
-
-          if (timeA[0] !== timeB[0]) {
-            return timeA[0] - timeB[0];
+          // First sort by AM/PM
+          const timeA = a.rawTime;
+          const timeB = b.rawTime;
+          
+          // Check if time contains AM/PM
+          const isAM_A = timeA.includes('AM');
+          const isAM_B = timeB.includes('AM');
+          
+          // Sort AM before PM
+          if (isAM_A !== isAM_B) {
+            return isAM_A ? -1 : 1;
           }
-          if (timeA[1] !== timeB[1]) {
-            return timeA[1] - timeB[1];
+
+          // If both are AM or both are PM, sort by hour
+          const hourA = parseInt(timeA.split(':')[0]);
+          const hourB = parseInt(timeB.split(':')[0]);
+          
+          // Convert 12 to 0 for AM
+          const adjustedHourA = isAM_A && hourA === 12 ? 0 : hourA;
+          const adjustedHourB = isAM_B && hourB === 12 ? 0 : hourB;
+          
+          if (adjustedHourA !== adjustedHourB) {
+            return adjustedHourA - adjustedHourB;
+          }
+
+          // If hours are equal, sort by minutes
+          const minuteA = parseInt(timeA.split(':')[1]);
+          const minuteB = parseInt(timeB.split(':')[1]);
+          if (minuteA !== minuteB) {
+            return minuteA - minuteB;
           }
 
           // If times are equal, sort by days
@@ -215,10 +236,26 @@ const AlarmScreen = ({route, navigation}) => {
   };
 
   const handleGoToSetTimer = schedule => {
+    // Convert calendar string to array of days
+    const dayMap = {
+      'T.2': 'Monday',
+      'T.3': 'Tuesday',
+      'T.4': 'Wednesday',
+      'T.5': 'Thursday',
+      'T.6': 'Friday',
+      'T.7': 'Saturday',
+      'CN': 'Sunday'
+    };
+    
+    const calendarArray = schedule.calendar.split(', ').map(day => dayMap[day.trim()]);
+    
     navigation.navigate('SetTimerScreen', {
       item: {
         ...item,
-        schedule: schedule,
+        schedule: {
+          ...schedule,
+          calendar: calendarArray
+        },
       },
     });
   };
@@ -305,11 +342,6 @@ const AlarmScreen = ({route, navigation}) => {
         <View style={styles.header1}>
           <Text style={styles.textHeader}>{t('garden_schedule')}</Text>
         </View>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={handleAddNewSchedule}>
-          <Icon name="add-circle" size={40} color={colors.primary} />
-        </TouchableOpacity>
       </View>
       <View style={styles.itemAlarm}>
         {schedules.length === 0 ? (
@@ -332,9 +364,15 @@ const AlarmScreen = ({route, navigation}) => {
                 />
               </View>
             )}
+            contentContainerStyle={{ paddingBottom: 80 }}
           />
         )}
       </View>
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={handleAddNewSchedule}>
+        <Icon name="add" size={30} color={colors.white} />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -374,7 +412,7 @@ const ItemAlarm = ({
             onValueChange={toggleSwitch}
             trackColor={{false: theme === 'light' ? '#d3d3d3':  'white', true: theme === 'light' ? '#d3d3d3':  'white'}}
             thumbColor={isWatering ? colors.primary : '#a0a0a0'}
-            style={{transform: [{scale: 1.2}]}}
+            style={{transform: [{scale: 1.5}]}}
           />
         </View>
       </View>

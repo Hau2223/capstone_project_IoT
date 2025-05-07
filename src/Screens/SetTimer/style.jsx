@@ -170,7 +170,7 @@ const light = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   dayText: {
-    fontSize: 15,
+    fontSize: 12,
     color: colors.black,
     fontWeight: '500'
   },
@@ -279,6 +279,49 @@ const light = StyleSheet.create({
   ampmTextActive: {
     color: colors.white,
   },
+  pickerWrapper: {
+    height: 200,
+    width: 80,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  pickerLabel: {
+    fontSize: 16,
+    color: colors.gray,
+    marginBottom: 8,
+  },
+  pickerContent: {
+    paddingVertical: 75,
+  },
+  pickerItem: {
+    height: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectedPickerItem: {
+    backgroundColor: colors.primary + '20',
+  },
+  pickerItemText: {
+    fontSize: 24,
+    color: colors.gray,
+  },
+  selectedPickerItemText: {
+    color: colors.primary,
+    fontWeight: 'bold',
+  },
+  timeSeparator: {
+    fontSize: 32,
+    color: colors.gray,
+    marginTop: 40,
+  },
+  ampmWrapper: {
+    flexDirection: 'row',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    padding: 4,
+    gap: 4,
+  },
 });
 
 const dark = StyleSheet.create({
@@ -367,7 +410,27 @@ const dark = StyleSheet.create({
   settingDescription: {
     ...light.settingDescription,
     color: colors.white,
-  }
+  },
+  pickerWrapper: {
+    ...light.pickerWrapper,
+    backgroundColor: '#2a2a2a',
+  },
+  pickerLabel: {
+    ...light.pickerLabel,
+    color: colors.lightGray,
+  },
+  pickerItemText: {
+    ...light.pickerItemText,
+    color: colors.lightGray,
+  },
+  timeSeparator: {
+    ...light.timeSeparator,
+    color: colors.lightGray,
+  },
+  ampmWrapper: {
+    ...light.ampmWrapper,
+    backgroundColor: '#2a2a2a',
+  },
 });
 
 export const createStyle = mode => {

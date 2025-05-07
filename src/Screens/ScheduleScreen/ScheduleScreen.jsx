@@ -54,8 +54,6 @@ const ScheduleScreen = ({navigation, route}) => {
       const response = await getAllDevices();
       const allDevices = response?.data || [];
 
-      // console.log('Tất cả thiết bị từ API:', allDevices);
-
       const counts = {
         water: 0,
         light: 0,

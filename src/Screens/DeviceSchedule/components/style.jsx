@@ -3,12 +3,16 @@ import colors from '../../../../assets/common/colorCss';
 
 const light = StyleSheet.create({
   item: {
-    width: '100%',
+    width: '95%',
     backgroundColor: colors.white,
     flexDirection: 'row',
     gap: 10,
     padding: 10,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.bg_SwitchInAC,
+    margin:5,
+    borderRadius: 12,
   },
   imgStyle: {
     width: 105,
@@ -19,6 +23,7 @@ const light = StyleSheet.create({
     width: 'auto',
     justifyContent: 'center',
     gap: 10,
+    marginLeft: 5,
   },
   header2: {
     color: colors.black,
@@ -37,7 +42,7 @@ const light = StyleSheet.create({
     alignItems: 'center',
   },
   btn: {
-    height: 25,
+    paddingVertical: 5,
     width: 'auto',
     backgroundColor: colors.bg_clock,
     borderRadius: 12,
@@ -45,11 +50,12 @@ const light = StyleSheet.create({
   },
   textBtn: {
     textAlign: 'center',
-    paddingHorizontal: 10,
-    fontSize: 12,
+    paddingHorizontal: 5,
+    fontSize: 8,
+    color: colors.black,
   },
   moreText: {
-    fontSize: 20,
+    fontSize: 15,
     color: colors.bg_InActopTab,
     alignSelf: 'center',
   },

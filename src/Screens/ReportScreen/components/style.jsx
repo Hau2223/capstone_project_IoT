@@ -14,7 +14,7 @@ const light = StyleSheet.create({
   },
   container: {
     alignItems: 'center',
-    marginTop: 30,
+    marginVertical: 30,
   },
   frameTable: {
     width: '95%',
@@ -30,7 +30,6 @@ const light = StyleSheet.create({
   },
   containerData: {
     width: '100%',
-    marginTop: 20,
   },
   weekSelectorContainer: {
     width: '100%',
@@ -40,9 +39,10 @@ const light = StyleSheet.create({
   },
   chartTitle: {
     color: colors.primary,
-    fontSize: 24,
+    fontSize: 27,
     fontWeight: 'bold',
     textAlign: 'center',
+    marginVertical: 10,
   },
   button: {
     width: 'auto',
