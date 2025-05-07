@@ -20,7 +20,7 @@ import { useTranslation } from 'react-i18next';
 import colors from '../../../../assets/common/colorCss';
 import { ThemeContext } from '../../../../assets/common/themeProvider';
 import { createStyle } from './style';
-// import {ExportCSV} from "./CsvExport";
+import {GenerateCSVFromJSON} from "./Csv";
 import { Button } from 'react-native-paper';
 const getWeekday = (dateString, t) => {
   const days = [
@@ -562,7 +562,7 @@ const ReportDetail = ({navigation, route}) => {
             )}
           </View>
         </View>
-
+        {/* <GenerateCSVFromJSON></GenerateCSVFromJSON> */}
         <View style={{marginTop: 10}}>
           <View style={styles.row2col}>
             <Card
