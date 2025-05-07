@@ -265,5 +265,9 @@
   "no_blocked_users": "No users have been blocked",
   "unblock": "Unblock",
 
+  "confirm_delete": "Are you sure you want to delete",
+  "from_device": "from the device?",
+  "confirm_add": "Do you want to add",
+  "block_listmem": "block list?",
   "": ""
 }

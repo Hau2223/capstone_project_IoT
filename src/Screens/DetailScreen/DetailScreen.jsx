@@ -32,6 +32,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import IconMa from 'react-native-vector-icons/MaterialIcons';
 import IconFo from 'react-native-vector-icons/FontAwesome';
 import {
+  addBlockMember,
   delMember,
   leaveMembertDevive,
   memberId,
@@ -39,7 +40,7 @@ import {
   unBlockMember,
   updateMember,
 } from '../../../services/menberServices';
-import {gardenId} from '../../../services/authServices';
+import {gardenId, me} from '../../../services/authServices';
 import HeaderCompo from '../../components/HeaderCompo';
 import {
   updateNameDevice,
@@ -47,6 +48,7 @@ import {
 } from '../../../services/deviceServices';
 import {createStyle} from './style';
 import {updateControl} from '../../../services/controlServices';
+import {IMAGES} from '../../../utils/constants';
 
 const DetailScreen = ({navigation, route}) => {
   const {t} = useTranslation();
@@ -67,9 +69,11 @@ const DetailScreen = ({navigation, route}) => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [otherUsers, setOtherUsers] = useState([]);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   const sensors = item?.data?.sensors || [];
   const controls = item?.data?.controls || [];
+  const blocks = item?.data?.blocks || [];
 
   const sensorMap = Object.fromEntries(sensors.map(s => [s.type, s]));
   const controlMap = Object.fromEntries(controls.map(c => [c.name, c]));
@@ -172,6 +176,16 @@ const DetailScreen = ({navigation, route}) => {
       },
     }));
   };
+  const fetchCurrentUserId = async () => {
+    try {
+      const response = await me();
+      if (response.status === 200) {
+        setCurrentUserId(response.data._id);
+      }
+    } catch (error) {
+      console.error('Error fetching userId:', error);
+    }
+  };
 
   const fetchDetailGarden = useCallback(async () => {
     try {
@@ -193,6 +207,26 @@ const DetailScreen = ({navigation, route}) => {
       const block = await memBlockList({id_esp: deviceId});
       if (block.message === 'Success') {
         setUserBlock(block.data);
+        if (currentUserId && block.data) {
+          const isBlocked = block.data.some(
+            blockedUser =>
+              blockedUser.userId.toString() === currentUserId.toString(),
+          );
+          if (isBlocked) {
+            Alert.alert(
+              t('alert_info'),
+              t('blocked_from_device'),
+              [
+                {
+                  text: t('ok'),
+                  onPress: () => navigation.goBack(),
+                },
+              ],
+              {cancelable: false},
+            );
+            return;
+          }
+        }
       }
       setLoading(false);
     } catch (err) {
@@ -205,11 +239,11 @@ const DetailScreen = ({navigation, route}) => {
 
   useFocusEffect(
     useCallback(() => {
+      fetchCurrentUserId();
       fetchDetailGarden();
       const interval = setInterval(() => {
         fetchDetailGarden();
       }, 5000);
-
       return () => clearInterval(interval);
     }, [fetchDetailGarden]),
   );
@@ -343,23 +377,27 @@ const DetailScreen = ({navigation, route}) => {
 
   const handleBlockMember = async userId => {
     try {
-      // const res = await unBlockMember({id_esp: deviceId, userId});
-      // if (res.message === 'Member removed successfully') {
-      //   setUserInfo(prev => prev.filter(user => user.userId !== userId));
-      //   Alert.alert(t('alert_success'), t('member_removed_successfully'));
-      // }
-      console.log('12333');
+      const res = await addBlockMember({id_esp: deviceId, userId});
+
+      if (res.message === 'User added to block list successfully') {
+        setUserInfo(prev => prev.filter(user => user.userId !== userId));
+        await fetchDetailGarden();
+        // Alert.alert(t('alert_success'), t('User added to block list successfully'));
+        console.log('1111');
+      }
     } catch (error) {
-      Alert.alert(t('alert_error'), t('member_remove_failed'));
+      Alert.alert(t('alert_error'), t('User added to block list failed'));
     }
   };
 
   const handleUnBlockMember = async userId => {
     try {
       const res = await unBlockMember({id_esp: deviceId, userId});
-      console.log(res);
+      // setUserInfo(prev => prev.filter(user => user.userId !== userId));
+      // console.log(res);
+      // await fetchDetailGarden();
     } catch (error) {
-      Alert.alert(t('alert_error'), t('member_remove_failed'));
+      Alert.alert(t('alert_error'), t('User unblock list block failed'));
     }
   };
 
@@ -471,7 +509,6 @@ const DetailScreen = ({navigation, route}) => {
         />
         <View style={{height: 20}} />
       </Animated.ScrollView>
-
       <Modal
         animationType="fade"
         transparent={true}
@@ -868,7 +905,15 @@ const FrameItem3 = ({
         onRequestClose={() => setModalBlockMem(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>{t('block_list')}</Text>
+            <View style={styles.loTitle}>
+              <Text style={styles.modalTitle}>{t('block_list')}</Text>
+              <Pressable
+                style={styles.btnCloseBlock}
+                onPress={() => setModalBlockMem(false)}>
+                <Icon name="window-close" color={colors.primary} size={30} />
+              </Pressable>
+            </View>
+
             {userBlock && userBlock.length > 0 ? (
               <FlatList
                 data={userBlock}
@@ -921,14 +966,12 @@ const UserComponent = ({
   const styles = createStyle(theme);
   const [modalDel, setModalDel] = useState(false);
   const [modalConfirmDelete, setModalConfirmDelete] = useState(false); // Thêm state cho modal xác nhận
-  const defaultImage =
-    'https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg';
 
   return (
     <View style={[styles.UserFrame, isLastItem && styles.noBorderBottom]}>
       <View style={styles.iconContent}>
         <Image
-          source={{uri: img && img !== 'Unknown' ? img : defaultImage}}
+          source={{uri: img && img !== 'Unknown' ? img : IMAGES.IMAGES_DF}}
           style={{
             height: 40,
             width: 40,
@@ -967,7 +1010,7 @@ const UserComponent = ({
           <View style={styles.modalContainer}>
             <Icon name="alert-circle" size={50} color={colors.btn_Cancel} />
             <Text style={styles.modalTitle}>
-              bạn có chắc chắn muốn xóa {txtUser} khỏi
+              {t('confirm_delete')} {txtUser} {t('from_device')}
             </Text>
             <View style={styles.modalButtonGroup}>
               <TouchableOpacity
@@ -979,7 +1022,6 @@ const UserComponent = ({
                 style={styles.modalButtonPrimary}
                 onPress={() => {
                   setModalDel(false);
-                  handleDeleteMember(userId);
                   setModalConfirmDelete(true);
                 }}>
                 <Text style={styles.modalButtonText}>{t('ok')}</Text>
@@ -999,19 +1041,22 @@ const UserComponent = ({
           <View style={styles.modalContainer}>
             <Icon name="alert-circle" size={50} color={colors.btn_Cancel} />
             <Text style={styles.modalTitle}>
-              {t('confirm_delete_member', {name: txtUser})}
+              {t('confirm_add')} {txtUser} {t('block_listmem')}
             </Text>
             <View style={styles.modalButtonGroup}>
               <TouchableOpacity
                 style={styles.modalButtonCancel}
-                onPress={() => setModalConfirmDelete(false)}>
+                onPress={() => {
+                  setModalConfirmDelete(false);
+                  handleDeleteMember(userId);
+                }}>
                 <Text style={styles.modalButtonText}>{t('cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.modalButtonPrimary}
                 onPress={() => {
                   setModalConfirmDelete(false); // Đóng modal xác nhận
-                  handleBlockMember(userId); // Gọi hàm xóa thành viên
+                  handleBlockMember(userId); // Gọi hàm thêm thành viên vào danh sách chặn thành viên
                 }}>
                 <Text style={styles.modalButtonText}>{t('confirm')}</Text>
               </TouchableOpacity>
