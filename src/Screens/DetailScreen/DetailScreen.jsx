@@ -36,6 +36,7 @@ import {
   leaveMembertDevive,
   memberId,
   memBlockList,
+  unBlockMember,
   updateMember,
 } from '../../../services/menberServices';
 import {gardenId} from '../../../services/authServices';
@@ -342,21 +343,21 @@ const DetailScreen = ({navigation, route}) => {
 
   const handleBlockMember = async userId => {
     try {
-      // const res = await delMember({id_esp: deviceId, userId});
+      // const res = await unBlockMember({id_esp: deviceId, userId});
       // if (res.message === 'Member removed successfully') {
       //   setUserInfo(prev => prev.filter(user => user.userId !== userId));
       //   Alert.alert(t('alert_success'), t('member_removed_successfully'));
       // }
       console.log('12333');
-      
     } catch (error) {
       Alert.alert(t('alert_error'), t('member_remove_failed'));
     }
   };
 
-  const handleUnblock = async userId => {
+  const handleUnBlockMember = async userId => {
     try {
-      console.log('123', userId);
+      const res = await unBlockMember({id_esp: deviceId, userId});
+      console.log(res);
     } catch (error) {
       Alert.alert(t('alert_error'), t('member_remove_failed'));
     }
@@ -465,7 +466,7 @@ const DetailScreen = ({navigation, route}) => {
           isOwner={isOwner}
           userBlock={userBlock}
           handleDeleteMember={handleDeleteMember}
-          handleUnblock={handleUnblock}
+          handleUnBlockMember={handleUnBlockMember}
           handleBlockMember={handleBlockMember}
         />
         <View style={{height: 20}} />
@@ -814,8 +815,8 @@ const FrameItem3 = ({
   isOwner,
   handleDeleteMember,
   userBlock,
-  handleUnblock,
-  handleBlockMember
+  handleUnBlockMember,
+  handleBlockMember,
 }) => {
   const {t} = useTranslation();
   const {theme} = useContext(ThemeContext);
@@ -883,7 +884,7 @@ const FrameItem3 = ({
                     </View>
                     <TouchableOpacity
                       style={styles.moveBlock}
-                      onPress={() => handleUnblock(item.userId)}>
+                      onPress={() => handleUnBlockMember(item.userId)}>
                       <Icon
                         name="close-circle-outline"
                         size={30}
@@ -913,7 +914,7 @@ const UserComponent = ({
   userId,
   handleDeleteMember,
   isLastItem,
-  handleBlockMember
+  handleBlockMember,
 }) => {
   const {t} = useTranslation();
   const {theme} = useContext(ThemeContext);

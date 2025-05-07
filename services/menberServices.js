@@ -24,6 +24,12 @@ export const delMember = async params => {
   return await del(`/device/delMember/${params.id_esp}/${params.userId}`);
 };
 
+export const unBlockMember = async params => {
+  return await del(`/device/delBlock/${params.id_esp}`, {
+    userId: params.userId,
+  });
+};
+
 export const leaveMembertDevive = async params => {
   return await del(`/device/leaveDevice/${params.id_esp}`);
 };

@@ -352,6 +352,7 @@ app.post('/createDevice', async (req, res) => {
     });
   }
 });
+
 /**
  * @swagger
  * /api/device/delBlock/{id_esp}:
