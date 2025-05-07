@@ -27,10 +27,11 @@ const light = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 10,
     marginBottom: itemSpacing,
-    borderWidth: 1.5,
-    borderColor: colors.bg_NaN,
+    borderWidth: 1,
+    borderColor: colors.borderColor,
     padding: 15,
-    elevation: 5,
+    elevation: 3,
+    marginVertical:10
   },
   itemHeader: {
     flexDirection: 'row',
@@ -66,7 +67,7 @@ const light = StyleSheet.create({
   },
   track: {
     height: 5,
-    backgroundColor: colors.white,
+    backgroundColor: colors.bg_SwitchInAC,
     borderRadius: 5,
   },
   selectedTrack: {
@@ -120,6 +121,11 @@ const dark = StyleSheet.create({
   sliderLabel:{
     ...light.sliderLabel,
     color: colors.white,
+  },
+
+  track: {
+    ...light.track,
+    backgroundColor: colors.white,
   },
 });
 

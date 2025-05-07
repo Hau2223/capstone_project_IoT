@@ -85,22 +85,39 @@ const SetTimerScreen = ({route, navigation}) => {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showDurationPicker, setShowDurationPicker] = useState(false);
   const [selectedDays, setSelectedDays] = useState(() => {
-    if (existingSchedule?.calendar) {
-      const dayMap = {
-        'T.2': '2',
-        'T.3': '3',
-        'T.4': '4',
-        'T.5': '5',
-        'T.6': '6',
-        'T.7': '7',
-        CN: 'C',
-      };
-      return existingSchedule.calendar
-        .split(', ')
-        .map(day => dayMap[day.trim()])
-        .filter(Boolean);
+    // This dayMap is used to convert various day name formats (Vietnamese or English)
+    // into the internal ID format ('2', '3', 'C', etc.)
+    const dayMapToInternalId = {
+      'T.2': '2', 'T.3': '3', 'T.4': '4', 'T.5': '5', 'T.6': '6', 'T.7': '7', 'CN': 'C',
+      'Monday': '2', 'Tuesday': '3', 'Wednesday': '4', 'Thursday': '5', 'Friday': '6', 'Saturday': '7', 'Sunday': 'C'
+    };
+
+    let daysToProcess = [];
+
+    // Prioritize rawRepeat if it's available and is an array (typically English names from API)
+    if (existingSchedule?.rawRepeat && Array.isArray(existingSchedule.rawRepeat) && existingSchedule.rawRepeat.length > 0) {
+      daysToProcess = existingSchedule.rawRepeat;
+    } 
+    // Fallback to calendar if rawRepeat is not suitable or not present
+    else if (existingSchedule?.calendar) {
+      if (Array.isArray(existingSchedule.calendar)) {
+        daysToProcess = existingSchedule.calendar;
+      } else if (typeof existingSchedule.calendar === 'string') {
+        // This is typically the Vietnamese formatted string like "T.2, T.4"
+        daysToProcess = existingSchedule.calendar.split(',').map(d => d.trim());
+      }
     }
-    return [];
+
+    if (daysToProcess.length > 0) {
+      // Convert the day names (either English from rawRepeat or Vietnamese from calendar string)
+      // to internal IDs like '2', '3', 'C'.
+      const mappedDays = daysToProcess.map(day => dayMapToInternalId[day]).filter(Boolean);
+      if (mappedDays.length > 0) {
+        return mappedDays;
+      }
+    }
+    
+    return []; // Default to no days selected
   });
   const [scheduleName, setScheduleName] = useState(
     existingSchedule?.name || '',
