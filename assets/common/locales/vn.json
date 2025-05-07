@@ -261,5 +261,11 @@
   "cardAvgStream": "Lưu lượng (L/min) Trung bình",
   "pointerLabel": "Tưới: ",
 
+  "block_list": "Danh Sách Chặn",
+  "blocked_users": "Người Bị Chặn",
+  "blocks": "Chặn",
+  "no_blocked_users": "Không có người dùng nào bị chặn",
+  "unblock": "Bỏ chặn",
+  
   "": ""
 }

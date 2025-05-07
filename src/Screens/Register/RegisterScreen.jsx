@@ -1,5 +1,5 @@
-import {StatusBar} from 'react-native';
-import React, {useState, useCallback, memo, useContext} from 'react';
+import {StatusBar, Modal, ActivityIndicator, View, Text} from 'react-native';
+import React, {useState, useCallback, memo, useContext, useEffect} from 'react';
 import {useNavigation, useIsFocused} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
 import HeaderCompo from '../../components/HeaderCompo';
@@ -9,9 +9,10 @@ import {ThemeContext} from '../../../assets/common/themeProvider';
 import {createStyle} from './style';
 import {signUp, sendOTPEmail, verifyOTP} from '../../../services/authServices';
 import Comfirm from './components/Comfirm';
-import AlertModelCompo from '../../components/AlertModelCompo'; 
+import AlertModelCompo from '../../components/AlertModelCompo';
 import LinearGradient from 'react-native-linear-gradient';
 import colors from '../../../assets/common/colorCss';
+import LoadingModal from '../../components/LoadingModal';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
@@ -25,10 +26,10 @@ const RegisterScreen = () => {
     email: '',
     password: '',
   });
-
-  // State cho Modal
   const [modal, setModal] = useState({visible: false, type: '', message: ''});
   const [onConfirmAction, setOnConfirmAction] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   const showAlert = (type, message, title = '') => {
     setModal({visible: true, type, title, message});
   };
@@ -55,7 +56,7 @@ const RegisterScreen = () => {
       showAlert(t('alert_warning'), t('email_invalid'));
       return false;
     }
-    return true; // Email hợp lệ
+    return true;
   }, [data.email, t]);
 
   const handleInputChange = (key, value) => {
@@ -64,9 +65,9 @@ const RegisterScreen = () => {
 
   const handleSendCode = () => {
     if (!handleEmail()) {
-      // Nếu email không hợp lệ, dừng hàm
       return;
     }
+    setIsLoading(true);
 
     sendOTPEmail({email: data.email})
       .then(response => {
@@ -74,19 +75,21 @@ const RegisterScreen = () => {
         if (response.message === 'Email sent successfully') {
           setStep('verifyOTP');
         }
-
-        // showAlert('success', 'Mã OTP đã được gửi!');
       })
       .catch(error => {
         console.error('Lỗi không thể gửi mã OTP!:', error);
         showAlert(t('alert_error'), t('otp_send_error'));
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   };
+
   const handleReSendCode = () => {
     if (!handleEmail()) {
-      // Nếu email không hợp lệ, dừng hàm
       return;
     }
+    setIsLoading(true);
     sendOTPEmail({email: data.email})
       .then(res => {
         console.log('Mã OTP được gửi lại', res);
@@ -94,30 +97,33 @@ const RegisterScreen = () => {
       .catch(error => {
         console.error('Lỗi khi gửi OTP:', error);
         showAlert(t('alert_error'), t('otp_send_error'));
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   };
 
   const handleVerifyOTP = otp => {
+    setIsLoading(true);
     verifyOTP({email: data.email, code: otp})
       .then(res => {
-        // console.log('Xác minh thành công:', res);
         showAlert(t('alert_success'), t('otp_verification_success'));
         signUp({name: data.name, email: data.email, password: data.password})
           .then(res => {
-            // console.log('Xác minh thành công:', res);
             showAlert(t('alert_success'), t('registration_success_message'));
-            setData('');
+            setData({name: '', email: '', password: ''});
             setOnConfirmAction(() => () => {
               setModal({...modal, visible: false});
               navigation.navigate('Login');
             });
           })
           .catch(err => {
-            console.error('Lỗi xác minh OTP:', err.response.data.message);
+            console.error('Lỗi đăng ký:', err.response.data.message);
+            showAlert(t('alert_error'), t('registration_error'));
           });
       })
       .catch(err => {
-        // console.error('Lỗi xác minh OTP:', err.response.data.message);
+        console.error('Lỗi xác minh OTP:', err.response.data.message);
         if (err.response.data.message === 'Invalid OTP code') {
           showAlert(t('alert_warning'), t('invalid_otp_code'));
         } else if (err.response.data.message === 'OTP has expired') {
@@ -125,34 +131,35 @@ const RegisterScreen = () => {
         } else {
           showAlert(t('alert_error'), t('otp_invalid_or_expired'));
         }
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   };
 
   const handleRegister = () => {
-    // if (!handleData()) {
-    //   return;
-    // }
     setStep('comfirm');
   };
 
   return (
     <LinearGradient
-      colors={
-        [colors.liner_light1, colors.liner_light2]
-      }
+      colors={[colors.liner_light1, colors.liner_light2]}
       style={styles.container}>
-        {isFocused && (
+      {isFocused && (
         <StatusBar
           backgroundColor={colors.liner_light1}
           barStyle={'light-content'}
         />
       )}
-      <HeaderCompo isPress={handleBack} color={colors.white} bgcolor={colors.bg_NaN}/>
+      <HeaderCompo
+        isPress={handleBack}
+        color={colors.white}
+        bgcolor={colors.bg_NaN}
+      />
       {step === 'request' && (
         <Request
           data={data}
           handleInputChange={handleInputChange}
-          // handleData={handleData}
           handleRegister={handleRegister}
         />
       )}
@@ -188,6 +195,9 @@ const RegisterScreen = () => {
         }}
         onCancel={closeAlert}
       />
+
+      {/* Modal Loading */}
+      <LoadingModal isLoading={isLoading} />
     </LinearGradient>
   );
 };

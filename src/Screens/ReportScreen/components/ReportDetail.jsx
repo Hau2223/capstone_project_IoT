@@ -20,7 +20,8 @@ import { useTranslation } from 'react-i18next';
 import colors from '../../../../assets/common/colorCss';
 import { ThemeContext } from '../../../../assets/common/themeProvider';
 import { createStyle } from './style';
-
+// import {ExportCSV} from "./CsvExport";
+import { Button } from 'react-native-paper';
 const getWeekday = (dateString, t) => {
   const days = [
     t('mon'), // Translated "Monday"
@@ -299,7 +300,11 @@ const ReportDetail = ({navigation, route}) => {
       setSelectedDate(rangeOrDate);
     }
   };
-
+  async function fetchData() {
+    // You can await here
+    const response = await reportbyIdDevices({id_esp: deviceId})
+    ExportCSV(response);
+  }
   useEffect(() => {
     if (mode === 'week') {
       const week = getWeekRange(selectedDate);
@@ -530,6 +535,7 @@ const ReportDetail = ({navigation, route}) => {
             />
           </View>
         </View>
+        <Button onPress={fetchData} title="Export Report" />
 
         <View style={styles.container}>
           <View style={styles.frameTable}>
@@ -590,6 +596,8 @@ const ReportDetail = ({navigation, route}) => {
           </View>
         </View>
       </ScrollView>
+
+      
     </View>
   );
 };

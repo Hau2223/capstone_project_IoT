@@ -1,4 +1,4 @@
-import {StyleSheet} from 'react-native';
+import { StyleSheet } from 'react-native';
 import colors from '../../../assets/common/colorCss';
 
 const light = StyleSheet.create({
@@ -56,10 +56,12 @@ const light = StyleSheet.create({
   itemWrapper: {
     alignItems: 'center',
     width: '50%',
+    overflow: 'hidden',
     padding: 5,
   },
   listContainer: {
     paddingHorizontal: 5,
+    overflow: 'hidden',
   },
   listSkeleton: {
     gap: 10,
@@ -79,16 +81,12 @@ const light = StyleSheet.create({
   contentSkeleton: {
     gap: 5,
   },
-
-  //Button plus
   floatingButtonWrapper: {
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 30 : 10,
     right: 10,
     zIndex: 1000,
   },
-
-  //Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: colors.bg_modal,
@@ -145,21 +143,17 @@ const light = StyleSheet.create({
     color: colors.white,
     fontWeight: '900',
   },
-
-  //Component
   item: {
     width: '100%',
     backgroundColor: colors.white,
     flexDirection: 'column',
     borderRadius: 7,
-    borderWidth: 2,
-    borderColor: colors.bg_NaN,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
     paddingBottom: 15,
     elevation: 5,
-    shadowColor: colors.black
+    shadowColor: colors.black,
   },
   imgStyle: {
     width: '100%',
@@ -187,13 +181,13 @@ const light = StyleSheet.create({
     fontStyle: 'italic',
   },
 });
+
 const dark = StyleSheet.create({
   ...light,
   frame: {
     ...light.frame,
     backgroundColor: colors.bg_dark,
   },
-  //Modal
   modalContainer: {
     ...light.modalContainer,
     backgroundColor: colors.bg_dark,
@@ -207,11 +201,13 @@ const dark = StyleSheet.create({
     borderColor: colors.white,
     color: colors.white,
   },
-
-  //Component
   item: {
     ...light.item,
     backgroundColor: colors.bg_dark,
+    borderColor: colors.white,
+  },
+  imgStyle: {
+    ...light.imgStyle,
     borderColor: colors.white,
   },
   textStyle: {
@@ -220,8 +216,8 @@ const dark = StyleSheet.create({
   },
   itemSkeleton: {
     ...light.itemSkeleton,
-    backgroundColor: colors.bg_dark
-  }
+    backgroundColor: colors.bg_dark,
+  },
 });
 
 export const createStyle = mode => {
