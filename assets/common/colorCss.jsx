@@ -41,6 +41,7 @@ const colors = {
   bg_clock: '#EFEFEF',
   bg_selectClock: '#f0f0f0',
   bg_SwitchInAC: '#ACACAC',
+  borderColor:"#D0D0D0",
   txtSchedule: 'rgba(255, 255, 255, 0.85)',
   txtSelectTex: '#FF9500',
   txtSetting: '#666666',
@@ -68,6 +69,8 @@ const colors = {
   ic_light: '#FFEB3B',
   ic_wind: '#90A4AE',
   ic_user: '#D9D9D9',
+
+  txtHide: 'black',
 };
 
 export default colors;

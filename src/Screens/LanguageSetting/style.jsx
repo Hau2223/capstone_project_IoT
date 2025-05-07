@@ -18,6 +18,7 @@ const light = StyleSheet.create({
     fontWeight: '500',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 15,
   },
   currentLan: {
     flexDirection: 'row',

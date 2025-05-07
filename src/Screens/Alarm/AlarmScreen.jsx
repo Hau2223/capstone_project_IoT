@@ -236,10 +236,26 @@ const AlarmScreen = ({route, navigation}) => {
   };
 
   const handleGoToSetTimer = schedule => {
+    // Convert calendar string to array of days
+    const dayMap = {
+      'T.2': 'Monday',
+      'T.3': 'Tuesday',
+      'T.4': 'Wednesday',
+      'T.5': 'Thursday',
+      'T.6': 'Friday',
+      'T.7': 'Saturday',
+      'CN': 'Sunday'
+    };
+    
+    const calendarArray = schedule.calendar.split(', ').map(day => dayMap[day.trim()]);
+    
     navigation.navigate('SetTimerScreen', {
       item: {
         ...item,
-        schedule: schedule,
+        schedule: {
+          ...schedule,
+          calendar: calendarArray
+        },
       },
     });
   };

@@ -503,39 +503,6 @@ const ReportDetail = ({navigation, route}) => {
       </View> */}
       <ScrollView contentContainerStyle={{paddingBottom: 30}}>
         <ModeSelector mode={mode} setMode={setMode} />
-        <View style={{marginTop: 10}}>
-          <View style={styles.row2col}>
-            <Card
-              title={`${t('water_used_L')}`}
-              value={`${summary.totalWaterUsage.toFixed(2)} L`}
-            />
-            <Card
-              title={`${t('average_temperature_C')}`}
-              value={`${summary.avgTemp.toFixed(2)} °C`}
-            />
-          </View>
-          <View style={styles.row2col}>
-            <Card
-              title={`${t('average_air_humidity_percent')}`}
-              value={`${summary.avgHumidity.toFixed(2)} %`}
-            />
-            <Card
-              title={`${t('average_soil_moisture_percent')}`}
-              value={`${summary.avgMoisture.toFixed(2)} %`}
-            />
-          </View>
-          <View style={styles.row2col}>
-            <Card
-              title={`${t('average_light_lux')}`}
-              value={`${summary.avgLuminosity.toFixed(2)} lux`}
-            />
-            <Card
-              title={`${t('average_flow_rate_L_min')}`}
-              value={`${summary.avgStream.toFixed(2)} L/min`}
-            />
-          </View>
-        </View>
-        <Button onPress={fetchData} title="Export Report" />
 
         <View style={styles.container}>
           <View style={styles.frameTable}>
@@ -575,7 +542,7 @@ const ReportDetail = ({navigation, route}) => {
                         selectedMetric === m.key ? m.color : 'transparent',
                     }}
                   />
-                  <Text style={{color: theme === 'light' ? colors.borderColor : colors.white , fontSize: 13}}>{m.label}</Text>
+                  <Text style={{color: theme === 'light' ? colors.txtHide : colors.white , fontSize: 13}}>{m.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -595,6 +562,41 @@ const ReportDetail = ({navigation, route}) => {
             )}
           </View>
         </View>
+
+        <View style={{marginTop: 10}}>
+          <View style={styles.row2col}>
+            <Card
+              title={`${t('water_used_L')}`}
+              value={`${summary.totalWaterUsage.toFixed(2)} L`}
+            />
+            <Card
+              title={`${t('average_temperature_C')}`}
+              value={`${summary.avgTemp.toFixed(2)} °C`}
+            />
+          </View>
+          <View style={styles.row2col}>
+            <Card
+              title={`${t('average_air_humidity_percent')}`}
+              value={`${summary.avgHumidity.toFixed(2)} %`}
+            />
+            <Card
+              title={`${t('average_soil_moisture_percent')}`}
+              value={`${summary.avgMoisture.toFixed(2)} %`}
+            />
+          </View>
+          <View style={styles.row2col}>
+            <Card
+              title={`${t('average_light_lux')}`}
+              value={`${summary.avgLuminosity.toFixed(2)} lux`}
+            />
+            <Card
+              title={`${t('average_flow_rate_L_min')}`}
+              value={`${summary.avgStream.toFixed(2)} L/min`}
+            />
+          </View>
+        </View>
+        <Button onPress={fetchData} title="Export Report" />
+
       </ScrollView>
 
       

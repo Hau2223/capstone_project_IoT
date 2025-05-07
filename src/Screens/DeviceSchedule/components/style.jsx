@@ -23,6 +23,7 @@ const light = StyleSheet.create({
     width: 'auto',
     justifyContent: 'center',
     gap: 10,
+    marginLeft: 5,
   },
   header2: {
     color: colors.black,
