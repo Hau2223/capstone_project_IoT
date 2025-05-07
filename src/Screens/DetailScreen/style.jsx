@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import {StyleSheet} from 'react-native';
 import colors from '../../../assets/common/colorCss';
 
 const light = StyleSheet.create({
@@ -98,13 +98,17 @@ const light = StyleSheet.create({
   UserFrame: {
     width: '100%',
     flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 10,
     paddingHorizontal: 5,
+    borderBottomWidth: 1,
+    borderColor: colors.borderColor,
   },
-  iconContent: {
-    width: '15%',
-    justifyContent: 'center',
+  noBorderBottom: {
+    borderBottomWidth: 0,
   },
+
   textContent: {
     width: '65%',
     justifyContent: 'center',
@@ -114,44 +118,44 @@ const light = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end',
   },
+  iconContent: {
+    width: '15%',
+  },
   textUser: {
-    width: '55%',
-    justifyContent: 'center',
+    width: '75%',
   },
-  textRole: {
-    width: '30%',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
+  layout_role: {
+    width: '10%',
   },
+
   noMembersText: {
     textAlign: 'center',
     color: colors.black,
     fontSize: 20,
     marginTop: 20,
   },
-
   // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Nền mờ
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContainer: {
-    width: '80%', // Giảm chiều rộng để giống hình ảnh
+    width: '80%',
     backgroundColor: colors.white,
-    borderRadius: 15, // Bo góc nhiều hơn
+    borderRadius: 15,
     padding: 20,
     alignItems: 'center',
     gap: 15,
-    elevation: 5, // Thêm bóng cho modal
+    elevation: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
   modalTitle: {
-    fontSize: 18, // Giảm kích thước chữ để phù hợp với hình ảnh
+    fontSize: 18,
     fontWeight: 'bold',
     color: colors.black,
     textAlign: 'center',
@@ -162,7 +166,7 @@ const light = StyleSheet.create({
     borderColor: colors.borderColor,
     borderRadius: 8,
     paddingHorizontal: 12,
-    paddingVertical: 8, // Giảm padding để nhỏ gọn hơn
+    paddingVertical: 8,
     fontSize: 16,
     color: colors.black,
   },
@@ -170,18 +174,18 @@ const light = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    gap: 15, // Tăng khoảng cách giữa các nút
+    gap: 15,
   },
   modalButtonPrimary: {
     flex: 1,
-    backgroundColor: '#28A745', // Màu xanh lá giống trong hình
+    backgroundColor: '#28A745',
     paddingVertical: 12,
-    borderRadius: 8, // Bo góc nhiều hơn
+    borderRadius: 8,
     alignItems: 'center',
   },
   modalButtonCancel: {
     flex: 1,
-    backgroundColor: '#F5A623', // Màu cam giống trong hình
+    backgroundColor: '#F5A623',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -189,9 +193,8 @@ const light = StyleSheet.create({
   modalButtonText: {
     fontSize: 16,
     color: colors.white,
-    fontWeight: 'bold', // Chữ đậm hơn
+    fontWeight: 'bold',
   },
-
   menuContainer: {
     width: '100%',
     marginVertical: 10,
@@ -221,7 +224,7 @@ const light = StyleSheet.create({
     marginBottom: 10,
   },
   flatList: {
-    maxHeight: 150, 
+    maxHeight: 150,
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.borderColor,
@@ -241,6 +244,27 @@ const light = StyleSheet.create({
     color: colors.black,
     textAlign: 'center',
     marginVertical: 10,
+  },
+  detailBlock: {
+    backgroundColor: colors.primary,
+    padding: 5,
+    alignSelf: 'flex-end',
+  },
+  layoutBlock: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderColor: colors.borderColor,
+    padding: 5,
+    gap: 10,
+  },
+  imgBlock: {
+    height: 40,
+    width: 40,
+    borderRadius: 20,
+  },
+  lotxtBlock: {
+    width: '70%',
   },
 });
 
@@ -273,14 +297,12 @@ const dark = StyleSheet.create({
   },
   textHeader3: {
     ...light.textHeader3,
-    color: colors.white
+    color: colors.white,
   },
   noMembersText: {
     ...light.noMembersText,
     color: colors.white,
   },
-
-  // Modal
   modalContainer: {
     ...light.modalContainer,
     backgroundColor: colors.bg_dark,
@@ -311,7 +333,7 @@ const dark = StyleSheet.create({
   },
   menuAnchorText: {
     ...light.menuAnchorText,
-    color: colors.white
+    color: colors.white,
   },
   flatList: {
     ...light.flatList,
@@ -321,7 +343,6 @@ const dark = StyleSheet.create({
     ...light.menuItemText,
     color: colors.white,
   },
-
 });
 
 export const createStyle = mode => {

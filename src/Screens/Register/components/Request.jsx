@@ -60,6 +60,8 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
                 value={data.name}
                 onChangeText={text => handleInputChange('name', text)}
                 placeholder={t('enter_name')}
+                placeholderTextColor={colors.loginTxt}
+                underlineColorAndroid="transparent"
                 style={styles.rqTextInput}
               />
             </View>
@@ -72,6 +74,8 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
                 value={data.email}
                 onChangeText={text => handleInputChange('email', text)}
                 placeholder={t('enter_email')}
+                placeholderTextColor={colors.loginTxt}
+                underlineColorAndroid="transparent"
                 style={styles.rqTextInput}
               />
             </View>
@@ -87,6 +91,9 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
               onChangeText={text => handleInputChange('password', text)}
               secureTextEntry={!showPassword}
               placeholder={t('enter_password')}
+              underlineColorAndroid={colors.white}
+              electionColor={colors.loginTxt}
+              placeholderTextColor={colors.loginTxt}
               style={[styles.rqTextInput, {flex: 1}]}
             />
             <Pressable onPress={() => setShowPassword(prev => !prev)}>

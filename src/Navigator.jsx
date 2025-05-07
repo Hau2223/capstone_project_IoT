@@ -1,20 +1,14 @@
-import {
-  Button,
-  StyleSheet,
-  Text,
-  View,
-  ActivityIndicator,
-  Image,
-} from 'react-native';
+import {Image} from 'react-native';
 import React, {memo, useContext} from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {UserContext, UserProvider} from '../utils/UserContext';
+import {UserProvider} from '../utils/UserContext';
 import {ThemeContext, ThemeProvider} from '../assets/common/themeProvider';
 import {LanguageProvider} from '../assets/common/translation';
 import {useTranslation} from 'react-i18next';
 import {PaperProvider} from 'react-native-paper';
+import Toast from 'react-native-toast-message';
 
 import {
   LoadingScreen,
@@ -35,6 +29,7 @@ import {
   AlarmScreen,
   AreaScheduleScreen,
 } from './Screens';
+
 import ReportScreen from './Screens/ReportScreen/ReportScreen';
 import ReportDetail from './Screens/ReportScreen/components/ReportDetail';
 import colors from '../assets/common/colorCss';
@@ -229,6 +224,7 @@ const Navigator = () => {
                   options={{headerShown: false, animation: 'slide_from_right'}}
                 />
               </StackNav.Navigator>
+              <Toast />
             </UserProvider>
           </LanguageProvider>
         </ThemeProvider>
@@ -239,11 +235,11 @@ const Navigator = () => {
 
 export default memo(Navigator);
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  text: {fontSize: 24, fontWeight: 'bold'},
-});
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   text: {fontSize: 24, fontWeight: 'bold'},
+// });

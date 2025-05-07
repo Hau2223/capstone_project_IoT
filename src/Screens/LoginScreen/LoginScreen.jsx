@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   StatusBar,
   Image,
+  TouchableOpacity,
 } from 'react-native';
 import React, {
   useState,
@@ -18,22 +19,21 @@ import React, {
 } from 'react';
 import IconOni from 'react-native-vector-icons/Ionicons';
 import DeviceInfo from 'react-native-device-info';
-import {useNavigation, useIsFocused} from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {login, loginGoogle} from '../../../services/authServices';
-import {UserContext} from '../../../utils/UserContext';
+import { login, loginGoogle } from '../../../services/authServices';
+import { UserContext } from '../../../utils/UserContext';
 import LinearGradient from 'react-native-linear-gradient';
-
-
 import colors from '../../../assets/common/colorCss';
-import {useTranslation} from 'react-i18next';
-import {ThemeContext} from '../../../assets/common/themeProvider';
-import {createStyle} from './style';
+import { useTranslation } from 'react-i18next';
+import { ThemeContext } from '../../../assets/common/themeProvider';
+import { createStyle } from './style';
+import LoadingModal from '../../components/LoadingModal';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
-  const {t} = useTranslation();
-  const {theme} = useContext(ThemeContext);
+  const { t } = useTranslation();
+  const { theme } = useContext(ThemeContext);
   const styles = createStyle(theme);
   const deviceId = DeviceInfo.getDeviceId();
   const [email, setEmail] = useState('');
@@ -42,16 +42,20 @@ const LoginScreen = () => {
   const [focusedFieldPass, setFocusedFieldPass] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showInfoAlert, setShowInfoAlert] = useState(false);
-  const {setUserToken} = useContext(UserContext);
+  const [isLoading, setIsLoading] = useState(false);
+  const { setUserToken } = useContext(UserContext);
   const isFocused = useIsFocused();
   const textInputUserRef = useRef(null);
   const textInputPassRef = useRef(null);
+
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
   const toggleDelUserVisible = () => {
     setEmail('');
   };
+
   const toggleDelPasVisible = () => {
     setPassword('');
   };
@@ -62,10 +66,11 @@ const LoginScreen = () => {
       console.log('Email và mật khẩu không được để trống');
       return;
     }
-    login({email, password, deviceId})
+    setIsLoading(true);
+
+    login({ email, password, deviceId })
       .then(response => {
         console.log(response);
-
         if (
           response?.status === 200 ||
           response.role === 'user' ||
@@ -74,7 +79,6 @@ const LoginScreen = () => {
           const token = response.data;
           const user = response.role;
           setShowInfoAlert(false);
-          // Lưu token
           AsyncStorage.setItem('authToken', token)
             .then(() => console.log('Token đã được lưu:', token))
             .catch(err => console.log('Lỗi lưu token:', err));
@@ -87,7 +91,6 @@ const LoginScreen = () => {
       })
       .catch(err => {
         const errMsg = err.response?.data?.message || err.message;
-
         if (errMsg === 'User not found') {
           console.log('Tài khoản không tồn tại');
         } else if (errMsg === 'Invalid password') {
@@ -95,25 +98,14 @@ const LoginScreen = () => {
         } else {
           console.log('Lỗi không xác định:', errMsg);
         }
-
         setShowInfoAlert(true);
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 1000);
       });
   }, [email, password, deviceId, setUserToken, navigation]);
-
-  // const onGoogleButtonPress = async () => {
-  //   try {
-  //     await GoogleSignin.hasPlayServices();
-  //     const { idToken } = await GoogleSignin.signIn();
-
-  //     const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-
-  //     const userCredential = await auth().signInWithCredential(googleCredential);
-
-  //     console.log('User signed in:', userCredential.user);
-  //   } catch (error) {
-  //     console.error('Google Sign-In Error:', error);
-  //   }
-  // };
 
   const shouldExitApp = React.useCallback(() => {
     const currentRoute =
@@ -139,7 +131,7 @@ const LoginScreen = () => {
 
     return () => subscription.remove();
   }, [navigation, shouldExitApp]);
-  
+
   return (
     <LinearGradient
       colors={[colors.liner_light1, colors.liner_light2]}
@@ -177,15 +169,13 @@ const LoginScreen = () => {
               style={styles.txtInput}
             />
             {focusedFieldEmail && email.length > 0 && (
-              <>
-                <Pressable onPress={toggleDelUserVisible}>
-                  <IconOni
-                    name="close-circle"
-                    color={colors.loginTxt}
-                    size={20}
-                  />
-                </Pressable>
-              </>
+              <Pressable onPress={toggleDelUserVisible}>
+                <IconOni
+                  name="close-circle"
+                  color={colors.loginTxt}
+                  size={20}
+                />
+              </Pressable>
             )}
           </View>
           <View
@@ -226,14 +216,14 @@ const LoginScreen = () => {
             </View>
           </View>
           {showInfoAlert && (
-            <Text style={{color: 'red', fontSize: 12}}>
+            <Text style={{ color: 'red', fontSize: 12 }}>
               {t('login_failed_message')}
             </Text>
           )}
           <Text
             style={styles.txtForget}
             onPress={() => {
-              navigation.navigate('ResetPass', {email});
+              navigation.navigate('ResetPass', { email });
             }}>
             {t('forgot_password')}
           </Text>
@@ -241,23 +231,14 @@ const LoginScreen = () => {
         <View style={styles.layoutbtn}>
           <LinearGradient
             colors={[colors.liner_light1, colors.liner_light2]}
-            start={{x: 0, y: 1}}
-            end={{x: 1, y: 0}}
+            start={{ x: 0, y: 1 }}
+            end={{ x: 1, y: 0 }}
             locations={[0, 0.6]}
-            style={styles.btnLogin} // Bạn vẫn giữ styles.btnLogin để định dạng kích thước, padding, border radius, v.v.
-          >
-            <Pressable onPress={handleLogin}>
+            style={styles.btnLogin}>
+            <TouchableOpacity onPress={handleLogin}>
               <Text style={styles.txtBtn}>{t('login')}</Text>
-            </Pressable>
+            </TouchableOpacity>
           </LinearGradient>
-          {/* <View style={styles.wrapperManual}>
-            <Text style={styles.textManual}>Hoặc đăng kí với</Text>
-          </View> */}
-
-          {/* <Pressable style={styles.btnGoogle} onPress={onGoogleButtonPress}>
-            <Text style={styles.txtGoogle}>{t('loginGoogle')}</Text>
-          </Pressable> */}
-
           <Text style={styles.txtAccNaN}>
             {t('no_account')}{' '}
             <Text
@@ -268,6 +249,8 @@ const LoginScreen = () => {
           </Text>
         </View>
       </View>
+
+      <LoadingModal isLoading={isLoading} />
     </LinearGradient>
   );
 };

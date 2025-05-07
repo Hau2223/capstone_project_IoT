@@ -118,7 +118,7 @@ app.get('/membersDetail/:id_esp', authenticateJWT, async (req, res) => {
 
     const membersInfo = await Promise.all(
       device.members.map(async (member) => {
-        const user = await User.findById(member.userId).select('name avatar'); // Chỉ lấy các trường cần thiết
+        const user = await User.findById(member.userId).select('name avatar');
 
         return {
           userId: member.userId, // Luôn trả về userId từ member
@@ -352,6 +352,7 @@ app.post('/createDevice', async (req, res) => {
     });
   }
 });
+
 /**
  * @swagger
  * /api/device/delBlock/{id_esp}:

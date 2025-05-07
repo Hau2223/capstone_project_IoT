@@ -100,10 +100,10 @@ app.post('/login', async (req, res) => {
     const token = createToken(user._id);
     await user.save();
 
-    res.status(200).json({data: token, role: user.role,  status: 200});
+    res.status(200).json({data: token, role: user.role, status: 200});
   } catch (err) {
-      console.error('Error logging in user:', err);
-      res.status(500).json({status: 500, message: 'Internal server error'});
+    console.error('Error logging in user:', err);
+    res.status(500).json({status: 500, message: 'Internal server error'});
   }
 });
 
@@ -111,7 +111,7 @@ app.post('/login', async (req, res) => {
  * @swagger
  * /api/user/sendCode/{email}:
  *   get:
- *     summary: Send a verification code via email
+ *     summary: Send a verification code to the specified email address
  *     tags: [Authentication]
  *     parameters:
  *       - in: path
@@ -120,26 +120,40 @@ app.post('/login', async (req, res) => {
  *         schema:
  *           type: string
  *           format: email
- *         description: The recipient's email address
+ *         description: The email address to send the verification code to
  *     responses:
  *       200:
- *         description: Email sent successfully
+ *         description: Verification code sent successfully
  *         content:
  *           application/json:
  *             example:
  *               message: "Email sent successfully"
- *               code: "123456"
+ *               code: "1234"
+ *               status: 200
+ *       400:
+ *         description: Email already exists (if applicable in your logic)
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Email already exists!"
+ *               status: 400
  *       500:
- *         description: Failed to send email or configuration error
+ *         description: Failed to send email or server error
  *         content:
  *           application/json:
  *             example:
  *               message: "Failed to send email"
- *               error: "Error description"
+ *               error: "Some error detail"
+ *               status: 500
  */
 app.get('/sendCode/:email', async (req, res) => {
   const email = req.params.email;
+
   try {
+    if (await User.findOne({email})) {
+      return res.status(400).json({message: 'Email already exists!'});
+    }
+
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       return res.status(500).json({message: 'Email configuration error'});
     }
@@ -172,7 +186,7 @@ app.get('/sendCode/:email', async (req, res) => {
           <p style="margin-top: 20px;">This code is only active for the next 2 minutes. Once the code expires you will have to resubmit a request for a code.</p>
         </div>
       `,
-    };    
+    };
 
     await transporter.sendMail(mailOptions);
 
@@ -493,19 +507,18 @@ app.post('/logout', authenticateJWT, async (req, res) => {
     // Tìm người dùng
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ status: 404, message: 'User not found' });
+      return res.status(404).json({status: 404, message: 'User not found'});
     }
     // Cập nhật trạng thái
     user.status = 'offline';
     await user.save();
 
-    res.status(200).json({ status: 200, message: 'Logout successful' });
+    res.status(200).json({status: 200, message: 'Logout successful'});
   } catch (error) {
     console.error('Error logging out user:', error);
-    res.status(500).json({ status: 500, message: 'Internal server error' });
+    res.status(500).json({status: 500, message: 'Internal server error'});
   }
 });
-
 
 /**
  * @swagger
@@ -694,7 +707,7 @@ app.put('/updateProfile', authenticateJWT, async (req, res) => {
         gender: updatedUser.gender,
         phone: updatedUser.phone,
         address: updatedUser.address,
-        dob: updatedUser.dob
+        dob: updatedUser.dob,
       },
     });
   } catch (error) {
