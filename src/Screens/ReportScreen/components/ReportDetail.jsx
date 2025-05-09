@@ -20,7 +20,7 @@ import { useTranslation } from 'react-i18next';
 import colors from '../../../../assets/common/colorCss';
 import { ThemeContext } from '../../../../assets/common/themeProvider';
 import { createStyle } from './style';
-import {GenerateCSVFromJSON} from "./Csv";
+import {DownloadCSV} from "./Csv";
 import { Button } from 'react-native-paper';
 const getWeekday = (dateString, t) => {
   const days = [
@@ -48,7 +48,6 @@ const getWeekRange = selectedDate => {
   endOfWeek.setDate(startOfWeek.getDate() + 6);
   return {startOfWeek, endOfWeek};
 };
-
 const DateSelector = ({mode, onSelect}) => {
   const {t} = useTranslation();
   const {theme} = useContext(ThemeContext);
@@ -69,7 +68,7 @@ const DateSelector = ({mode, onSelect}) => {
       }
     }
   };
-
+  
   let label = '';
   if (mode === 'week') {
     const range = getWeekRange(date);
@@ -300,11 +299,15 @@ const ReportDetail = ({navigation, route}) => {
       setSelectedDate(rangeOrDate);
     }
   };
+  const [response, setRes] = useState();
   async function fetchData() {
     // You can await here
     const response = await reportbyIdDevices({id_esp: deviceId})
-    ExportCSV(response);
+    setRes(response);
   }
+  useEffect(() => {
+    fetchData();
+  }, []);
   useEffect(() => {
     if (mode === 'week') {
       const week = getWeekRange(selectedDate);
@@ -562,8 +565,9 @@ const ReportDetail = ({navigation, route}) => {
             )}
           </View>
         </View>
-        {/* <GenerateCSVFromJSON></GenerateCSVFromJSON> */}
+        <DownloadCSV datajs={response}/>
         <View style={{marginTop: 10}}>
+
           <View style={styles.row2col}>
             <Card
               title={`${t('water_used_L')}`}
