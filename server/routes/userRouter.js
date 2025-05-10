@@ -208,6 +208,99 @@ app.get('/sendCode/:email', async (req, res) => {
 
 /**
  * @swagger
+ * /api/user/sendCodeReset/{email}:
+ *   get:
+ *     summary: Send a verification code to the specified email address
+ *     tags: [Authentication]
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: email
+ *         description: The email address to send the verification code to
+ *     responses:
+ *       200:
+ *         description: Verification code sent successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Email sent successfully"
+ *               code: "1234"
+ *               status: 200
+ *       400:
+ *         description: Email already exists (if applicable in your logic)
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Email already exists!"
+ *               status: 400
+ *       500:
+ *         description: Failed to send email or server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Failed to send email"
+ *               error: "Some error detail"
+ *               status: 500
+ */
+app.get('/sendCodeReset/:email', async (req, res) => {
+  const email = req.params.email;
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      return res.status(500).json({message: 'Email configuration error'});
+    }
+
+    const randomNumber = Math.floor(1000 + Math.random() * 9000);
+    otpStore[email] = {
+      code: String(randomNumber),
+      expires: Date.now() + 2 * 60 * 1000, // Hết hạn sau 2 phút
+    };
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Mã xác thực của bạn',
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <p>Hi there,</p>
+          <p>This is your one time verification code:</p>
+          <div style="background-color: #f2f2f2; padding: 20px; text-align: center; border-radius: 8px; font-size: 32px; font-weight: bold; letter-spacing: 10px;">
+            ${randomNumber}
+          </div>
+          <p style="margin-top: 20px;">This code is only active for the next 2 minutes. Once the code expires you will have to resubmit a request for a code.</p>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({
+      message: 'Email sent successfully',
+      status: 200,
+      code: String(randomNumber),
+    });
+  } catch (error) {
+    console.error('Error sending email:', error.message);
+    res.status(500).json({
+      status: 500,
+      message: 'Failed to send email',
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * @swagger
  * /api/user/verifyOTP:
  *   post:
  *     summary: Verify the OTP code

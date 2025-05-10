@@ -90,7 +90,7 @@ const Verification = ({email, handleVerifyOTP, handleReSendCode}) => {
           end={{x: 1, y: 0}}
           locations={[0, 0.6]}
           style={styles.vrButton}>
-          <Pressable onPress={() => handleVerifyOTP(otp)}>
+          <Pressable onPress={() => handleVerifyOTP(otp)} style={styles.touchableArea}>
             <Text style={styles.vrButtonText}>{t('verify')}</Text>
           </Pressable>
         </LinearGradient>

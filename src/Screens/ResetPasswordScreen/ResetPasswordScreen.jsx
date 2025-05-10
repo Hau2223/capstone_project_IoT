@@ -74,7 +74,7 @@ const ResetPasswordScreen = ({ route, navigation }) => {
     }
     setIsLoading(true);
 
-    sendOTPEmail({ email: data.newEmail })
+    sendEmailReset({ email: data.newEmail })
       .then(response => {
         console.log('Mã OTP đã gửi:', response);
         setStep('verify');

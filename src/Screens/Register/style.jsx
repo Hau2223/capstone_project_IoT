@@ -90,6 +90,7 @@ const light = StyleSheet.create({
     color: 'red',
     fontSize: 13,
     paddingHorizontal: 5,
+    alignSelf: 'flex-start',
   },
   rqButtonGroup: {
     width: '100%',
@@ -105,6 +106,13 @@ const light = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 30,
     marginTop: 10,
+  },
+  touchableArea: {
+    width: '100%',
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 30,
   },
   rqButtonText: {
     color: colors.loginform,
@@ -167,13 +175,21 @@ const light = StyleSheet.create({
   },
   ceButton: {
     width: '100%',
-    paddingVertical: 12,
     borderWidth: 1.5,
     borderColor: colors.white,
     backgroundColor: colors.loginBtn,
     borderRadius: 20,
     alignItems: 'center',
+
   },
+  cetouchableArea: {
+    width: '100%',
+    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 30,
+  },
+  
   ceButtonText: {
     color: colors.white,
     fontSize: 18,

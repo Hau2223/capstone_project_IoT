@@ -4,7 +4,6 @@ import {
   TextInput,
   Pressable,
   BackHandler,
-  SafeAreaView,
   StatusBar,
   Image,
   TouchableOpacity,

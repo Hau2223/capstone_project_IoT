@@ -125,52 +125,51 @@ const SensorThresholdScreen = ({navigation}) => {
 
   // Kiểm tra quyền trước khi lưu ngưỡng
   const saveThreshold = async id_esp => {
-    // Kiểm tra quyền owner
-    const deviceMembers = members[id_esp] || [];
-    const currentUser = deviceMembers.find(
-      member => member.isCurrentUser && member.role === 'owner',
-    );
 
-    if (!currentUser) {
-      Alert.alert(
-        t('alert_error'),
-        t('permission_denied_threshold'),
-      );
-      return;
-    }
-
+  
     setLoading(true);
     try {
       const thresholdData = thresholds[id_esp];
-      const updatePromises = [
-        updateThreshold({
+      const updatePromises = [];
+  
+      // Kiểm tra và cập nhật ngưỡng độ ẩm
+      if (thresholdData.humidity.values[0] !== thresholdData.humidity.controlId) {
+        updatePromises.push(updateThreshold({
           id_esp,
           controlId: thresholdData.humidity.controlId,
           threshold_min: thresholdData.humidity.values[0],
           threshold_max: thresholdData.humidity.values[1],
-          mode: 'threshold',
-        }),
-        updateThreshold({
+        }));
+      }
+  
+      // Kiểm tra và cập nhật ngưỡng nhiệt độ
+      if (thresholdData.temperature.values[0] !== thresholdData.temperature.controlId) {
+        updatePromises.push(updateThreshold({
           id_esp,
           controlId: thresholdData.temperature.controlId,
           threshold_min: thresholdData.temperature.values[0],
           threshold_max: thresholdData.temperature.values[1],
-          mode: 'threshold',
-        }),
-        updateThreshold({
+        }));
+      }
+  
+      // Kiểm tra và cập nhật ngưỡng ánh sáng
+      if (thresholdData.light.values[0] !== thresholdData.light.controlId) {
+        updatePromises.push(updateThreshold({
           id_esp,
           controlId: thresholdData.light.controlId,
           threshold_min: thresholdData.light.values[0],
           threshold_max: thresholdData.light.values[1],
-          mode: 'threshold',
-        }),
-      ];
-
-      await Promise.all(updatePromises);
-      // Kiểm tra tất cả các yêu cầu có thành công không
-      // Lưu ý: Kiểm tra `result._j?.message` có thể không chính xác, tùy thuộc vào cấu trúc phản hồi thực tế của API
-      await fetchDevices();
-      Alert.alert('Thành công', 'Đã lưu ngưỡng thành công!');
+        }));
+      }
+  
+      // Thực hiện các yêu cầu cập nhật
+      if (updatePromises.length > 0) {
+        await Promise.all(updatePromises);
+        await fetchDevices();
+        Alert.alert('Thành công', 'Đã lưu ngưỡng thành công!');
+      } else {
+        Alert.alert('Thông báo', 'Không có thay đổi nào để lưu.');
+      }
     } catch (err) {
       console.error('Lỗi khi lưu ngưỡng:', err.message);
       Alert.alert('Lỗi', 'Không thể lưu ngưỡng. Vui lòng thử lại.');
@@ -178,13 +177,13 @@ const SensorThresholdScreen = ({navigation}) => {
       setLoading(false);
     }
   };
-
+  
   const renderItem = ({item}) => {
     // Kiểm tra quyền để vô hiệu hóa nút lưu nếu không phải owner
     const deviceMembers = members[item.id_esp] || [];
-    const isOwner = deviceMembers.some(
-      member => member.isCurrentUser && member.role === 'owner',
-    );
+    // const isOwner = deviceMembers.some(
+    //   member => member.isCurrentUser && member.role === 'owner',
+    // );
 
     return (
       <View style={styles.itemContainer}>
@@ -215,7 +214,8 @@ const SensorThresholdScreen = ({navigation}) => {
             trackStyle={styles.track}
             selectedStyle={styles.selectedTrack}
             markerStyle={styles.marker}
-            disabled={loading || !isOwner} // Vô hiệu hóa slider nếu không phải owner
+            // disabled={loading || !isOwner} 
+            // Vô hiệu hóa slider nếu không phải owner
           />
         </View>
         {/* Slider cho nhiệt độ */}
@@ -238,7 +238,8 @@ const SensorThresholdScreen = ({navigation}) => {
             trackStyle={styles.track}
             selectedStyle={styles.selectedTrack}
             markerStyle={styles.marker}
-            disabled={loading || !isOwner} // Vô hiệu hóa slider nếu không phải owner
+            // disabled={loading || !isOwner} 
+            // Vô hiệu hóa slider nếu không phải owner
           />
         </View>
         {/* Slider cho ánh sáng */}
@@ -261,16 +262,19 @@ const SensorThresholdScreen = ({navigation}) => {
             trackStyle={styles.track}
             selectedStyle={styles.selectedTrack}
             markerStyle={styles.marker}
-            disabled={loading || !isOwner} // Vô hiệu hóa slider nếu không phải owner
+            // disabled={loading || !isOwner} 
+            // Vô hiệu hóa slider nếu không phải owner
           />
         </View>
         <TouchableOpacity
-          style={[
-            styles.saveButton,
-            (loading || !isOwner) && styles.saveButtonDisabled,
-          ]}
+        style={ styles.saveButton}
+          // style={[
+          //   styles.saveButton,
+          //   (loading || !isOwner) && styles.saveButtonDisabled,
+          // ]}
           onPress={() => saveThreshold(item.id_esp)}
-          disabled={loading || !isOwner} // Vô hiệu hóa nút lưu nếu không phải owner
+          // disabled={loading || !isOwner} 
+          // Vô hiệu hóa nút lưu nếu không phải owner
         >
           <Text style={styles.saveButtonText}>
             {loading ? t('saving') : t('save')}

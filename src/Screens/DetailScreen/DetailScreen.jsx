@@ -40,15 +40,16 @@ import {
   unBlockMember,
   updateMember,
 } from '../../../services/menberServices';
-import {gardenId, me} from '../../../services/authServices';
+import {gardenId, me, meAuth} from '../../../services/authServices';
 import HeaderCompo from '../../components/HeaderCompo';
 import {
   updateNameDevice,
   uploadImgDevice,
 } from '../../../services/deviceServices';
 import {createStyle} from './style';
-import {updateControl} from '../../../services/controlServices';
+import {updateControl, updateMode} from '../../../services/controlServices';
 import {IMAGES} from '../../../utils/constants';
+import {Dropdown} from 'react-native-element-dropdown';
 
 const DetailScreen = ({navigation, route}) => {
   const {t} = useTranslation();
@@ -178,7 +179,7 @@ const DetailScreen = ({navigation, route}) => {
   };
   const fetchCurrentUserId = async () => {
     try {
-      const response = await me();
+      const response = await meAuth();
       if (response.status === 200) {
         setCurrentUserId(response.data._id);
       }
@@ -354,7 +355,7 @@ const DetailScreen = ({navigation, route}) => {
       });
       if (res.message === 'Successfully left the device') {
         navigation.goBack();
-        console.log('Người dùng rời thiết bị', deviceId);
+        // console.log('Người dùng rời thiết bị', deviceId);
       }
       Alert.alert(t('alert_success'), t('device_left_successfully'));
     } catch (error) {
@@ -378,12 +379,11 @@ const DetailScreen = ({navigation, route}) => {
   const handleBlockMember = async userId => {
     try {
       const res = await addBlockMember({id_esp: deviceId, userId});
-
       if (res.message === 'User added to block list successfully') {
         setUserInfo(prev => prev.filter(user => user.userId !== userId));
         await fetchDetailGarden();
         // Alert.alert(t('alert_success'), t('User added to block list successfully'));
-        console.log('1111');
+        // console.log('1111');
       }
     } catch (error) {
       Alert.alert(t('alert_error'), t('User added to block list failed'));
@@ -393,9 +393,12 @@ const DetailScreen = ({navigation, route}) => {
   const handleUnBlockMember = async userId => {
     try {
       const res = await unBlockMember({id_esp: deviceId, userId});
+      console.log(res);
+      if(res.message === 'User removed from block list successfully'){
+        await fetchDetailGarden();
+      }
       // setUserInfo(prev => prev.filter(user => user.userId !== userId));
       // console.log(res);
-      // await fetchDetailGarden();
     } catch (error) {
       Alert.alert(t('alert_error'), t('User unblock list block failed'));
     }
@@ -782,6 +785,20 @@ const FrameItem2 = ({
     }
   };
 
+  const handleMenuSelect = async (controlType, value) => {
+    try {
+      const res = await updateMode({
+        mode: value,
+      });
+      console.log('Updated mode', res);
+      
+      console.log(`Updated ${controlType} mode to ${value}`);
+    } catch (error) {
+      console.error('Lỗi khi cập nhật mode:', error);
+      Alert.alert(t('alert_error'), t('mode_update_failed'));
+    }
+  };
+
   return (
     <View style={styles.containerFrame}>
       <Header3 header3={t('controls')} />
@@ -790,27 +807,33 @@ const FrameItem2 = ({
         colorIcon="#03A9F4"
         txtStatus={t('water')}
         valueStatus={controls.water}
+        mode={controlMap.water.mode}
         onChange={() => {
           handleSwitchChange('water', controlMap?.water?._id, controls.water);
         }}
+        onMenuSelect={value => handleMenuSelect('water',controlMap?.water?._id, value)}
       />
       <StatusComponent
         nameIcon="lightbulb-on-outline"
         colorIcon="#FFEB3B"
         txtStatus={t('light')}
         valueStatus={controls.light}
+        mode={controlMap.light.mode}
         onChange={() => {
           handleSwitchChange('light', controlMap?.light?._id, controls.light);
         }}
+        onMenuSelect={value => handleMenuSelect('light', controlMap?.light?._id, value)}
       />
       <StatusComponent
         nameIcon="weather-windy"
         colorIcon="#90A4AE"
         txtStatus={t('wind')}
         valueStatus={controls.wind}
+        mode={controlMap.wind.mode}
         onChange={() => {
           handleSwitchChange('wind', controlMap?.wind?._id, controls.wind);
         }}
+        onMenuSelect={value => handleMenuSelect('wind',controlMap?.wind?._id, value)}
       />
     </View>
   );
@@ -821,11 +844,83 @@ const StatusComponent = ({
   colorIcon,
   txtStatus,
   valueStatus,
+  mode,
   onChange,
+  onMenuSelect,
 }) => {
   const {t} = useTranslation();
   const {theme} = useContext(ThemeContext);
   const styles = createStyle(theme);
+  const [selectedOption, setSelectedOption] = useState(mode);
+  const [isSwitchDisabled, setIsSwitchDisabled] = useState(false);
+
+  // Menu options
+  const menuOptions = [
+    {label: t('manual'), value: 'manual'},
+    {label: t('schedule'), value: 'schedule'},
+    {label: t('threshold'), value: 'threshold'},
+  ];
+
+  // Sync selectedOption with mode prop when it changes
+  useEffect(() => {
+    setSelectedOption(mode);
+  }, [mode]);
+
+  const handleOptionSelect = async value => {
+    let newStatus = valueStatus;
+
+    // If the selected option is 'schedule' or 'threshold', set status to false
+    if (value === 'schedule' || value === 'threshold') {
+      if (valueStatus) {
+        // Only call onChange if the switch is currently true to avoid unnecessary updates
+        newStatus = false;
+        await onChange(); // This will toggle the switch to false and update backend
+      }
+    } else if (value === 'manual') {
+      newStatus = valueStatus; // Keep the current status
+    }
+
+    setSelectedOption(value);
+    try {
+      await onMenuSelect(value, newStatus); // Update mode and status in backend
+    } catch (error) {
+      console.error('Lỗi khi cập nhật mode:', error);
+      Alert.alert(t('alert_error'), t('mode_update_failed'));
+      // Revert state if backend update fails
+      setSelectedOption(mode);
+      if (newStatus !== valueStatus) {
+        await onChange(); // Revert switch state
+      }
+    }
+  };
+
+  const handleSwitchChange = async () => {
+    if (isSwitchDisabled) return;
+
+    setIsSwitchDisabled(true);
+    const newValue = !valueStatus;
+
+    // If switching to true, set mode to manual
+    if (newValue) {
+      setSelectedOption('manual');
+      try {
+        await onMenuSelect('manual', newValue); // Update mode to manual and status
+      } catch (error) {
+        console.error('Lỗi khi cập nhật mode:', error);
+        Alert.alert(t('alert_error'), t('mode_update_failed'));
+        setSelectedOption(mode);
+        setIsSwitchDisabled(false);
+        return;
+      }
+    }
+
+    await onChange(); // Update switch state
+
+    setTimeout(() => {
+      setIsSwitchDisabled(false);
+    }, 1000);
+  };
+
   return (
     <View style={styles.contentFrame}>
       <View style={styles.iconContent}>
@@ -834,10 +929,33 @@ const StatusComponent = ({
       <View style={styles.textContent}>
         <Text style={styles.textStyle}>{txtStatus}</Text>
       </View>
-      <View style={styles.valueContent}>
+      <View style={styles.controlSettingsContainer}>
+        <Dropdown
+          style={styles.controlMenuButton}
+          data={menuOptions}
+          itemTextStyle={{
+            color: theme === 'light' ? colors.primary : colors.white,
+          }}
+          selectedTextStyle={{
+            color: theme === 'light' ? colors.primary : colors.white,
+          }}
+          labelField="label"
+          valueField="value"
+          value={selectedOption}
+          onChange={item => handleOptionSelect(item.value)} // Pass the value directly
+          renderRightIcon={() => (
+            <Icon
+              name="chevron-down"
+              size={20}
+              color={colors.primary}
+              style={styles.controlMenuIcon}
+            />
+          )}
+        />
         <Switch
           value={valueStatus}
-          onValueChange={onChange}
+          onValueChange={handleSwitchChange}
+          disabled={isSwitchDisabled}
           trackColor={{false: '#F6F6F6', true: 'white'}}
           thumbColor={valueStatus ? colors.primary : '#ACACAC'}
           style={{transform: [{scale: 1.2}]}}

@@ -76,7 +76,7 @@ const VerifyReset = ({email, handleVerifyOTP, handleReSendCode, handleBack}) => 
         <View style={styles.otpContainer}>
           {timer > 0 && (
             <Text style={styles.vrResendText}>
-              Thời gian còn lại {formatTime(timer)}
+              {t('remaining_time')} {formatTime(timer)}
             </Text>
           )}
           <Text style={styles.vrNoticeText}>
