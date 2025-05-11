@@ -49,6 +49,7 @@
   "otp_expired": "OTP has expired",
   "registration_success": "Account registration successful",
   "verify": "Verify",
+  "reset_password ": "Reset Password ",
 
   "email_required": "Please enter your email.",
   "email_invalid": "Email must end with @gmail.com.",
@@ -72,6 +73,7 @@
   "alert_account_created": "Account has been created successfully.",
   "alert_otp_verification_failed": "OTP verification failed. Please check and try again.",
   "otp_send_error": "Error: Unable to send OTP!",
+  "email_already_exists": "Email already exists",
 
   "otp_verification_success": "Verification successful!",
   "registration_success_message": "Account registration successful",
@@ -269,5 +271,13 @@
   "from_device": "from the device?",
   "confirm_add": "Do you want to add",
   "block_listmem": "block list?",
+
+  "manual": "manual",
+  "schedule": "schedule",
+  "threshold": "threshold",
+  "all": "All",
+  "cannot_add_device": "Access to this device has been restricted for you.",
+  "no_gardens": "No gardens available.",
+  "remaining_time": "Remaining time",
   "": ""
 }

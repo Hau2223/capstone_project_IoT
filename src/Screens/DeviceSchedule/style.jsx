@@ -27,7 +27,7 @@ const light = StyleSheet.create({
     height: 'auto',
     width: '100%',
     flexDirection: 'column',
-    marginBottom: 180,
+
   },
   itemWrapper: {
     alignItems: 'center',

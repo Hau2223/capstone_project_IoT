@@ -170,7 +170,7 @@ const ComfirmNewPass = ({data, handleInputChange, handleResetPass, handleBack}) 
           locations={[0, 0.6]}
           style={styles.cnpButton}>
           <TouchableOpacity onPress={handleRequest}>
-            <Text style={styles.cnpButtonText}>{t('verify')}</Text>
+            <Text style={styles.cnpButtonText}>{t('reset_password')}</Text>
           </TouchableOpacity>
         </LinearGradient>
       </View>

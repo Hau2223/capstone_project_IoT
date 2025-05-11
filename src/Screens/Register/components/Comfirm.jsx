@@ -46,7 +46,7 @@ const Comfirm = ({email, handleSendCode, handleInputChange, handleEmail}) => {
           end={{x: 1, y: 0}}
           locations={[0, 0.6]}
           style={styles.ceButton}>
-          <Pressable onPress={handlePress}>
+          <Pressable onPress={handlePress} style={styles.cetouchableArea}>
             <Text style={styles.ceButtonText}>{t('send_code')}</Text>
           </Pressable>
         </LinearGradient>

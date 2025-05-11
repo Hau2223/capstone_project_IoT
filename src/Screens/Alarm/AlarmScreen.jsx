@@ -19,7 +19,7 @@ import {createStyle} from './style';
 import {useTranslation} from 'react-i18next';
 import colors from '../../../assets/common/colorCss';
 import HeaderCompo from '../../components/HeaderCompo';
-// import Toast from 'react-native-toast-message';
+import Toast from 'react-native-toast-message';
 
 const AlarmScreen = ({route, navigation}) => {
   const {t} = useTranslation();

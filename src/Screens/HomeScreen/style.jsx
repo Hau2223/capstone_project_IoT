@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import {StyleSheet} from 'react-native';
 import colors from '../../../assets/common/colorCss';
 
 const light = StyleSheet.create({
@@ -47,11 +47,10 @@ const light = StyleSheet.create({
     paddingHorizontal: 4,
   },
   container: {
-    height: 'auto',
-    width: '100%',
+    flex: 1,
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 80,
+    justifyContent: 'center',
+    backgroundColor: colors.secondary,
   },
   itemWrapper: {
     alignItems: 'center',
@@ -60,6 +59,7 @@ const light = StyleSheet.create({
     padding: 5,
   },
   listContainer: {
+    marginTop: 10,
     paddingHorizontal: 5,
     overflow: 'hidden',
   },
@@ -101,6 +101,7 @@ const light = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     alignItems: 'center',
+
     gap: 15,
   },
   modalTitle: {
@@ -180,6 +181,12 @@ const light = StyleSheet.create({
     fontWeight: '500',
     fontStyle: 'italic',
   },
+  emptyText: {
+    fontSize: 18,
+    color: colors.black,
+    textAlign: 'center',
+    marginTop: 20,
+  },
 });
 
 const dark = StyleSheet.create({
@@ -187,6 +194,10 @@ const dark = StyleSheet.create({
   frame: {
     ...light.frame,
     backgroundColor: colors.bg_dark,
+  },
+  container: {
+    ...light.container,
+    backgroundColor: colors.bg_dark, 
   },
   modalContainer: {
     ...light.modalContainer,
@@ -217,6 +228,10 @@ const dark = StyleSheet.create({
   itemSkeleton: {
     ...light.itemSkeleton,
     backgroundColor: colors.bg_dark,
+  },
+  emptyText: {
+    ...light.emptyText,
+    color: colors.lightGray,
   },
 });
 

@@ -1,4 +1,4 @@
-import {StyleSheet} from 'react-native';
+import { StyleSheet } from 'react-native';
 import colors from '../../../assets/common/colorCss';
 
 const light = StyleSheet.create({
@@ -12,7 +12,7 @@ const light = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.white,
     overflow: 'hidden',
-    paddingTop: 5,
+    paddingTop: 6,
     paddingHorizontal: 10,
     gap: 5,
   },
@@ -81,6 +81,7 @@ const light = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colors.borderColor,
     padding: 10,
+    gap: 10,
     backgroundColor: colors.white,
   },
   textHeader3: {
@@ -93,6 +94,7 @@ const light = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     paddingHorizontal: 5,
+    alignItems: 'center',
   },
   UserFrame: {
     width: '100%',
@@ -107,7 +109,6 @@ const light = StyleSheet.create({
   noBorderBottom: {
     borderBottomWidth: 0,
   },
-
   textContent: {
     width: '65%',
     justifyContent: 'center',
@@ -116,6 +117,13 @@ const light = StyleSheet.create({
     width: '20%',
     justifyContent: 'center',
     alignItems: 'flex-end',
+  },
+  controlSettingsContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 10,
   },
   iconContent: {
     width: '15%',
@@ -126,7 +134,6 @@ const light = StyleSheet.create({
   layout_role: {
     width: '10%',
   },
-
   noMembersText: {
     textAlign: 'center',
     color: colors.black,
@@ -149,7 +156,7 @@ const light = StyleSheet.create({
     gap: 15,
     elevation: 5,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
@@ -203,27 +210,18 @@ const light = StyleSheet.create({
     color: colors.white,
     fontWeight: 'bold',
   },
-  menuContainer: {
-    width: '100%',
-    marginVertical: 10,
-  },
-  menuAnchor: {
+  // Custom Dropdown Styles
+  controlMenuButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 2,
+    borderWidth: 1,
+    borderRadius: 8,
     borderColor: colors.primary,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 6,
     backgroundColor: colors.white,
-  },
-  menuAnchorText: {
-    fontSize: 16,
-    color: colors.black,
-  },
-  menuIcon: {
-    marginLeft: 10,
+    minWidth: 120,
+    maxWidth: 120,
   },
   selectedUserText: {
     fontSize: 16,
@@ -240,11 +238,11 @@ const light = StyleSheet.create({
   },
   menuItem: {
     padding: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.5)',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderColor,
   },
   menuItemText: {
-    fontSize: 16,
+    fontSize: 14,
     color: colors.black,
   },
   noMembersText: {
@@ -322,10 +320,33 @@ const dark = StyleSheet.create({
   modalInput: {
     ...light.modalInput,
     color: colors.white,
+    borderColor: colors.white,
+  },
+  modalButtonPrimary: {
+    ...light.modalButtonPrimary,
+    backgroundColor: '#28A745',
+  },
+  modalButtonCancel: {
+    ...light.modalButtonCancel,
+    backgroundColor: '#F5A623',
+  },
+  controlMenuButton: {
+    ...light.controlMenuButton,
+    backgroundColor: colors.bg_dark,
+    borderColor: colors.white,
+  },
+  controlMenuIcon: {
+    ...light.controlMenuIcon,
+  },
+  flatList: {
+    ...light.flatList,
+    backgroundColor: colors.bg_dark,
+    borderColor: colors.white,
   },
   menuItem: {
     ...light.menuItem,
     borderBottomColor: '#444',
+    backgroundColor: colors.bg_dark,
   },
   menuItemText: {
     ...light.menuItemText,
@@ -335,21 +356,13 @@ const dark = StyleSheet.create({
     ...light.noMembersText,
     color: colors.white,
   },
-  menuAnchor: {
-    ...light.menuAnchor,
-    backgroundColor: colors.bg_dark,
+  detailBlock: {
+    ...light.detailBlock,
+    backgroundColor: colors.primary,
   },
-  menuAnchorText: {
-    ...light.menuAnchorText,
-    color: colors.white,
-  },
-  flatList: {
-    ...light.flatList,
-    backgroundColor: colors.bg_dark,
-  },
-  menuItemText: {
-    ...light.menuItemText,
-    color: colors.white,
+  layoutBlock: {
+    ...light.layoutBlock,
+    borderColor: colors.white,
   },
 });
 

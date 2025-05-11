@@ -1,4 +1,4 @@
-import {StatusBar, Modal, ActivityIndicator, View, Text} from 'react-native';
+import {StatusBar} from 'react-native';
 import React, {useState, useCallback, memo, useContext, useEffect} from 'react';
 import {useNavigation, useIsFocused} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
@@ -59,16 +59,23 @@ const RegisterScreen = () => {
     return true;
   }, [data.email, t]);
 
+  const handlePass = useCallback(() => {
+    if (data.password.length < 8) {
+      showAlert(t('alert_warning'), t('email_required'));
+      return false;
+    }
+    return true;
+  }, [data.email, t]);
+
   const handleInputChange = (key, value) => {
     setData(prev => ({...prev, [key]: value}));
   };
 
   const handleSendCode = () => {
+    setIsLoading(true);
     if (!handleEmail()) {
       return;
     }
-    setIsLoading(true);
-
     sendOTPEmail({email: data.email})
       .then(response => {
         console.log('Mã OTP đã gửi:', response);
@@ -77,7 +84,11 @@ const RegisterScreen = () => {
         }
       })
       .catch(error => {
-        console.error('Lỗi không thể gửi mã OTP!:', error);
+        console.error('Lỗi không thể gửi mã OTP!:', error.response?.data?.message);
+        const errMsg = err.response?.data?.message;
+        if(errMsg === 'Email already exists!'){
+          showAlert(t('alert_info'), t('email_already_exists'));
+        }
         showAlert(t('alert_error'), t('otp_send_error'));
       })
       .finally(() => {
@@ -95,7 +106,7 @@ const RegisterScreen = () => {
         console.log('Mã OTP được gửi lại', res);
       })
       .catch(error => {
-        console.error('Lỗi khi gửi OTP:', error);
+        console.error('Lỗi khi gửi OTP:', error.response?.data?.message);
         showAlert(t('alert_error'), t('otp_send_error'));
       })
       .finally(() => {

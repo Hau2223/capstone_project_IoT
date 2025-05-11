@@ -12,7 +12,6 @@ const HeaderCompo = ({name, isPress, color, bgcolor, height}) => {
         color={color || colors.black}
         style={styles.iconHeader}
         onPress={isPress}
-      
       />
       <Text style={[styles.txtHeader, {color: color || colors.black}]}>{name}</Text>
     </View>
@@ -34,7 +33,8 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   txtHeader: {
-    fontSize: 27,
+    fontSize: 20,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
 });

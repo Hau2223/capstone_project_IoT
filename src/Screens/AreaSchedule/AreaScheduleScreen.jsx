@@ -27,11 +27,9 @@ const AreaScheduleScreen = ({navigation, route}) => {
       )}
       <TopTab.Navigator
         screenOptions={{
-          tabBarActiveTintColor: theme === 'light'? colors.primary : colors.white,
+          tabBarActiveTintColor:colors.primary,
           tabBarInactiveTintColor:theme === 'light'? colors.bg_InActopTab : colors.white,
-          tabBarIndicatorStyle: {
-            backgroundColor:theme === 'light'? colors.primary : colors.white,
-          },
+          tabBarIndicatorStyle:  {backgroundColor: colors.primary, height: 3},
           tabBarStyle: {
             backgroundColor: theme === 'light' ? colors.white : colors.bg_dark,
           },

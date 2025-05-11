@@ -30,7 +30,8 @@ export const sendOTPEmail = async params => {
 };
 
 export const sendEmailReset = async params => {
-  return await get(`/user/sendCode/${params.email}`);
+  console.log(params.email);
+  return await get(`/user/sendCodeReset/${params.email}`);
 };
 
 export const verifyOTP = async params => {
@@ -51,7 +52,7 @@ export const profile = async () => {
   return await get('/user/profile');
 };
 
-export const me = async () => {
+export const meAuth = async () => {
   return await get('/user/me');
 };
 

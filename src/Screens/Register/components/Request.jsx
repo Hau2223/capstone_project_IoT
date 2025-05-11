@@ -85,24 +85,29 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
           </View>
 
           {/* Input Password */}
-          <View style={styles.rqInputPasswordWrapper}>
-            <TextInput
-              value={data.password}
-              onChangeText={text => handleInputChange('password', text)}
-              secureTextEntry={!showPassword}
-              placeholder={t('enter_password')}
-              underlineColorAndroid={colors.white}
-              electionColor={colors.loginTxt}
-              placeholderTextColor={colors.loginTxt}
-              style={[styles.rqTextInput, {flex: 1}]}
-            />
-            <Pressable onPress={() => setShowPassword(prev => !prev)}>
-              <Ionicons
-                name={showPassword ? 'eye-off' : 'eye'}
-                size={22}
-                color={colors.loginTxt}
+          <View style={styles.rqInputGroup}>
+            <View style={styles.rqInputPasswordWrapper}>
+              <TextInput
+                value={data.password}
+                onChangeText={text => handleInputChange('password', text)}
+                secureTextEntry={!showPassword}
+                placeholder={t('enter_password')}
+                underlineColorAndroid={colors.white}
+                electionColor={colors.loginTxt}
+                placeholderTextColor={colors.loginTxt}
+                style={[styles.rqTextInput, {flex: 1}]}
               />
-            </Pressable>
+              <Pressable onPress={() => setShowPassword(prev => !prev)}>
+                <Ionicons
+                  name={showPassword ? 'eye-off' : 'eye'}
+                  size={22}
+                  color={colors.loginTxt}
+                />
+              </Pressable>
+            </View>
+            {error.email && (
+              <Text style={styles.rqErrorText}>{error.password}</Text>
+            )}
           </View>
         </View>
 
@@ -113,7 +118,7 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
             end={{x: 1, y: 0}}
             locations={[0, 0.6]}
             style={styles.rqButton}>
-            <Pressable onPress={handleRequest}>
+            <Pressable onPress={handleRequest} style={styles.touchableArea}>
               <Text style={styles.rqButtonText}>{t('create_account')}</Text>
             </Pressable>
           </LinearGradient>

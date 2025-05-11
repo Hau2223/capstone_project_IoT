@@ -74,7 +74,9 @@ const DevicesListScreen = ({navigation, route}) => {
             let statusText = 'Chưa có thiết bị';
             if (control) {
               if (hasSchedules) {
-                statusText = `${t('status_label')} ${control.status ? t('status_on') : t('status_off') }`;
+                statusText = `${t('status_label')} ${
+                  control.status ? t('status_on') : t('status_off')
+                }`;
               } else {
                 statusText = `${t('status_label')} - - -`;
               }
@@ -116,7 +118,12 @@ const DevicesListScreen = ({navigation, route}) => {
           barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
         />
       )}
-      <HeaderCompo isPress={() => navigation.goBack()} bgcolor={colors.bg_NaN} name={t('garden_schedule_list')} color={theme === 'light' ? colors.black : colors.white}/>
+      <HeaderCompo
+        isPress={() => navigation.goBack()}
+        bgcolor={colors.bg_NaN}
+        name={t('garden_schedule_list')}
+        color={theme === 'light' ? colors.black : colors.white}
+      />
       <View style={styles.container}>
         <FlatList
           showsVerticalScrollIndicator={false}
@@ -137,10 +144,11 @@ const DevicesListScreen = ({navigation, route}) => {
           )}
           nestedScrollEnabled={true}
           contentContainerStyle={styles.listContainer}
+          ListFooterComponent={<View style={{height: 20}} />}
         />
       </View>
     </View>
   );
 };
 
-export default memo(DevicesListScreen);  
+export default memo(DevicesListScreen);

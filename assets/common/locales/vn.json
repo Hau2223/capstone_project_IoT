@@ -50,6 +50,7 @@
   "otp_expired": "Mã OTP đã hết hạn",
   "registration_success": "Đăng kí tài khoản thành công",
   "verify": "Xác minh",
+  "reset_password ": "Đặt lại mật khẩu",
 
   "email_required": "Vui lòng nhập email của bạn.",
   "email_invalid": "Email phải có đuôi @gmail.com.",
@@ -73,6 +74,7 @@
   "alert_account_created": "Tài khoản đã được tạo thành công.",
   "alert_otp_verification_failed": "Xác minh OTP không thành công. Vui lòng kiểm tra và thử lại.",
   "otp_send_error": "Lỗi không thể gửi mã OTP!",
+  "email_already_exists": "Email đã tồn tại",
 
   "otp_verification_success": "Xác minh thành công!",
   "registration_success_message": "Đăng kí tài khoản thành công",
@@ -266,12 +268,18 @@
   "blocks": "Chặn",
   "no_blocked_users": "Không có người dùng nào bị chặn",
   "unblock": "Bỏ chặn",
-  
-  
+
   "confirm_delete": "Bạn có chắc chắn muốn xóa",
   "from_device": "khỏi thiết bị?",
   "confirm_add": "Bán có muốn thêm",
   "block_listmem": "dạnh sách chặn?",
 
+  "manual": "thủ công",
+  "schedule": "lịch",
+  "threshold": "ngưỡng",
+  "all": "Tất cả",
+  "cannot_add_device": "Bạn không được phép truy cập vào thiết bị này.",
+  "no_gardens": "Không có vườn nào.",
+  "remaining_time": "Thời gian còn lại",
   "": ""
 }

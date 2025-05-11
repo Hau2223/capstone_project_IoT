@@ -24,7 +24,7 @@ const colors = {
   txtLoginWith: '#787878',
   txtForget: '#379F45',
   InputOTP: '#D5CBF2',
-  reSendOTP: '#12589E',
+  reSendOTP: '#FFC107',
   bg_setting: '#F0F4F3',
   txtSetting: '#15B392',
 
