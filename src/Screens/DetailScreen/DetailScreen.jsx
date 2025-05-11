@@ -394,7 +394,7 @@ const DetailScreen = ({navigation, route}) => {
     try {
       const res = await unBlockMember({id_esp: deviceId, userId});
       console.log(res);
-      if(res.message === 'User removed from block list successfully'){
+      if (res.message === 'User removed from block list successfully') {
         await fetchDetailGarden();
       }
       // setUserInfo(prev => prev.filter(user => user.userId !== userId));
@@ -785,14 +785,19 @@ const FrameItem2 = ({
     }
   };
 
-  const handleMenuSelect = async (controlType, value) => {
+  const handleMenuSelect = async (controlType, controlId, value) => {
     try {
+      // Gọi API updateMode để cập nhật mode trên server
       const res = await updateMode({
+        id_esp: deviceId,
+        controlId: controlId,
         mode: value,
       });
-      console.log('Updated mode', res);
-      
-      console.log(`Updated ${controlType} mode to ${value}`);
+
+      if (res.message === 'Control updated successfully') {
+        updateControlMap(controlType, controls[controlType]);
+        console.log(`Updated ${controlType} mode to ${value}`);
+      }
     } catch (error) {
       console.error('Lỗi khi cập nhật mode:', error);
       Alert.alert(t('alert_error'), t('mode_update_failed'));
@@ -811,7 +816,9 @@ const FrameItem2 = ({
         onChange={() => {
           handleSwitchChange('water', controlMap?.water?._id, controls.water);
         }}
-        onMenuSelect={value => handleMenuSelect('water',controlMap?.water?._id, value)}
+        onMenuSelect={value =>
+          handleMenuSelect('water', controlMap?.water?._id, value)
+        }
       />
       <StatusComponent
         nameIcon="lightbulb-on-outline"
@@ -822,7 +829,9 @@ const FrameItem2 = ({
         onChange={() => {
           handleSwitchChange('light', controlMap?.light?._id, controls.light);
         }}
-        onMenuSelect={value => handleMenuSelect('light', controlMap?.light?._id, value)}
+        onMenuSelect={value =>
+          handleMenuSelect('light', controlMap?.light?._id, value)
+        }
       />
       <StatusComponent
         nameIcon="weather-windy"
@@ -833,7 +842,9 @@ const FrameItem2 = ({
         onChange={() => {
           handleSwitchChange('wind', controlMap?.wind?._id, controls.wind);
         }}
-        onMenuSelect={value => handleMenuSelect('wind',controlMap?.wind?._id, value)}
+        onMenuSelect={value =>
+          handleMenuSelect('wind', controlMap?.wind?._id, value)
+        }
       />
     </View>
   );
@@ -869,27 +880,26 @@ const StatusComponent = ({
   const handleOptionSelect = async value => {
     let newStatus = valueStatus;
 
-    // If the selected option is 'schedule' or 'threshold', set status to false
+    // Nếu chọn 'schedule' hoặc 'threshold', tắt switch (status = false)
     if (value === 'schedule' || value === 'threshold') {
       if (valueStatus) {
-        // Only call onChange if the switch is currently true to avoid unnecessary updates
         newStatus = false;
-        await onChange(); // This will toggle the switch to false and update backend
+        await onChange(); // Tắt switch và cập nhật trạng thái
       }
     } else if (value === 'manual') {
-      newStatus = valueStatus; // Keep the current status
+      newStatus = valueStatus; // Giữ nguyên trạng thái switch
     }
 
     setSelectedOption(value);
     try {
-      await onMenuSelect(value, newStatus); // Update mode and status in backend
+      await onMenuSelect(value, newStatus); // Gọi onMenuSelect để cập nhật mode và status
     } catch (error) {
       console.error('Lỗi khi cập nhật mode:', error);
       Alert.alert(t('alert_error'), t('mode_update_failed'));
-      // Revert state if backend update fails
+      // Quay lại trạng thái trước đó nếu lỗi
       setSelectedOption(mode);
       if (newStatus !== valueStatus) {
-        await onChange(); // Revert switch state
+        await onChange(); // Hoàn nguyên trạng thái switch
       }
     }
   };
