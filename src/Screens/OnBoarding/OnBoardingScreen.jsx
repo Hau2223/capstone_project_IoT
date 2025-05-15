@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import colors from '../../../assets/common/colorCss';
 import {useIsFocused} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
+import { fonts } from '../../../assets/common/fontCss';
 
 const OnBoardingScreen = () => {
   const {t} = useTranslation();
@@ -186,7 +187,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   txtDone: {
-    fontSize: 16,
+    fontSize: fonts.FontSize.L,
     fontWeight: 'bold',
     color: colors.white,
   },

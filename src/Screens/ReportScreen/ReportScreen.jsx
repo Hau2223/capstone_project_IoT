@@ -121,6 +121,7 @@ const ReportScreen = ({ navigation }) => {
             data={devices}
             numColumns={2}
             keyExtractor={item => item._id}
+            showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
               <View style={styles.itemWrapper}>
                 <ItemArea
@@ -131,6 +132,7 @@ const ReportScreen = ({ navigation }) => {
               </View>
             )}
             contentContainerStyle={styles.listContainer}
+            ListFooterComponent={<View style={{height: 50}} />}
           />
         )}
       </View>
@@ -148,7 +150,7 @@ const ItemArea = ({ nameArea, imageSource, onPress }) => {
       <View style={styles.overlay}>
         <Icon
           name="bar-chart-outline"
-          size={30}
+          size={28}
           color="white"
           style={styles.icon}
         />

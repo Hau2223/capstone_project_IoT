@@ -61,11 +61,11 @@ const Verification = ({email, handleVerifyOTP, handleReSendCode}) => {
               height: 50,
               borderRadius: 8,
               marginHorizontal: 5,
-              focusedPinCodeContainerStyle: colors.green,
+              focusedPinCodeContainerStyle: colors.primary,
               borderWidth: 2,
             },
             pinCodeTextStyle: {
-              color: colors.green,
+              color: colors.primary,
             },
           }}
         />
@@ -73,15 +73,9 @@ const Verification = ({email, handleVerifyOTP, handleReSendCode}) => {
         <View style={styles.otpContainer}>
           {timer > 0 && (
             <Text style={styles.vrResendText}>
-              Thời gian còn lại {formatTime(timer)}
+              {t('remaining_time')}: {formatTime(timer)}
             </Text>
           )}
-          <Text style={styles.vrNoticeText}>
-            {t('did_not_receive_code')}{' '}
-            <Text style={styles.vrResendText} onPress={handleResend}>
-              {t('resend_code')}
-            </Text>
-          </Text>
         </View>
 
         <LinearGradient
@@ -90,10 +84,18 @@ const Verification = ({email, handleVerifyOTP, handleReSendCode}) => {
           end={{x: 1, y: 0}}
           locations={[0, 0.6]}
           style={styles.vrButton}>
-          <Pressable onPress={() => handleVerifyOTP(otp)} style={styles.touchableArea}>
+          <Pressable
+            onPress={() => handleVerifyOTP(otp)}
+            style={styles.touchableArea}>
             <Text style={styles.vrButtonText}>{t('verify')}</Text>
           </Pressable>
         </LinearGradient>
+        <Text style={styles.vrNoticeText}>
+          {t('did_not_receive_code')}{' '}
+          <Text style={styles.vrResendText} onPress={handleResend}>
+            {t('resend_code')}
+          </Text>
+        </Text>
       </View>
     </View>
   );

@@ -9,6 +9,7 @@ import colors from '../../../assets/common/colorCss';
 import {TextInput} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {changePassword} from '../../../services/authServices';
+import Toast from 'react-native-toast-message';
 
 const ChangePasswordScreen = ({navigation}) => {
   const {theme} = useContext(ThemeContext);
@@ -51,15 +52,18 @@ const ChangePasswordScreen = ({navigation}) => {
     };
 
     let hasError = false;
-    // if(!currentPassword){
-    //   newError.currentPassword = t('Current password is incorrect')
-    // }
+    if (!currentPassword) {
+      newError.currentPassword = t('Current password is incorrect');
+    }
     if (!newPassword || newPassword.length < 8) {
       newError.newPassword = t('password_min_length');
       hasError = true;
     }
 
-    if (newPassword !== confirmPassword) {
+    if (!confirmPassword || confirmPassword.length < 8) {
+      newError.confirmPassword = t('password_min_length');
+      hasError = true;
+    } else if (newPassword !== confirmPassword) {
       newError.confirmPassword = t('passwords_do_not_match');
       hasError = true;
     }
@@ -71,9 +75,17 @@ const ChangePasswordScreen = ({navigation}) => {
 
     try {
       const res = await changePassword({currentPassword, newPassword});
-      Alert.alert(t('success'), t('password_changed_successfully'), [
-        {text: 'OK', onPress: () => navigation.goBack()},
-      ]);
+      Toast.show({
+        type: 'success',
+        text1: t('alert_success'),
+        text2: t('password_changed_successfully'),
+        text1Style: {fontSize: 16, color: colors.primary},
+        text2Style: {fontSize: 12, color: colors.black},
+        position: 'top',
+        autoHide: true,
+        visibilityTime: 3000,
+      });
+      navigation.goBack()
     } catch (err) {
       const msg = err?.response?.data?.message || 'Something went wrong';
       Alert.alert(t('error'), msg);
@@ -106,13 +118,14 @@ const ChangePasswordScreen = ({navigation}) => {
             right={
               <TextInput.Icon
                 icon={secureEntry.current ? 'eye-off' : 'eye'}
+                color={theme === 'light' ? colors.black : colors.white}
                 onPress={() => toggleSecureEntry('current')}
               />
             }
             style={styles.input}
             mode="outlined"
             activeOutlineColor={colors.primary}
-            outlineColor={colors.black}
+            outlineColor={theme === 'light' ? colors.black : colors.white}
           />
           {error.currentPassword ? (
             <Text style={styles.errorText}>{error.currentPassword}</Text>
@@ -130,13 +143,14 @@ const ChangePasswordScreen = ({navigation}) => {
             right={
               <TextInput.Icon
                 icon={secureEntry.new ? 'eye-off' : 'eye'}
+                color={theme === 'light' ? colors.black : colors.white}
                 onPress={() => toggleSecureEntry('new')}
               />
             }
             style={styles.input}
             mode="outlined"
             activeOutlineColor={colors.primary}
-            outlineColor={colors.black}
+            outlineColor={theme === 'light' ? colors.black : colors.white}
           />
           {error.newPassword ? (
             <Text style={styles.errorText}>{error.newPassword}</Text>
@@ -154,13 +168,14 @@ const ChangePasswordScreen = ({navigation}) => {
             right={
               <TextInput.Icon
                 icon={secureEntry.confirm ? 'eye-off' : 'eye'}
+                color={theme === 'light' ? colors.black : colors.white}
                 onPress={() => toggleSecureEntry('confirm')}
               />
             }
             style={styles.input}
             mode="outlined"
             activeOutlineColor={colors.primary}
-            outlineColor={colors.black}
+            outlineColor={theme === 'light' ? colors.black : colors.white}
           />
           {error.confirmPassword ? (
             <Text style={styles.errorText}>{error.confirmPassword}</Text>

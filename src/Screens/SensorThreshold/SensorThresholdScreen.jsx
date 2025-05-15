@@ -1,6 +1,12 @@
-import React, {useState, useEffect, useCallback, useContext, memo} from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useContext,
+  memo,
+  useRef,
+} from 'react';
 import {
-  StyleSheet,
   Text,
   View,
   FlatList,
@@ -16,6 +22,8 @@ import {updateThreshold} from '../../../services/controlServices';
 import {ThemeContext} from '../../../assets/common/themeProvider';
 import {createStyle} from './style';
 import {useTranslation} from 'react-i18next';
+import {useFocusEffect} from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
 
 const screenWidth = Dimensions.get('window').width;
 const itemSpacing = 10;
@@ -27,12 +35,12 @@ const SensorThresholdScreen = ({navigation}) => {
   const styles = createStyle(theme);
   const [devices, setDevices] = useState([]);
   const [thresholds, setThresholds] = useState({});
-  const [members, setMembers] = useState({}); // State để lưu thông tin members theo id_esp
+  const [localThresholds, setLocalThresholds] = useState({});
+  const [members, setMembers] = useState({});
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const isInitialFetch = useRef(true); // Sử dụng useRef để theo dõi lần fetch đầu tiên
 
-
-  // Lấy danh sách thiết bị
   const fetchDevices = useCallback(async () => {
     try {
       setError(null);
@@ -40,7 +48,6 @@ const SensorThresholdScreen = ({navigation}) => {
       if (response.status === 200) {
         const allDevices = response?.data || [];
 
-        // Ánh xạ thiết bị
         const filteredDevices = allDevices.map(device => ({
           id: device?._id,
           id_esp: device?.id_esp,
@@ -52,49 +59,86 @@ const SensorThresholdScreen = ({navigation}) => {
             : require('../../../assets/img/1.png'),
         }));
 
-        // Khởi tạo ngưỡng và thông tin members
-        const initialThresholds = {};
-        const initialMembers = {};
+        const newThresholds = {};
+        const newLocalThresholds = {};
+        const newMembers = {};
         filteredDevices.forEach(device => {
           const deviceData = allDevices.find(d => d.id_esp === device.id_esp);
           const controls = deviceData?.controls || [];
           const deviceMembers = deviceData?.members || [];
 
-          // Mặc định ngưỡng nếu không có controls
-          initialThresholds[device.id_esp] = {
+          newThresholds[device.id_esp] = {
+            humidity: {values: [0, 100], controlId: null},
+            temperature: {values: [0, 100], controlId: null},
+            light: {values: [0, 100], controlId: null},
+          };
+          newLocalThresholds[device.id_esp] = {
             humidity: {values: [0, 100], controlId: null},
             temperature: {values: [0, 100], controlId: null},
             light: {values: [0, 100], controlId: null},
           };
 
-          // Ánh xạ ngưỡng từ controls
           controls.forEach(control => {
             if (control.name === 'water') {
-              initialThresholds[device.id_esp].humidity = {
+              newThresholds[device.id_esp].humidity = {
+                values: [control.threshold_min, control.threshold_max],
+                controlId: control._id,
+              };
+              newLocalThresholds[device.id_esp].humidity = {
                 values: [control.threshold_min, control.threshold_max],
                 controlId: control._id,
               };
             } else if (control.name === 'light') {
-              initialThresholds[device.id_esp].light = {
+              newThresholds[device.id_esp].light = {
+                values: [control.threshold_min, control.threshold_max],
+                controlId: control._id,
+              };
+              newLocalThresholds[device.id_esp].light = {
                 values: [control.threshold_min, control.threshold_max],
                 controlId: control._id,
               };
             } else if (control.name === 'wind') {
-              initialThresholds[device.id_esp].temperature = {
+              newThresholds[device.id_esp].temperature = {
+                values: [control.threshold_min, control.threshold_max],
+                controlId: control._id,
+              };
+              newLocalThresholds[device.id_esp].temperature = {
                 values: [control.threshold_min, control.threshold_max],
                 controlId: control._id,
               };
             }
           });
 
-          // Lưu thông tin members theo id_esp
-          initialMembers[device.id_esp] = deviceMembers;
-          // console.log(`Members cho ${device.id_esp}:`, deviceMembers);
+          newMembers[device.id_esp] = deviceMembers;
         });
 
-        setDevices(filteredDevices);
-        setThresholds(initialThresholds);
-        setMembers(initialMembers);
+        // Chỉ cập nhật state nếu dữ liệu thay đổi
+        if (JSON.stringify(devices) !== JSON.stringify(filteredDevices)) {
+          setDevices(filteredDevices);
+        }
+        if (isInitialFetch.current) {
+          setThresholds(newThresholds);
+          setLocalThresholds(newLocalThresholds);
+          isInitialFetch.current = false;
+        } else if (
+          JSON.stringify(thresholds) !== JSON.stringify(newThresholds)
+        ) {
+          setThresholds(newThresholds);
+          setLocalThresholds(newLocalThresholds);
+          Toast.show({
+            type: 'info',
+            text1: t('alert_info'),
+            text2: t('threshold_updated_by_other_device'),
+            text1Style: {fontSize: 16, color: colors.black},
+            text2Style: {fontSize: 12, color: colors.black},
+            position: 'top',
+            autoHide: true,
+            visibilityTime: 2500,
+          });
+        }
+        if (JSON.stringify(members) !== JSON.stringify(newMembers)) {
+          setMembers(newMembers);
+        }
       } else {
         throw new Error('Không thể lấy danh sách thiết bị');
       }
@@ -103,15 +147,20 @@ const SensorThresholdScreen = ({navigation}) => {
       setError(err.response?.data?.message || 'Lỗi khi lấy dữ liệu thiết bị');
       setDevices([]);
     }
-  }, []);
+  }, [devices, thresholds, members, t]);
 
-  useEffect(() => {
-    fetchDevices();
-  }, [fetchDevices]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchDevices();
+      const intervalId = setInterval(() => {
+        fetchDevices();
+      }, 5000);
+      return () => clearInterval(intervalId);
+    }, [fetchDevices]),
+  );
 
-  // Xử lý thay đổi ngưỡng
   const handleThresholdChange = (id_esp, sensorType, values) => {
-    setThresholds(prev => ({
+    setLocalThresholds(prev => ({
       ...prev,
       [id_esp]: {
         ...prev[id_esp],
@@ -123,67 +172,102 @@ const SensorThresholdScreen = ({navigation}) => {
     }));
   };
 
-  // Kiểm tra quyền trước khi lưu ngưỡng
   const saveThreshold = async id_esp => {
-
-  
     setLoading(true);
     try {
-      const thresholdData = thresholds[id_esp];
+      const thresholdData = localThresholds[id_esp];
       const updatePromises = [];
-  
-      // Kiểm tra và cập nhật ngưỡng độ ẩm
-      if (thresholdData.humidity.values[0] !== thresholdData.humidity.controlId) {
-        updatePromises.push(updateThreshold({
-          id_esp,
-          controlId: thresholdData.humidity.controlId,
-          threshold_min: thresholdData.humidity.values[0],
-          threshold_max: thresholdData.humidity.values[1],
-        }));
+
+      if (
+        thresholdData.humidity.values[0] !==
+          thresholds[id_esp]?.humidity?.values[0] ||
+        thresholdData.humidity.values[1] !==
+          thresholds[id_esp]?.humidity?.values[1]
+      ) {
+        updatePromises.push(
+          updateThreshold({
+            id_esp,
+            controlId: thresholds[id_esp]?.humidity?.controlId,
+            threshold_min: thresholdData.humidity.values[0],
+            threshold_max: thresholdData.humidity.values[1],
+          }),
+        );
       }
-  
-      // Kiểm tra và cập nhật ngưỡng nhiệt độ
-      if (thresholdData.temperature.values[0] !== thresholdData.temperature.controlId) {
-        updatePromises.push(updateThreshold({
-          id_esp,
-          controlId: thresholdData.temperature.controlId,
-          threshold_min: thresholdData.temperature.values[0],
-          threshold_max: thresholdData.temperature.values[1],
-        }));
+
+      if (
+        thresholdData.temperature.values[0] !==
+          thresholds[id_esp]?.temperature?.values[0] ||
+        thresholdData.temperature.values[1] !==
+          thresholds[id_esp]?.temperature?.values[1]
+      ) {
+        updatePromises.push(
+          updateThreshold({
+            id_esp,
+            controlId: thresholds[id_esp]?.temperature?.controlId,
+            threshold_min: thresholdData.temperature.values[0],
+            threshold_max: thresholdData.temperature.values[1],
+          }),
+        );
       }
-  
-      // Kiểm tra và cập nhật ngưỡng ánh sáng
-      if (thresholdData.light.values[0] !== thresholdData.light.controlId) {
-        updatePromises.push(updateThreshold({
-          id_esp,
-          controlId: thresholdData.light.controlId,
-          threshold_min: thresholdData.light.values[0],
-          threshold_max: thresholdData.light.values[1],
-        }));
+
+      if (
+        thresholdData.light.values[0] !==
+          thresholds[id_esp]?.light?.values[0] ||
+        thresholdData.light.values[1] !== thresholds[id_esp]?.light?.values[1]
+      ) {
+        updatePromises.push(
+          updateThreshold({
+            id_esp,
+            controlId: thresholds[id_esp]?.light?.controlId,
+            threshold_min: thresholdData.light.values[0],
+            threshold_max: thresholdData.light.values[1],
+          }),
+        );
       }
-  
-      // Thực hiện các yêu cầu cập nhật
+
       if (updatePromises.length > 0) {
         await Promise.all(updatePromises);
-        await fetchDevices();
-        Alert.alert('Thành công', 'Đã lưu ngưỡng thành công!');
+        await fetchDevices(); // Gọi lại fetch để cập nhật thresholds sau khi lưu thành công
+        Toast.show({
+          type: 'success',
+          text1: t('alert_success'),
+          text2: t('success_thresshold'),
+          text1Style: {fontSize: 16, color: colors.primary},
+          text2Style: {fontSize: 12, color: colors.black},
+          position: 'top',
+          autoHide: true,
+          visibilityTime: 2500,
+        });
       } else {
-        Alert.alert('Thông báo', 'Không có thay đổi nào để lưu.');
+        Toast.show({
+          type: 'info',
+          text1: t('alert_info'),
+          text2: t('thresshold_no_change'),
+          text1Style: {fontSize: 16, color: colors.black},
+          text2Style: {fontSize: 12, color: colors.black},
+          position: 'top',
+          autoHide: true,
+          visibilityTime: 2500,
+        });
       }
     } catch (err) {
-      console.error('Lỗi khi lưu ngưỡng:', err.message);
-      Alert.alert('Lỗi', 'Không thể lưu ngưỡng. Vui lòng thử lại.');
+      Toast.show({
+        type: 'err',
+        text1: t('alert_info'),
+        text2: t('thresshold_no_change'),
+        text1Style: {fontSize: 16, color: colors.black},
+        text2Style: {fontSize: 12, color: colors.black},
+        position: 'top',
+        autoHide: true,
+        visibilityTime: 2500,
+      });
     } finally {
       setLoading(false);
     }
   };
-  
+
   const renderItem = ({item}) => {
-    // Kiểm tra quyền để vô hiệu hóa nút lưu nếu không phải owner
     const deviceMembers = members[item.id_esp] || [];
-    // const isOwner = deviceMembers.some(
-    //   member => member.isCurrentUser && member.role === 'owner',
-    // );
 
     return (
       <View style={styles.itemContainer}>
@@ -191,17 +275,17 @@ const SensorThresholdScreen = ({navigation}) => {
           <Image source={item.imageSource} style={styles.image} />
           <View style={styles.info}>
             <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.idEsp}>ID: {item.id_esp}</Text>
           </View>
         </View>
         {/* Slider cho độ ẩm */}
         <View style={styles.sliderContainer}>
           <Text style={styles.sliderLabel}>
-            {t('moisture_label')} {thresholds[item.id_esp]?.humidity?.values?.[0] || 0}% -{' '}
-            {thresholds[item.id_esp]?.humidity?.values?.[1] || 100}%
+            {t('moisture_label')}{' '}
+            {localThresholds[item.id_esp]?.humidity?.values?.[0] || 0}% -{' '}
+            {localThresholds[item.id_esp]?.humidity?.values?.[1] || 100}%
           </Text>
           <MultiSlider
-            values={thresholds[item.id_esp]?.humidity?.values || [0, 100]}
+            values={localThresholds[item.id_esp]?.humidity?.values || [0, 100]}
             sliderLength={itemWidth - 40}
             onValuesChange={values =>
               handleThresholdChange(item.id_esp, 'humidity', values)
@@ -214,18 +298,19 @@ const SensorThresholdScreen = ({navigation}) => {
             trackStyle={styles.track}
             selectedStyle={styles.selectedTrack}
             markerStyle={styles.marker}
-            // disabled={loading || !isOwner} 
-            // Vô hiệu hóa slider nếu không phải owner
           />
         </View>
         {/* Slider cho nhiệt độ */}
         <View style={styles.sliderContainer}>
           <Text style={styles.sliderLabel}>
-            {t('temperature_label')} {thresholds[item.id_esp]?.temperature?.values?.[0] || 0}°C
-            - {thresholds[item.id_esp]?.temperature?.values?.[1] || 50}°C
+            {t('temperature_label')}{' '}
+            {localThresholds[item.id_esp]?.temperature?.values?.[0] || 0}°C -{' '}
+            {localThresholds[item.id_esp]?.temperature?.values?.[1] || 50}°C
           </Text>
           <MultiSlider
-            values={thresholds[item.id_esp]?.temperature?.values || [0, 50]}
+            values={
+              localThresholds[item.id_esp]?.temperature?.values || [0, 50]
+            }
             sliderLength={itemWidth - 40}
             onValuesChange={values =>
               handleThresholdChange(item.id_esp, 'temperature', values)
@@ -238,18 +323,17 @@ const SensorThresholdScreen = ({navigation}) => {
             trackStyle={styles.track}
             selectedStyle={styles.selectedTrack}
             markerStyle={styles.marker}
-            // disabled={loading || !isOwner} 
-            // Vô hiệu hóa slider nếu không phải owner
           />
         </View>
         {/* Slider cho ánh sáng */}
         <View style={styles.sliderContainer}>
           <Text style={styles.sliderLabel}>
-            {t('light_label')} {thresholds[item.id_esp]?.light?.values?.[0] || 0} lux -{' '}
-            {thresholds[item.id_esp]?.light?.values?.[1] || 1000} lux
+            {t('light_label')}{' '}
+            {localThresholds[item.id_esp]?.light?.values?.[0] || 0} lux -{' '}
+            {localThresholds[item.id_esp]?.light?.values?.[1] || 1000} lux
           </Text>
           <MultiSlider
-            values={thresholds[item.id_esp]?.light?.values || [0, 1000]}
+            values={localThresholds[item.id_esp]?.light?.values || [0, 1000]}
             sliderLength={itemWidth - 40}
             onValuesChange={values =>
               handleThresholdChange(item.id_esp, 'light', values)
@@ -262,23 +346,12 @@ const SensorThresholdScreen = ({navigation}) => {
             trackStyle={styles.track}
             selectedStyle={styles.selectedTrack}
             markerStyle={styles.marker}
-            // disabled={loading || !isOwner} 
-            // Vô hiệu hóa slider nếu không phải owner
           />
         </View>
         <TouchableOpacity
-        style={ styles.saveButton}
-          // style={[
-          //   styles.saveButton,
-          //   (loading || !isOwner) && styles.saveButtonDisabled,
-          // ]}
-          onPress={() => saveThreshold(item.id_esp)}
-          // disabled={loading || !isOwner} 
-          // Vô hiệu hóa nút lưu nếu không phải owner
-        >
-          <Text style={styles.saveButtonText}>
-            {loading ? t('saving') : t('save')}
-          </Text>
+          style={styles.saveButton}
+          onPress={() => saveThreshold(item.id_esp)}>
+          <Text style={styles.saveButtonText}>{t('save')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -287,7 +360,9 @@ const SensorThresholdScreen = ({navigation}) => {
   return (
     <View style={styles.container}>
       {error ? (
-        <Text style={styles.error}>{t('alert_error')}: {error}</Text>
+        <Text style={styles.error}>
+          {t('alert_error')}: {error}
+        </Text>
       ) : devices.length === 0 ? (
         <Text style={styles.empty}>{t('no_devices')}</Text>
       ) : (
@@ -296,6 +371,7 @@ const SensorThresholdScreen = ({navigation}) => {
           renderItem={renderItem}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContainer}
+          extraData={localThresholds} // Theo dõi localThresholds để re-render khi slider thay đổi
           showsVerticalScrollIndicator={false}
           ListFooterComponent={<View style={{height: 20}} />}
         />
@@ -305,5 +381,3 @@ const SensorThresholdScreen = ({navigation}) => {
 };
 
 export default memo(SensorThresholdScreen);
-
-

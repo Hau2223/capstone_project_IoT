@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   txtHeader: {
-    fontSize: 20,
+    fontSize: 21,
     fontWeight: 'bold',
     textAlign: 'center',
   },

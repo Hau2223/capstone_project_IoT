@@ -3,10 +3,10 @@ import {
   Text,
   View,
   ScrollView,
-  StatusBar
+  StatusBar,
 } from 'react-native';
-import React, {useRef, useEffect, useState, memo, useContext} from 'react';
-import { useIsFocused } from '@react-navigation/native';
+import React, {useEffect, useState, memo, useContext} from 'react';
+import {useIsFocused} from '@react-navigation/native';
 import {LineChart} from 'react-native-gifted-charts';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {
@@ -14,69 +14,105 @@ import {
   reportByDate,
   reportByWeek,
   reportByMonth,
-} from '../../../../services/reportServices'; // Giả sử bạn đã định nghĩa hàm này trong api/DeviceAPI.js
+} from '../../../../services/reportServices';
 import HeaderCompo from '../../../components/HeaderCompo';
-import { useTranslation } from 'react-i18next';
+import {useTranslation} from 'react-i18next';
 import colors from '../../../../assets/common/colorCss';
-import { ThemeContext } from '../../../../assets/common/themeProvider';
-import { createStyle } from './style';
-import {DownloadCSV} from "./Csv";
-import { Button } from 'react-native-paper';
-const getWeekday = (dateString, t) => {
+import {ThemeContext} from '../../../../assets/common/themeProvider';
+import {createStyle} from './style';
+import {Button} from 'react-native-paper';
+
+const ensureDate = d => {
+  const converted = new Date(d);
+  return isNaN(converted.getTime()) ? new Date() : converted;
+};
+
+const isSameDay = (a, b) => {
+  const da = ensureDate(a);
+  const db = ensureDate(b);
+  return (
+    da.getFullYear() === db.getFullYear() &&
+    da.getMonth() === db.getMonth() &&
+    da.getDate() === db.getDate()
+  );
+};
+
+const getWeekday = (dateInput, t) => {
   const days = [
-    t('mon'), // Translated "Monday"
-    t('tue'), // Translated "Tuesday"
-    t('wed'), // Translated "Wednesday"
-    t('thu'), // Translated "Thursday"
-    t('fri'), // Translated "Friday"
-    t('sat'), // Translated "Saturday"
-    t('sun'), // Translated "Sunday"
+    t('mon'),
+    t('tue'),
+    t('wed'),
+    t('thu'),
+    t('fri'),
+    t('sat'),
+    t('sun'),
   ];
-  const jsDay = new Date(dateString).getDay();
-  const idx = jsDay === 0 ? 6 : jsDay - 1; // Adjust index (Sunday = 0 in JS)
+  const jsDay = ensureDate(dateInput).getDay();
+  const idx = jsDay === 0 ? 6 : jsDay - 1;
   return days[idx];
 };
 
 const getWeekRange = selectedDate => {
-  let date = new Date(selectedDate);
-  const day = date.getDay(); // 0: Chủ nhật, 1: Thứ hai, ...
-  // Nếu là Chủ nhật thì lùi về thứ Hai tuần trước, còn lại lùi về thứ Hai tuần này
-  const diff = day === 0 ? -6 : 1 - day;
-  let startOfWeek = new Date(date);
-  startOfWeek.setDate(date.getDate() + diff);
-  let endOfWeek = new Date(startOfWeek);
+  const date = ensureDate(selectedDate);
+  const day = date.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  const startOfWeek = new Date(date);
+  startOfWeek.setHours(0, 0, 0, 0);
+  startOfWeek.setDate(date.getDate() + diffToMonday);
+
+  const endOfWeek = new Date(startOfWeek);
   endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+
   return {startOfWeek, endOfWeek};
 };
-const DateSelector = ({mode, onSelect}) => {
+
+const formatDate = date => {
+  return ensureDate(date).toISOString().split('T')[0];
+};
+
+const formatWeek = dateInput => {
+  try {
+    const d = ensureDate(dateInput);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+    const yearStart = new Date(d.getFullYear(), 0, 1);
+    const weekNo = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+    return `${d.getFullYear()}-W${weekNo.toString().padStart(2, '0')}`;
+  } catch (err) {
+    console.error('formatWeek error:', err);
+    return 'Invalid-Date';
+  }
+};
+
+const formatMonth = date => {
+  const d = ensureDate(date);
+  return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+};
+
+const DateSelector = ({mode, onSelect, value}) => {
   const {t} = useTranslation();
   const {theme} = useContext(ThemeContext);
   const styles = createStyle(theme);
-  const [date, setDate] = useState(new Date());
   const [show, setShow] = useState(false);
 
   const handleChange = (_, selectedDate) => {
     setShow(false);
     if (selectedDate) {
-      setDate(selectedDate);
-      if (mode === 'week') {
-        onSelect(getWeekRange(selectedDate));
-      } else if (mode === 'day') {
-        onSelect(selectedDate);
-      } else if (mode === 'month') {
-        onSelect(selectedDate);
-      }
+      onSelect(selectedDate);
     }
   };
-  
+
   let label = '';
   if (mode === 'week') {
-    const range = getWeekRange(date);
-    label = `${t('week')}: ${range.startOfWeek.toLocaleDateString()} - ${range.endOfWeek.toLocaleDateString()}`;
+    const range = getWeekRange(value);
+    label = `${t(
+      'week',
+    )}: ${range.startOfWeek.toLocaleDateString()} - ${range.endOfWeek.toLocaleDateString()}`;
   } else if (mode === 'day') {
-    label = `${t('day')}: ${date.toLocaleDateString()}`;
+    label = `${t('day')}: ${value.toLocaleDateString()}`;
   } else if (mode === 'month') {
-    label = `${t('month')}: ${date.getMonth() + 1}/${date.getFullYear()}`;
+    label = `${t('month')}: ${value.getMonth() + 1}/${value.getFullYear()}`;
   }
 
   return (
@@ -85,13 +121,14 @@ const DateSelector = ({mode, onSelect}) => {
         <Text style={styles.chartTitle}>{t('data_analysis')}</Text>
         {show && (
           <DateTimePicker
-            value={date}
-            mode={'date'}
+            value={value}
+            mode="date"
             display="default"
             onChange={handleChange}
           />
         )}
       </View>
+
       <TouchableOpacity
         style={{
           alignSelf: 'center',
@@ -104,10 +141,6 @@ const DateSelector = ({mode, onSelect}) => {
           minWidth: 140,
           borderWidth: 1,
           borderColor: theme === 'light' ? '#e0e0e0' : colors.white,
-          shadowColor: theme === 'light' ? colors.black : colors.white,
-          shadowOpacity: 0.02,
-          shadowRadius: 1,
-          elevation: 0,
         }}
         onPress={() => setShow(true)}>
         <Text
@@ -116,7 +149,6 @@ const DateSelector = ({mode, onSelect}) => {
             color: theme === 'light' ? colors.primary : colors.white,
             fontSize: 15,
             fontWeight: '500',
-            letterSpacing: 0.2,
           }}>
           {label}
         </Text>
@@ -158,10 +190,16 @@ const LineChartComponent = ({data1, mode, color}) => {
           thickness={3}
           showDataPoints
           dataPointsRadius={5}
-          xAxisLabelTextStyle={{color:theme === 'light'? colors.black : colors.white}}
-          yAxisTextStyle={{color:theme === 'light'? colors.black : colors.white}}
-          yAxisColor= {theme === 'light'? colors.borderColor : colors.white}
-          xAxisColor={theme === 'light'? colors.borderColor : colors.white}
+          xAxisLabelTextStyle={{
+            color: theme === 'light' ? colors.black : colors.white,
+            fontSize: 12,
+          }}
+          yAxisTextStyle={{
+            color: theme === 'light' ? colors.black : colors.white,
+            fontSize: 12,
+          }}
+          yAxisColor={theme === 'light' ? colors.borderColor : colors.white}
+          xAxisColor={theme === 'light' ? colors.borderColor : colors.white}
           adjustToWidth={false}
           width={chartWidth}
           spacing={spacing}
@@ -194,7 +232,7 @@ const LineChartComponent = ({data1, mode, color}) => {
               return (
                 <View style={styles.pointerLabel}>
                   <Text style={styles.pointerText}>
-                    {t('pointerLabel')} {Number(value1).toFixed(2)}
+                    {Number(value1).toFixed(2)}
                   </Text>
                 </View>
               );
@@ -217,12 +255,12 @@ const Card = ({title, value}) => {
   const {t} = useTranslation();
   const {theme} = useContext(ThemeContext);
   const styles = createStyle(theme);
-  return(
+  return (
     <View style={styles.card}>
-    <Text style={styles.cardTitle}>{title}</Text>
-    <Text style={styles.cardValue}>{value}</Text>
-  </View>
-  )
+      <Text style={styles.cardTitle}>{title}</Text>
+      <Text style={styles.cardValue}>{value}</Text>
+    </View>
+  );
 };
 
 const ModeSelector = ({mode, setMode}) => {
@@ -231,22 +269,22 @@ const ModeSelector = ({mode, setMode}) => {
   const styles = createStyle(theme);
   return (
     <View style={styles.modeSelector}>
-    {['day', 'week', 'month'].map(m => (
-      <TouchableOpacity
-        key={m}
-        style={[styles.modeButton, mode === m && styles.modeButtonActive]}
-        onPress={() => setMode(m)}>
-        <Text
-          style={[
-            styles.modeButtonText,
-            mode === m && styles.modeButtonTextActive,
-          ]}>
-          {m === 'day' ? t('day') : m === 'week' ? t('week') : t('month')}
-        </Text>
-      </TouchableOpacity>
-    ))}
-  </View>
-  )
+      {['day', 'week', 'month'].map(m => (
+        <TouchableOpacity
+          key={m}
+          style={[styles.modeButton, mode === m && styles.modeButtonActive]}
+          onPress={() => setMode(m)}>
+          <Text
+            style={[
+              styles.modeButtonText,
+              mode === m && styles.modeButtonTextActive,
+            ]}>
+            {m === 'day' ? t('day') : m === 'week' ? t('week') : t('month')}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
 };
 
 const ReportDetail = ({navigation, route}) => {
@@ -255,12 +293,9 @@ const ReportDetail = ({navigation, route}) => {
   const styles = createStyle(theme);
   const isFocused = useIsFocused();
   const {deviceId} = route.params;
-  const initialWeek = getWeekRange(new Date());
-  const [weekRange, setWeekRange] = useState(initialWeek);
+  const [weekRange, setWeekRange] = useState(getWeekRange(new Date()));
+
   const [filteredData1, setFilteredData1] = useState([]);
-  // console.log(filteredData1);
-  
-  const [filteredData2, setFilteredData2] = useState([]);
   const [summary, setSummary] = useState({
     avgHumidity: 0,
     avgMoisture: 0,
@@ -269,69 +304,44 @@ const ReportDetail = ({navigation, route}) => {
     avgStream: 0,
     totalWaterUsage: 0,
   });
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [mode, setMode] = useState('week');
-  const [selectedDate, setSelectedDate] = useState(initialWeek.startOfWeek);
-  const [selectedMetric, setSelectedMetric] = useState('water_usage');
+  const [selectedMetric, setSelectedMetric] = useState('humidity');
   const [chartData, setChartData] = useState([]);
 
-  const formatDate = date => date.toISOString().split('T')[0];
-  const formatWeek = date => {
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-    const yearStart = new Date(d.getFullYear(), 0, 1);
-    const weekNo = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
-    return `${d.getFullYear()}-W${weekNo.toString().padStart(2, '0')}`;
-  };
-  const formatMonth = date => {
-    const d = new Date(date);
-    return `${d.getFullYear()}-${(d.getMonth() + 1)
-      .toString()
-      .padStart(2, '0')}`;
-  };
-
-  const handleSelectDate = rangeOrDate => {
+  const handleSelectDate = date => {
+    const safe = ensureDate(date);
     if (mode === 'week') {
-      const week = getWeekRange(rangeOrDate);
+      const week = getWeekRange(safe);
       setWeekRange(week);
       setSelectedDate(week.startOfWeek);
     } else {
-      setSelectedDate(rangeOrDate);
+      setSelectedDate(safe);
     }
   };
-  const [response, setRes] = useState();
+
   async function fetchData() {
-    // You can await here
-    const response = await reportbyIdDevices({id_esp: deviceId})
+    const response = await reportbyIdDevices({id_esp: deviceId});
     setRes(response);
   }
+
   useEffect(() => {
     fetchData();
   }, []);
-  useEffect(() => {
-    if (mode === 'week') {
-      const week = getWeekRange(selectedDate);
-      setWeekRange(week);
-      setSelectedDate(week.startOfWeek);
-    }
-  }, [mode]);
 
   useEffect(() => {
     const fetchAndLog = async () => {
       try {
         let reports = [];
-        if (mode === 'week') {
-          const week = formatWeek(selectedDate);
-          const res = await reportByWeek({id_esp: deviceId, week});
-          reports = Array.isArray(res) ? res : [res];
-        } else if (mode === 'day') {
+        if (mode === 'day') {
           const date = formatDate(selectedDate);
-          const res = await reportByDate({id_esp: deviceId, date});
-          reports = Array.isArray(res) ? res : [res];
+          reports = await reportByDate({id_esp: deviceId, date});
+        } else if (mode === 'week') {
+          const week = formatWeek(weekRange.startOfWeek);
+          reports = await reportByWeek({id_esp: deviceId, week});
         } else if (mode === 'month') {
           const month = formatMonth(selectedDate);
-          const res = await reportByMonth({id_esp: deviceId, month});
-          reports = Array.isArray(res) ? res : [res];
+          reports = await reportByMonth({id_esp: deviceId, month});
         }
 
         const allHumidity = reports.flatMap(r => r.humidity_avg || []);
@@ -340,6 +350,7 @@ const ReportDetail = ({navigation, route}) => {
         const allTemp = reports.flatMap(r => r.tempurature_avg || []);
         const allStream = reports.flatMap(r => r.stream_avg || []);
         const allWaterUsage = reports.map(r => r.water_usage || 0);
+
         setSummary({
           avgHumidity: average(allHumidity),
           avgMoisture: average(allMoisture),
@@ -348,35 +359,33 @@ const ReportDetail = ({navigation, route}) => {
           avgStream: average(allStream),
           totalWaterUsage: allWaterUsage.reduce((a, b) => a + b, 0),
         });
-        // Đổ dữ liệu cho biểu đồ
+
         if (mode === 'week') {
-          // 7 ngày trong tuần
-          let weekDays = Array.from({length: 7}, (_, i) => {
-            let date = new Date(weekRange?.startOfWeek || selectedDate);
+          const baseDate = weekRange?.startOfWeek || selectedDate;
+          const weekDays = Array.from({length: 7}, (_, i) => {
+            const date = new Date(baseDate);
             date.setDate(date.getDate() + i);
-            let dateString = formatDate(date);       
             return {
-              date: dateString,
-              label: getWeekday(dateString, t), // Pass t to getWeekday
+              date,
+              label: getWeekday(date, t),
             };
           });
+
           setFilteredData1(
-            weekDays.map(day => ({
-              ...day,
-              value:
-                reports.find(
-                  r => formatDate(new Date(r.time_created)) === day.date,
-                )?.water_usage ?? 0,
-            })),
-          );
-          setFilteredData2(
-            weekDays.map(day => ({
-              ...day,
-              value:
-                reports.find(
-                  r => formatDate(new Date(r.time_created)) === day.date,
-                )?.humidity_avg?.[0] ?? 0,
-            })),
+            weekDays.map(day => {
+              const report = reports.find(r =>
+                isSameDay(r.time_created, day.date),
+              );
+              return {
+                ...day,
+                water_usage: report?.water_usage ?? 0,
+                humidity: report?.humidity_avg?.[0] ?? 0,
+                temp: report?.tempurature_avg?.[0] ?? 0,
+                moisture: report?.moisture_avg?.[0] ?? 0,
+                lux: report?.luminosity_avg?.[0] ?? 0,
+                stream: report?.stream_avg?.[0] ?? 0,
+              };
+            }),
           );
         } else if (mode === 'day') {
           const timeSlots = Array.from({length: 12}, (_, i) => {
@@ -384,26 +393,27 @@ const ReportDetail = ({navigation, route}) => {
             return `${hour.toString().padStart(2, '0')}:00`;
           });
 
-          const reportsSorted = [...reports].sort(
-            (a, b) => new Date(a.time_created) - new Date(b.time_created),
-          );
-          const chartData = timeSlots.map((slot, idx) => {
-            const slotHour = idx * 2;
-            const slotStart = new Date(selectedDate);
-            slotStart.setHours(slotHour, 0, 0, 0);
-            const slotEnd = new Date(selectedDate);
-            slotEnd.setHours(slotHour + 2, 0, 0, 0);
+          const selectedDateStart = new Date(selectedDate);
+          selectedDateStart.setUTCHours(0, 0, 0, 0);
+          const selectedDateEnd = new Date(selectedDate);
+          selectedDateEnd.setUTCHours(23, 59, 59, 999);
 
-            const report = reportsSorted.find(r => {
-              const t = new Date(r.time_created);
-              return t >= slotStart && t < slotEnd;
-            });
-            return {
-              date: slot,
-              label: slot,
-              value: report ? report.water_usage : 0,
-            };
+          const report = reports.find(r => {
+            const t = new Date(r.time_created);
+            return t >= selectedDateStart && t <= selectedDateEnd;
           });
+
+          const chartData = timeSlots.map((slot, idx) => ({
+            date: slot,
+            label: slot,
+            water_usage: report?.water_usage ? report.water_usage / 12 : 0,
+            humidity: report?.humidity_avg?.[idx] || 0,
+            temp: report?.tempurature_avg?.[idx] || 0,
+            moisture: report?.moisture_avg?.[idx] || 0,
+            lux: report?.luminosity_avg?.[idx] || 0,
+            stream: report?.stream_avg?.[idx] || 0,
+          }));
+
           setFilteredData1(chartData);
         } else if (mode === 'month') {
           const year = selectedDate.getFullYear();
@@ -429,87 +439,104 @@ const ReportDetail = ({navigation, route}) => {
                 t.getDate() <= group.end
               );
             });
-            const avg = reportsOfGroup.length
-              ? reportsOfGroup.reduce(
-                  (sum, r) => sum + (r.water_usage || 0),
-                  0,
-                ) / reportsOfGroup.length
-              : 0;
+
             return {
               date: `${group.start}-${group.end}`,
               label: `${group.start}-${group.end}`,
-              value: avg,
+              water_usage: reportsOfGroup.length
+                ? reportsOfGroup.reduce(
+                    (sum, r) => sum + (r.water_usage || 0),
+                    0,
+                  ) / reportsOfGroup.length
+                : 0,
+              humidity: reportsOfGroup.length
+                ? average(reportsOfGroup.map(r => r.humidity_avg?.[0] || 0))
+                : 0,
+              temp: reportsOfGroup.length
+                ? average(reportsOfGroup.map(r => r.tempurature_avg?.[0] || 0))
+                : 0,
+              moisture: reportsOfGroup.length
+                ? average(reportsOfGroup.map(r => r.moisture_avg?.[0] || 0))
+                : 0,
+              lux: reportsOfGroup.length
+                ? average(reportsOfGroup.map(r => r.luminosity_avg?.[0] || 0))
+                : 0,
+              stream: reportsOfGroup.length
+                ? average(reportsOfGroup.map(r => r.stream_avg?.[0] || 0))
+                : 0,
             };
           });
 
           setFilteredData1(chartData);
         }
-      } catch (er) {
-        console.log('Lỗi khi gọi API report:', err.data);
+      } catch (err) {
+        console.log('Lỗi khi gọi API report:', err);
       }
     };
-    fetchAndLog();
-  }, [deviceId, mode, selectedDate, weekRange]);
 
-  
+    fetchAndLog();
+  }, [deviceId, selectedDate, mode]);
 
   useEffect(() => {
     if (!filteredData1 || filteredData1.length === 0) {
       setChartData([]);
       return;
     }
-    if (selectedMetric === 'water_usage') {
-      setChartData(filteredData1);
-    } else if (selectedMetric === 'humidity') {
-      setChartData(
-        filteredData1.map((d, i) => ({...d, value: d.humidity ?? 0})),
-      );
-    } else if (selectedMetric === 'temp') {
-      setChartData(filteredData1.map((d, i) => ({...d, value: d.temp ?? 0})));
-    } else if (selectedMetric === 'lux') {
-      setChartData(filteredData1.map((d, i) => ({...d, value: d.lux ?? 0})));
-    } else if (selectedMetric === 'moisture') {
-      setChartData(
-        filteredData1.map((d, i) => ({...d, value: d.moisture ?? 0})),
-      );
-    } else if (selectedMetric === 'stream') {
-      setChartData(filteredData1.map((d, i) => ({...d, value: d.stream ?? 0})));
-    }
+
+    setChartData(
+      filteredData1.map(d => ({
+        ...d,
+        date: typeof d.date === 'string' ? d.date : formatDate(d.date),
+        value:
+          selectedMetric === 'humidity'
+            ? d.humidity
+            : selectedMetric === 'temp'
+            ? d.temp
+            : selectedMetric === 'moisture'
+            ? d.moisture
+            : selectedMetric === 'lux'
+            ? d.lux
+            : selectedMetric === 'stream'
+            ? d.stream
+            : 0,
+      })),
+    );
   }, [filteredData1, selectedMetric]);
 
   const metrics = [
     {key: 'humidity', label: t('metricHumidity'), color: '#4EA5FF'},
     {key: 'temp', label: t('metricTemp'), color: '#FF7B7B'},
-    {key: 'lux', label:t('metricLux'), color: '#FFD966'},
-    {key: 'moisture', label:t('metricMoisture'), color: '#4ED6CB'},
-    {key: 'stream', label:t('metricStream'), color: '#A084E8'},
-    {key: 'water_usage', label: t('metricWaterUsage'), color: '#25A4FF'},
+    {key: 'lux', label: t('metricLux'), color: '#FFD966'},
+    {key: 'moisture', label: t('metricMoisture'), color: '#4ED6CB'},
+    {key: 'stream', label: t('metricStream'), color: '#A084E8'},
   ];
+
   return (
     <View style={styles.frame}>
-            {isFocused && (
-              <StatusBar
-                backgroundColor={theme === 'light' ? colors.white : colors.bg_dark}
-                barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
-              />
-            )}
+      {isFocused && (
+        <StatusBar
+          backgroundColor={theme === 'light' ? colors.white : colors.bg_dark}
+          barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+        />
+      )}
       <HeaderCompo
         bgcolor={colors.bg_NaN}
         isPress={() => navigation.goBack()}
         name={t('data_analysis')}
         color={colors.primary}
       />
-      {/* <View style={styles.header} >
-        <View style={styles.header1}>
-          <Text style={styles.textHeader}>Phân tích dữ liệu</Text>
-        </View>
-      </View> */}
+
       <ScrollView contentContainerStyle={{paddingBottom: 30}}>
         <ModeSelector mode={mode} setMode={setMode} />
 
         <View style={styles.container}>
           <View style={styles.frameTable}>
-            <DateSelector mode={mode} onSelect={handleSelectDate} />
+            <DateSelector
+              mode={mode}
+              value={selectedDate}
+              onSelect={handleSelectDate}
+            />
+
             <View
               style={{
                 flexDirection: 'row',
@@ -519,6 +546,7 @@ const ReportDetail = ({navigation, route}) => {
                 marginVertical: 10,
                 marginBottom: 20,
                 alignSelf: 'center',
+                width: '100%',
                 maxWidth: '100%',
                 rowGap: 6,
               }}>
@@ -528,6 +556,7 @@ const ReportDetail = ({navigation, route}) => {
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
+                    width: '40%',
                     marginHorizontal: 4,
                     marginVertical: 2,
                     opacity: selectedMetric === m.key ? 1 : 0.5,
@@ -535,6 +564,7 @@ const ReportDetail = ({navigation, route}) => {
                   onPress={() => setSelectedMetric(m.key)}>
                   <View
                     style={{
+                      width: '100%',
                       width: 14,
                       height: 14,
                       borderRadius: 7,
@@ -545,7 +575,14 @@ const ReportDetail = ({navigation, route}) => {
                         selectedMetric === m.key ? m.color : 'transparent',
                     }}
                   />
-                  <Text style={{color: theme === 'light' ? colors.txtHide : colors.white , fontSize: 13}}>{m.label}</Text>
+                  <Text
+                    style={{
+                      color: theme === 'light' ? colors.txtHide : colors.white,
+                      fontSize: 13,
+                     width: '100%',
+                    }}>
+                    {m.label}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -559,15 +596,12 @@ const ReportDetail = ({navigation, route}) => {
                 }
               />
             ) : (
-              <Text style={styles.noDataText}>
-                {t('noDataText')}
-              </Text>
+              <Text style={styles.noDataText}>{t('noDataText')}</Text>
             )}
           </View>
         </View>
-        <DownloadCSV datajs={response}/>
-        <View style={{marginTop: 10}}>
 
+        <View style={{marginTop: 10}}>
           <View style={styles.row2col}>
             <Card
               title={`${t('water_used_L')}`}
@@ -599,11 +633,9 @@ const ReportDetail = ({navigation, route}) => {
             />
           </View>
         </View>
+
         <Button onPress={fetchData} title="Export Report" />
-
       </ScrollView>
-
-      
     </View>
   );
 };

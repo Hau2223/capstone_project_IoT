@@ -17,6 +17,7 @@ const ItemHomePage = ({
   const {t} = useTranslation();
   const {theme} = useContext(ThemeContext);
   const styles = createStyle(theme);
+
   return (
     <TouchableOpacity style={styles.item} onPress={onPress}>
       <Image
@@ -33,17 +34,17 @@ const ItemHomePage = ({
         <View style={styles.txtGroup}>
           <Text style={styles.textStyle}>{t('temperature_label')}</Text>
           <Text style={styles.textStyle}>
-            {temperature === 2147483647 ? temperature : '0.0'}°C
+            {temperature === 2147483647 ? '0.0' : temperature}°C
           </Text>
         </View>
         <View style={styles.txtGroup}>
           <Text style={styles.textStyle}>{t('moisture_label')}</Text>
           <Text style={styles.textStyle}>
-            {moisture === 2147483647 ? moisture : '0.0'}%
+            {moisture === 2147483647 ? '0.0': moisture }%
           </Text>
         </View>
         <View style={styles.txtGroup}>
-          <Text style={styles.textStyle}>{t('watering_status_label')} </Text>
+          <Text style={styles.textStyle}>{t('water_label')} </Text>
           <Text style={styles.textStyle}>{water}</Text>
         </View>
         <View style={styles.txtGroup}>

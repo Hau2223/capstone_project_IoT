@@ -52,20 +52,20 @@ const RegisterScreen = () => {
     if (!data.email.length) {
       showAlert(t('alert_warning'), t('email_required'));
       return false;
-    } else if (!data.email.endsWith('@gmail.com')) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
       showAlert(t('alert_warning'), t('email_invalid'));
       return false;
     }
     return true;
   }, [data.email, t]);
 
-  const handlePass = useCallback(() => {
-    if (data.password.length < 8) {
-      showAlert(t('alert_warning'), t('email_required'));
-      return false;
-    }
-    return true;
-  }, [data.email, t]);
+  // const handlePass = useCallback(() => {
+  //   if (data.password.length < 8) {
+  //     showAlert(t('alert_warning'), t('email_required'));
+  //     return false;
+  //   }
+  //   return true;
+  // }, [data.email, t]);
 
   const handleInputChange = (key, value) => {
     setData(prev => ({...prev, [key]: value}));

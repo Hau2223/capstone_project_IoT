@@ -13,6 +13,7 @@ import {
   Platform,
   Linking,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import React, {
   memo,
@@ -21,6 +22,7 @@ import React, {
   useCallback,
   useRef,
   useContext,
+  useMemo,
 } from 'react';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {useFocusEffect, useIsFocused} from '@react-navigation/native';
@@ -43,6 +45,7 @@ import {
 import {gardenId, me, meAuth} from '../../../services/authServices';
 import HeaderCompo from '../../components/HeaderCompo';
 import {
+  detailDevice,
   updateNameDevice,
   uploadImgDevice,
 } from '../../../services/deviceServices';
@@ -50,6 +53,7 @@ import {createStyle} from './style';
 import {updateControl, updateMode} from '../../../services/controlServices';
 import {IMAGES} from '../../../utils/constants';
 import {Dropdown} from 'react-native-element-dropdown';
+import Toast from 'react-native-toast-message';
 
 const DetailScreen = ({navigation, route}) => {
   const {t} = useTranslation();
@@ -79,6 +83,11 @@ const DetailScreen = ({navigation, route}) => {
   const sensorMap = Object.fromEntries(sensors.map(s => [s.type, s]));
   const controlMap = Object.fromEntries(controls.map(c => [c.name, c]));
 
+  const isOwner = useMemo(
+    () => userInfo?.some(user => user.isMe && user.role === 'owner'),
+    [userInfo],
+  );
+
   const {
     temperature: temperatureSensor,
     humidity: humiditySensor,
@@ -92,7 +101,8 @@ const DetailScreen = ({navigation, route}) => {
     light: lightControl,
     wind: windControl,
   } = controlMap;
-  const isOwner = userInfo?.some(user => user.isMe && user.role === 'owner');
+
+  const [showId, setShowId] = useState(false);
 
   const requestGalleryPermission = async () => {
     if (Platform.OS === 'android') {
@@ -155,9 +165,17 @@ const DetailScreen = ({navigation, route}) => {
             });
             if (uploadRes.message === 'Device image updated') {
               handleChangeImage('img_area', selectedImage.uri);
-              Alert.alert(t('alert_success'), t('image_updated_successfully'), [
-                {text: t('ok')},
-              ]);
+              await fetchDetailGarden();
+              Toast.show({
+                type: 'success',
+                text1: t('alert_success'),
+                text2: t('image_updated_successfully'),
+                text1Style: {fontSize: 16, color: colors.primary},
+                text2Style: {fontSize: 12, color: colors.black},
+                position: 'top',
+                autoHide: true,
+                visibilityTime: 3000,
+              });
             }
           } catch (err) {
             console.error('Lỗi khi lưu thông tin:', err);
@@ -177,6 +195,7 @@ const DetailScreen = ({navigation, route}) => {
       },
     }));
   };
+
   const fetchCurrentUserId = async () => {
     try {
       const response = await meAuth();
@@ -238,20 +257,59 @@ const DetailScreen = ({navigation, route}) => {
     }
   }, [deviceId]);
 
+  // Inside DetailScreen component
+  const syncDeviceData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await detailDevice({id: deviceId});
+      if (response && response.data) {
+        setItem(response);
+      } else {
+        throw new Error('Invalid device data');
+      }
+    } catch (err) {
+      console.error('Error syncing device data:', err);
+      setError(err.message || 'Error fetching device data');
+      Toast.show({
+        type: 'error',
+        text1: t('alert_error'),
+        text2: `${t('invalid_device_id1')} ${deviceId} ${t(
+          'invalid_device_id2',
+        )}`,
+        text1Style: {fontSize: 20, color: colors.black},
+        text2Style: {fontSize: 15, color: colors.black},
+        position: 'top',
+        autoHide: true,
+        visibilityTime: 3000,
+      });
+      navigation.goBack();
+    } finally {
+      setLoading(false);
+    }
+  }, [deviceId, navigation, t]);
+
   useFocusEffect(
     useCallback(() => {
       fetchCurrentUserId();
       fetchDetailGarden();
+      syncDeviceData();
       const interval = setInterval(() => {
         fetchDetailGarden();
+        syncDeviceData();
       }, 5000);
       return () => clearInterval(interval);
-    }, [fetchDetailGarden]),
+    }, [fetchDetailGarden, syncDeviceData]),
   );
+
+  const loHeightScoll = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [350, 220],
+    extrapolate: 'clamp',
+  });
 
   const imageHeight = scrollY.interpolate({
     inputRange: [0, 200],
-    outputRange: [265, 150],
+    outputRange: [265, 200],
     extrapolate: 'clamp',
   });
 
@@ -287,11 +345,30 @@ const DetailScreen = ({navigation, route}) => {
         name_area: name_area,
       });
       if (res.message === 'Garden name updated successfully') {
-        Alert.alert(t('alert_info'), t('garden_name_updated_successfully'));
+        Toast.show({
+          type: 'success',
+          text1: t('alert_success'),
+          text2: t('garden_name_updated_successfully'),
+          text1Style: {fontSize: 16, color: colors.primary},
+          text2Style: {fontSize: 12, color: colors.black},
+          position: 'top',
+          autoHide: true,
+          visibilityTime: 3000,
+        });
         refreshData({name_area});
       }
     } catch (err) {
       console.log(err.response.data.message);
+      Toast.show({
+        type: 'success',
+        text1: t('alert_info'),
+        text2: t('garden_name_updated_fail'),
+        text1Style: {fontSize: 16, color: colors.primary},
+        text2Style: {fontSize: 12, color: colors.black},
+        position: 'top',
+        autoHide: true,
+        visibilityTime: 3000,
+      });
     }
   }, []);
 
@@ -335,13 +412,19 @@ const DetailScreen = ({navigation, route}) => {
         id_esp: deviceId,
         userId: selectedUser.userId,
       });
-      ifHebrews: {
-        res.message === 'User promoted to owner successfully';
-      }
-      {
-        console.log('Chuyển quyền cho thành viên thành công');
-        Alert.alert(t('success'), t('ownership_transferred'));
+      if (res.message === 'User promoted to owner successfully') {
+        // Toast.show({
+        //   type: 'success',
+        //   text1: t('alert_success'),
+        //   text2: t('ownership_transferred') + `${selectedUser}` ,
+        //   text1Style: {fontSize: 16, color: colors.primary},
+        //   text2Style: {fontSize: 12, color: colors.black},
+        //   position: 'top',
+        //   autoHide: true,
+        //   visibilityTime: 3000,
+        // });
         await fetchDetailGarden();
+        await handleLeaveDevice();
       }
     } catch (error) {
       console.error('Lỗi khi rời thiết bị:', error);
@@ -355,9 +438,17 @@ const DetailScreen = ({navigation, route}) => {
       });
       if (res.message === 'Successfully left the device') {
         navigation.goBack();
-        // console.log('Người dùng rời thiết bị', deviceId);
+        Toast.show({
+          type: 'success',
+          text1: t('alert_success'),
+          text2: t('device_left_successfully'),
+          text1Style: {fontSize: 16, color: colors.primary},
+          text2Style: {fontSize: 12, color: colors.black},
+          position: 'top',
+          autoHide: true,
+          visibilityTime: 3000,
+        });
       }
-      Alert.alert(t('alert_success'), t('device_left_successfully'));
     } catch (error) {
       console.error('Lỗi khi rời thiết bị:', error);
       Alert.alert(t('alert_error'), t('leave_device_failed'));
@@ -369,38 +460,115 @@ const DetailScreen = ({navigation, route}) => {
       const res = await delMember({id_esp: deviceId, userId});
       if (res.message === 'Member removed successfully') {
         setUserInfo(prev => prev.filter(user => user.userId !== userId));
-        Alert.alert(t('alert_success'), t('member_removed_successfully'));
+        Toast.show({
+          type: 'success',
+          text1: t('alert_success'),
+          text2: t('member_removed_successfully'),
+          text1Style: {fontSize: 16, color: colors.primary},
+          text2Style: {fontSize: 12, color: colors.black},
+          position: 'top',
+          autoHide: true,
+          visibilityTime: 3000,
+        });
       }
     } catch (error) {
-      Alert.alert(t('alert_error'), t('member_remove_failed'));
+      Toast.show({
+        type: 'error',
+        text1: t('alert_error'),
+        text2: t('member_remove_failed'),
+        text1Style: {fontSize: 16, color: colors.primary},
+        text2Style: {fontSize: 12, color: colors.black},
+        position: 'top',
+        autoHide: true,
+        visibilityTime: 3000,
+      });
     }
   };
 
   const handleBlockMember = async userId => {
     try {
       const res = await addBlockMember({id_esp: deviceId, userId});
-      if (res.message === 'User added to block list successfully') {
+      if (
+        res.message ===
+        'User added to block list and removed from members successfully'
+      ) {
         setUserInfo(prev => prev.filter(user => user.userId !== userId));
         await fetchDetailGarden();
         // Alert.alert(t('alert_success'), t('User added to block list successfully'));
         // console.log('1111');
+        Toast.show({
+          type: 'success',
+          text1: t('alert_success'),
+          text2: t('user_added_to_block_list_successfully'),
+          text1Style: {fontSize: 16, color: colors.primary},
+          text2Style: {fontSize: 12, color: colors.black},
+          position: 'top',
+          autoHide: true,
+          visibilityTime: 3000,
+        });
       }
     } catch (error) {
-      Alert.alert(t('alert_error'), t('User added to block list failed'));
+      Toast.show({
+        type: 'error',
+        text1: t('alert_error'),
+        text2: t('user_added_to_block_list_fail'),
+        text1Style: {fontSize: 16, color: colors.primary},
+        text2Style: {fontSize: 12, color: colors.black},
+        position: 'top',
+        autoHide: true,
+        visibilityTime: 3000,
+      });
     }
   };
 
+  const handleUnBlockConfirm = userId => {
+    Alert.alert(
+      t('alert_info'),
+      t('are_you_sure_to_unblock'),
+      [
+        {
+          text: t('cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('ok'),
+          onPress: () => {
+            handleUnBlockMember(userId);
+          },
+        },
+      ],
+    );
+  };
+  
   const handleUnBlockMember = async userId => {
     try {
       const res = await unBlockMember({id_esp: deviceId, userId});
-      console.log(res);
+      // console.log(res);
       if (res.message === 'User removed from block list successfully') {
         await fetchDetailGarden();
+
+        Toast.show({
+          type: 'success',
+          text1: t('alert_success'),
+          text2: t('user_added_to_unblock_list_successfully'),
+          text1Style: {fontSize: 16, color: colors.primary},
+          text2Style: {fontSize: 12, color: colors.black},
+          position: 'top',
+          autoHide: true,
+          visibilityTime: 3000,
+        });
       }
-      // setUserInfo(prev => prev.filter(user => user.userId !== userId));
-      // console.log(res);
     } catch (error) {
-      Alert.alert(t('alert_error'), t('User unblock list block failed'));
+      Toast.show({
+        type: 'error',
+        text1: t('alert_success'),
+        text2: t('user_added_to_unblock_list_fail'),
+        text1Style: {fontSize: 16, color: colors.primary},
+        text2Style: {fontSize: 12, color: colors.black},
+        position: 'top',
+        autoHide: true,
+        visibilityTime: 3000,
+      });
     }
   };
 
@@ -414,12 +582,12 @@ const DetailScreen = ({navigation, route}) => {
       )}
       <HeaderCompo
         name={t('garden_info')}
-        color={theme === 'light' ? colors.black : colors.white}
+        color={theme === 'light' ? colors.primary : colors.white}
         bgcolor={theme === 'light' ? colors.white : colors.bg_dark}
         isPress={() => navigation.goBack()}
       />
 
-      <Animated.View style={[styles.container1]}>
+      <Animated.View style={[styles.container1, {height: loHeightScoll}]}>
         <Animated.View style={[styles.img, {height: imageHeight}]}>
           <Image
             style={styles.imgStyle}
@@ -439,16 +607,57 @@ const DetailScreen = ({navigation, route}) => {
               bottom: headerBottom,
             },
           ]}>
-          <Animated.Text
-            style={[
-              styles.header2,
-              {
-                fontSize: headerFontSize,
-              },
-            ]}
-            numberOfLines={numberBottom}>
-            {item?.data?.name_area}
-          </Animated.Text>
+          <Animated.View style={styles.loNameId}>
+            <Animated.Text
+              style={[
+                styles.header2,
+                {
+                  fontSize: headerFontSize,
+                },
+              ]}
+              numberOfLines={numberBottom}>
+              {item?.data?.name_area}
+            </Animated.Text>
+            <View>
+              {isOwner && (
+                <TouchableOpacity onPress={() => setShowId(prev => !prev)}>
+                  <Text style={styles.toggleButton}>
+                    {showId ? (
+                      `ID: ${deviceId}`
+                    ) : (
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 5,
+                        }}>
+                        <Text
+                          style={{
+                            width: 30,
+                            fontSize: 15,
+                            color:
+                              theme === 'light'
+                                ? colors.loginTxt
+                                : colors.white,
+                            marginHorizontal: 5,
+                          }}>
+                          ID:
+                        </Text>
+                        <Icon
+                          name="eye-off"
+                          size={24}
+                          color={
+                            theme === 'light' ? colors.loginTxt : colors.white
+                          }></Icon>
+                      </View>
+                    )}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </Animated.View>
+
           <Animated.View style={[styles.headerButton]}>
             {isOwner && (
               <TouchableOpacity
@@ -507,7 +716,7 @@ const DetailScreen = ({navigation, route}) => {
           isOwner={isOwner}
           userBlock={userBlock}
           handleDeleteMember={handleDeleteMember}
-          handleUnBlockMember={handleUnBlockMember}
+          handleUnBlockConfirm={handleUnBlockConfirm}
           handleBlockMember={handleBlockMember}
         />
         <View style={{height: 20}} />
@@ -559,7 +768,7 @@ const DetailScreen = ({navigation, route}) => {
         onRequestClose={() => setModalMember(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>
+            <Text style={styles.modalTitle} numberOfLines={2}>
               {showDropdown
                 ? t('select_member_to_transfer')
                 : t('leave_device_confirm')}
@@ -567,11 +776,11 @@ const DetailScreen = ({navigation, route}) => {
 
             {showDropdown && (
               <View style={styles.menuContainer}>
-                {selectedUser && (
+                {/* {selectedUser && (
                   <Text style={styles.selectedUserText}>
                     {t('selected_member')} {selectedUser.name}
                   </Text>
-                )}
+                )} */}
                 <TouchableOpacity
                   style={styles.menuAnchor}
                   onPress={() => setMenuVisible(!menuVisible)}>
@@ -580,8 +789,6 @@ const DetailScreen = ({navigation, route}) => {
                   </Text>
                   <Icon
                     name={menuVisible ? 'chevron-up' : 'chevron-down'}
-                    size={20}
-                    color={colors.primary}
                     style={styles.menuIcon}
                   />
                 </TouchableOpacity>
@@ -673,13 +880,15 @@ const FrameItem1 = ({
   const {theme} = useContext(ThemeContext);
   const styles = createStyle(theme);
   const displayMois =
-    txtMoisture === 2147483647 || txtMoisture == 0 ? '0.0%' : `${txtMoisture}%`;
+    txtMoisture === 2147483647 || txtMoisture == 0
+      ? '0.0 %'
+      : `${txtMoisture} %`;
   const displayTemp =
-    txtTemp === 2147483647 || txtTemp == 0 ? '0.0°C' : `${txtTemp}°C`;
+    txtTemp === 2147483647 || txtTemp == 0 ? '0.0 °C' : `${txtTemp} °C`;
   const displayHum =
     txtHumidity === 2147483647 || txtHumidity == 0
-      ? '0.0°C'
-      : `${txtHumidity}°C`;
+      ? '0.0 °C'
+      : `${txtHumidity} °C`;
 
   return (
     <View style={styles.containerFrame}>
@@ -706,13 +915,13 @@ const FrameItem1 = ({
         nameIcon={'water-pump'}
         colorIcon={'#00BCD4'}
         txtSensor={t('water_flow')}
-        txtNumb={`${txtStream}%`}
+        txtNumb={`${txtStream} m/s`}
       />
       <SensorComponent
         nameIcon={'white-balance-sunny'}
         colorIcon={'#FFD54F'}
         txtSensor={t('light_intensity')}
-        txtNumb={`${txtLuminosity}%`}
+        txtNumb={`${txtLuminosity} %`}
       />
     </View>
   );
@@ -730,7 +939,7 @@ const SensorComponent = ({nameIcon, colorIcon, txtSensor, txtNumb}) => {
         <Text style={styles.textStyle}>{txtSensor}</Text>
       </View>
       <View style={styles.valueContent}>
-        <Text style={styles.textStyle}>{txtNumb}</Text>
+        <Text style={styles.textValue}>{txtNumb}</Text>
       </View>
     </View>
   );
@@ -769,12 +978,16 @@ const FrameItem2 = ({
     }));
 
     try {
-      await updateControl({
+      const res = await updateControl({
         id_esp: deviceId,
         controlId: controlId,
         status: newValue,
         mode: 'manual',
       });
+
+      // if (res.message === 'Control updated successfully') {
+      //   console.log('Control updated successfully', res);
+      // }
     } catch (error) {
       console.error('Lỗi khi cập nhật:', error);
       setControls(prev => ({
@@ -793,13 +1006,13 @@ const FrameItem2 = ({
         controlId: controlId,
         mode: value,
       });
-
-      if (res.message === 'Control updated successfully') {
-        updateControlMap(controlType, controls[controlType]);
-        console.log(`Updated ${controlType} mode to ${value}`);
-      }
+      // console.log(res.message);
+      // if (res.message === 'Control updated successfully') {
+      //   // updateControlMap(controlType, controls[controlType]);
+      //   // console.log(`Updated ${controlType} mode to ${value}`);
+      // }
     } catch (error) {
-      console.error('Lỗi khi cập nhật mode:', error);
+      // console.error('Lỗi khi cập nhật mode:', error);
       Alert.alert(t('alert_error'), t('mode_update_failed'));
     }
   };
@@ -928,7 +1141,7 @@ const StatusComponent = ({
 
     setTimeout(() => {
       setIsSwitchDisabled(false);
-    }, 1000);
+    }, 3000);
   };
 
   return (
@@ -944,7 +1157,7 @@ const StatusComponent = ({
           style={styles.controlMenuButton}
           data={menuOptions}
           itemTextStyle={{
-            color: theme === 'light' ? colors.primary : colors.white,
+            color: theme === 'light' ? colors.primary : colors.black,
           }}
           selectedTextStyle={{
             color: theme === 'light' ? colors.primary : colors.white,
@@ -957,7 +1170,6 @@ const StatusComponent = ({
             <Icon
               name="chevron-down"
               size={20}
-              color={colors.primary}
               style={styles.controlMenuIcon}
             />
           )}
@@ -966,8 +1178,14 @@ const StatusComponent = ({
           value={valueStatus}
           onValueChange={handleSwitchChange}
           disabled={isSwitchDisabled}
-          trackColor={{false: '#F6F6F6', true: 'white'}}
-          thumbColor={valueStatus ? colors.primary : '#ACACAC'}
+          trackColor={{false: colors.borderColor, true: colors.borderColor}}
+          thumbColor={
+            valueStatus
+              ? colors.primary
+              : theme === 'light'
+              ? colors.bg_SwitchInAC
+              : colors.white
+          }
           style={{transform: [{scale: 1.2}]}}
         />
       </View>
@@ -980,7 +1198,7 @@ const FrameItem3 = ({
   isOwner,
   handleDeleteMember,
   userBlock,
-  handleUnBlockMember,
+  handleUnBlockConfirm,
   handleBlockMember,
 }) => {
   const {t} = useTranslation();
@@ -991,11 +1209,13 @@ const FrameItem3 = ({
     <View style={styles.containerFrame}>
       <View style={styles.headerContainer}>
         <Header3 header3={t('members')} />
-        <TouchableOpacity
-          style={styles.detailBlock}
-          onPress={() => setModalBlockMem(true)}>
-          <Icon name="account-details" size={24} color={colors.white} />
-        </TouchableOpacity>
+        {isOwner && (
+          <TouchableOpacity
+            style={styles.detailBlock}
+            onPress={() => setModalBlockMem(true)}>
+            <Icon name="account-details" size={24} color={colors.white} />
+          </TouchableOpacity>
+        )}
       </View>
       {users && users.length > 0 ? (
         <FlatList
@@ -1057,7 +1277,10 @@ const FrameItem3 = ({
                     </View>
                     <TouchableOpacity
                       style={styles.moveBlock}
-                      onPress={() => handleUnBlockMember(item.userId)}>
+                      onPress={() => {
+                        handleUnBlockConfirm(item.userId);
+                        setModalBlockMem(false);
+                      }}>
                       <Icon
                         name="close-circle-outline"
                         size={30}
@@ -1107,7 +1330,7 @@ const UserComponent = ({
             borderWidth: 1.5,
             borderColor: theme === 'light' ? colors.primary : colors.bg_NaN,
           }}
-          resizeMode="contain"
+          resizeMode="cover"
         />
       </View>
       <View style={styles.textUser}>
@@ -1127,7 +1350,6 @@ const UserComponent = ({
         )}
       </View>
 
-      {/* Modal đầu tiên: Hỏi có muốn xóa không */}
       <Modal
         animationType="fade"
         transparent={true}

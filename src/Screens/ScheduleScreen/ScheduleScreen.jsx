@@ -4,6 +4,8 @@ import {
   View,
   Dimensions,
   TouchableOpacity,
+  ActivityIndicatorComponent,
+  ActivityIndicator,
 } from 'react-native';
 import React, {useState, useEffect, useCallback, useContext, memo} from 'react';
 import {getAllDevices} from '../../../services/deviceServices';
@@ -13,6 +15,7 @@ import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {ThemeContext} from '../../../assets/common/themeProvider';
 import {createStyle} from './style';
 import {useTranslation} from 'react-i18next';
+import {useFocusEffect} from '@react-navigation/native';
 
 const screenWidth = Dimensions.get('window').width;
 const itemSpacing = 15;
@@ -28,6 +31,7 @@ const ScheduleScreen = ({navigation, route}) => {
     wind: 0,
   });
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [idUser, setIdUser] = useState(null);
 
   useEffect(() => {
@@ -50,6 +54,7 @@ const ScheduleScreen = ({navigation, route}) => {
     if (!idUser) return;
 
     try {
+      setLoading(true);
       setError(null);
       const response = await getAllDevices();
       const allDevices = response?.data || [];
@@ -107,18 +112,29 @@ const ScheduleScreen = ({navigation, route}) => {
       });
       setError(err.response?.data?.message || 'Lỗi khi lấy dữ liệu thiết bị');
       setScheduleCounts({water: 0, light: 0, wind: 0});
+    } finally {
+      setLoading(false);
     }
   }, [idUser]);
 
-  useEffect(() => {
-    if (idUser) {
+  // useEffect(() => {
+  //   if (idUser) {
+  //     fetchScheduleCounts();
+  //     const interval = setInterval(() => {
+  //       fetchScheduleCounts();
+  //     }, 5000);
+  //     return () => clearInterval(interval);
+  //   }
+  // }, [idUser, fetchScheduleCounts]);
+
+  useFocusEffect(
+    useCallback(() => {
       fetchScheduleCounts();
-      const interval = setInterval(() => {
-        fetchScheduleCounts();
+      const intervalId = setInterval(() => {
       }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [idUser, fetchScheduleCounts]);
+      return () => clearInterval(intervalId);
+    }, [fetchScheduleCounts]),
+  );
 
   const handleGoToListDevices = controlName => {
     navigation.navigate('DevicesListScreen', {
@@ -128,23 +144,43 @@ const ScheduleScreen = ({navigation, route}) => {
   };
 
   const controlItems = [
-    {name: 'water', label: t('watering_schedule'), icon: 'water', iconType: 'Ionicons'},
-    {name: 'light', label: t('light_schedule'), icon: 'sunny', iconType: 'Ionicons'},
-    {name: 'wind', label: t('fan_schedule'), icon: 'air', iconType: 'MaterialIcons'},
+    {
+      name: 'water',
+      label: t('watering_schedule'),
+      icon: 'water',
+      iconType: 'Ionicons',
+    },
+    {
+      name: 'light',
+      label: t('light_schedule'),
+      icon: 'sunny',
+      iconType: 'Ionicons',
+    },
+    {
+      name: 'wind',
+      label: t('fan_schedule'),
+      icon: 'air',
+      iconType: 'MaterialIcons',
+    },
   ];
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
+        {loading && (
+          <>
+            <ActivityIndicator />
+          </>
+        )}
         {error ? (
-          <Text style={styles.errorText}>{t('alert_error')}: {error}</Text>
+          <Text style={styles.errorText}>
+            {t('alert_error')}: {error}
+          </Text>
         ) : scheduleCounts.water +
             scheduleCounts.light +
             scheduleCounts.wind ===
           0 ? (
-          <Text style={styles.emptyText}>
-            {t('no_schedule_available')}
-          </Text>
+          <Text style={styles.emptyText}>{t('no_schedule_available')}</Text>
         ) : (
           <View style={styles.itemColumn}>
             {controlItems.map((item, index) => (
@@ -178,4 +214,3 @@ const ScheduleScreen = ({navigation, route}) => {
 };
 
 export default memo(ScheduleScreen);
-

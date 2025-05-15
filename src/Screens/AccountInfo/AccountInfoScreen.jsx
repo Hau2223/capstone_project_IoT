@@ -93,7 +93,7 @@ const AccountInfoScreen = ({navigation, route}) => {
         name={t('account_info')}
         isPress={() => navigation.goBack()}
         bgcolor={theme === 'light' ? colors.white : colors.bg_dark}
-        color={theme === 'light' ? colors.bg_dark : colors.white}
+        color={theme === 'light' ? colors.primary : colors.white}
       />
       <ScrollView
         style={{width: '100%', height: '100%'}}
@@ -112,7 +112,7 @@ const AccountInfoScreen = ({navigation, route}) => {
               style={styles.imgProfile}
               source={{
                 uri: currentUserInfo?.avatar
-                  ? currentUserInfo.avatar
+                  ? currentUserInfo?.avatar
                   : IMAGES.IMAGES_DF,
               }}
             />
@@ -139,12 +139,12 @@ const AccountInfoScreen = ({navigation, route}) => {
               onPress={() =>
                 navigation.navigate('EditProfile', {userInfo: currentUserInfo})
               }>
-              <Icon name="edit" size={20} />
+              <Icon name="edit" size={22} color={colors.primary} />
             </Pressable>
           </View>
           <View
             style={{
-              width: '95%',
+              width: '100%',
               alignSelf: 'center',
               paddingHorizontal: 5,
               gap: 5,
@@ -172,7 +172,7 @@ const AccountInfoScreen = ({navigation, route}) => {
           </View>
           <View
             style={{
-              width: '95%',
+              width: '100%',
               alignSelf: 'center',
               paddingHorizontal: 5,
               gap: 5,
@@ -180,16 +180,16 @@ const AccountInfoScreen = ({navigation, route}) => {
             {garden.length > 0 ? (
               garden.map((item, index) => (
                 <View key={index} style={styles.rowItem}>
-                  <Text style={styles.label}>
+                  <Text style={styles.labelGarden}>
                     <IconMa
                       name="flower-tulip-outline"
                       size={20}
                       color="#fff"
                       style={{marginRight: 5}}
                     />{' '}
-                    {item.data?.name_area || 'Không có tên'}
+                    {item.data?.name_area}
                   </Text>
-                  <Text style={styles.label}>
+                  <Text style={styles.valueGarden}>
                     <IconMa name="account-group" size={16} color="#fff" />{' '}
                     {item.data?.members?.length ?? 0}
                   </Text>

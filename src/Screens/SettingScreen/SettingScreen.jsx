@@ -18,9 +18,10 @@ import {createStyle} from './style';
 import {logout, profile} from '../../../services/authServices';
 import * as Animatable from 'react-native-animatable';
 import Icon from 'react-native-vector-icons/Feather';
+import Toast from 'react-native-toast-message';
 
 const SettingsScreen = ({navigation}) => {
-  const {t, i18n} = useTranslation();
+  const {t} = useTranslation();
   const {theme, toggleTheme} = useContext(ThemeContext);
   const isFocused = useIsFocused();
   const styles = createStyle(theme);
@@ -52,6 +53,7 @@ const SettingsScreen = ({navigation}) => {
       if (res.message === 'Logout successful') {
         await AsyncStorage.removeItem('authToken');
         await navigation.navigate('Login');
+        Alert.alert(t('alert_info'), t('logout_success'))
       }
     } catch (err) {
       console.log('Đăng xuất thất bại');
@@ -67,7 +69,9 @@ const SettingsScreen = ({navigation}) => {
         <View style={styles.profileHeader} />
         <View style={styles.avatarWrapper}>
           <Image
-            source={{uri: userInfo?.avatar ? userInfo.avatar : IMAGES.IMAGES_H}}
+            source={{
+              uri: userInfo?.avatar ? userInfo.avatar : IMAGES.IMAGES_DF,
+            }}
             style={styles.avatar}
             resizeMode="cover"
           />
@@ -79,11 +83,22 @@ const SettingsScreen = ({navigation}) => {
       <View style={styles.body}>
         <Text style={styles.sectionTitle}>{t('setting')}</Text>
         <View style={styles.settingBox}>
-          <Pressable
+          {/* <Pressable
             style={styles.optionContainer}
-            onPress={() => Alert.alert('Thông Báo, Tính năng chưa phát triển')}>
+            onPress={() =>
+              Toast.show({
+                type: 'info',
+                text1: t('alert_info'),
+                text2: t('feature_not_developed'),
+                text1Style: {fontSize: 16, color: colors.black},
+                text2Style: {fontSize: 12, color: colors.black},
+                position: 'top',
+                autoHide: true,
+                visibilityTime: 2500,
+              })
+            }>
             <Text style={styles.optionText}>{t('general_settings')}</Text>
-          </Pressable>
+          </Pressable> */}
 
           <Pressable
             style={styles.optionContainer}
@@ -110,12 +125,6 @@ const SettingsScreen = ({navigation}) => {
                 duration={2500}
                 key={theme} // quan trọng: để animation chạy lại khi theme thay đổi
               >
-                {/* <Icon
-                  name={theme === 'light' ? 'sun' : 'moon'}
-                  size={20}
-                  color={theme === 'light' ? 'orange' : 'lightblue'}
-                  style={{marginRight: 10}}
-                /> */}
                 <Image
                   source={
                     theme === 'light'

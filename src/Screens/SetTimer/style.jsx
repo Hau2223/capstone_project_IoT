@@ -124,6 +124,7 @@ const light = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   durationButton: {
+    width: '30%',
     marginTop: 10,
     padding: 10,
     backgroundColor: colors.bg_selectClock,
@@ -138,6 +139,7 @@ const light = StyleSheet.create({
   },
   durationPickerContainer: {
     width: '100%',
+
   },
   durationPicker: {
     color: colors.black,
@@ -147,7 +149,7 @@ const light = StyleSheet.create({
     padding: 20,
   },
   sectionTitle: {
-    fontSize: 17,
+    fontSize: 16,
     color: colors.black,
     marginBottom: 15,
   },
@@ -184,7 +186,7 @@ const light = StyleSheet.create({
     borderColor: colors.bg_selectClock,
   },
   nameInput: {
-    fontSize: 18,
+    fontSize: 16,
     color: colors.black,
     padding: 0,
   },

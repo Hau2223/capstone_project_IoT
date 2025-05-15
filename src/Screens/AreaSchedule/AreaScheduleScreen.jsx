@@ -1,4 +1,4 @@
-import {StyleSheet, View, StatusBar} from 'react-native';
+import {View, StatusBar, Text} from 'react-native';
 import React, {memo, useContext} from 'react';
 import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
@@ -25,16 +25,22 @@ const AreaScheduleScreen = ({navigation, route}) => {
           barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
         />
       )}
+      <View style={styles.header}>
+        <View style={styles.header1}>
+          <Text style={styles.textHeader}>{t('adjust')}</Text>
+        </View>
+      </View>
       <TopTab.Navigator
         screenOptions={{
-          tabBarActiveTintColor:colors.primary,
-          tabBarInactiveTintColor:theme === 'light'? colors.bg_InActopTab : colors.white,
-          tabBarIndicatorStyle:  {backgroundColor: colors.primary, height: 3},
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor:
+            theme === 'light' ? colors.bg_InActopTab : colors.white,
+          tabBarIndicatorStyle: {backgroundColor: colors.primary, height: 3},
           tabBarStyle: {
             backgroundColor: theme === 'light' ? colors.white : colors.bg_dark,
           },
           tabBarLabelStyle: {
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: 'bold',
             textTransform: 'none',
           },
@@ -42,7 +48,7 @@ const AreaScheduleScreen = ({navigation, route}) => {
         <TopTab.Screen
           name="Schedule"
           component={ScheduleScreen}
-          options={{tabBarLabel: t('watering_schedule')}}
+          options={{tabBarLabel: t('schedule')}}
           initialParams={{...route.params}}
         />
         <TopTab.Screen
@@ -58,5 +64,3 @@ const AreaScheduleScreen = ({navigation, route}) => {
 };
 
 export default memo(AreaScheduleScreen);
-
-

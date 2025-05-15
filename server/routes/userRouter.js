@@ -248,6 +248,10 @@ app.get('/sendCode/:email', async (req, res) => {
 app.get('/sendCodeReset/:email', async (req, res) => {
   const email = req.params.email;
   try {
+    if (!await User.findOne({email})) {
+      return res.status(400).json({message: 'Email does not exist!'});
+    }
+    
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       return res.status(500).json({message: 'Email configuration error'});
     }
@@ -289,6 +293,7 @@ app.get('/sendCodeReset/:email', async (req, res) => {
       status: 200,
       code: String(randomNumber),
     });
+
   } catch (error) {
     console.error('Error sending email:', error.message);
     res.status(500).json({

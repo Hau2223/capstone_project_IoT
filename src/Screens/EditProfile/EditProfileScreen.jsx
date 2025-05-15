@@ -24,6 +24,7 @@ import colors from '../../../assets/common/colorCss';
 import HeaderCompo from '../../components/HeaderCompo';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {format, isValid} from 'date-fns';
+import Toast from 'react-native-toast-message';
 
 const EditProfileScreen = ({navigation, route}) => {
   const {userInfo} = route.params;
@@ -72,21 +73,18 @@ const EditProfileScreen = ({navigation, route}) => {
   const pickImage = async () => {
     const hasPermission = await requestGalleryPermission();
     if (!hasPermission) {
-      Alert.alert(
-        t('permissionDenied'),
-        t('grant_photo_access'),
-        [
-          {text: t('cancel')},
-          {text: t('open_settings'), onPress: () => Linking.openSettings()},
-        ],
-      );
+      Alert.alert(t('permissionDenied'), t('grant_photo_access'), [
+        {text: t('cancel')},
+        {text: t('open_settings'), onPress: () => Linking.openSettings()},
+      ]);
       return;
     }
 
     launchImageLibrary({mediaType: 'photo'}, response => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.errorMessage) {
+      // if (response.didCancel) {
+      //   console.log('User cancelled image picker');
+      // } else
+      if (response.errorMessage) {
         console.log('ImagePicker Error: ', response.errorMessage);
       } else if (response.assets && response.assets.length > 0) {
         handleChange('avatar', response.assets[0].uri);
@@ -113,13 +111,13 @@ const EditProfileScreen = ({navigation, route}) => {
           type: 'image/jpeg',
         });
 
-        const uploadRes = await uploadAvatar(form, {
+        await uploadAvatar(form, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         });
 
-        console.log('Upload avatar response:', uploadRes);
+        // console.log('Upload avatar response:', uploadRes);
       }
 
       await updateProfile({
@@ -131,13 +129,20 @@ const EditProfileScreen = ({navigation, route}) => {
           ? format(new Date(formData.dob), 'yyyy-MM-dd')
           : null,
       });
-
-      Alert.alert(t('success'), t('updateSuccess'), [
-        {text: t('ok'), onPress: () => navigation.goBack()},
-      ]);
+      Toast.show({
+        type: 'success',
+        text1: t('alert_success'),
+        text2: t('updateSuccess'),
+        text1Style: {fontSize: 16, color: colors.primary},
+        text2Style: {fontSize: 12, color: colors.black},
+        position: 'top',
+        autoHide: true,
+        visibilityTime: 3000,
+      });
+      navigation.goBack();
     } catch (err) {
       console.error('Lỗi khi lưu thông tin:', err);
-      Alert.alert(t('error'),  t('updateFailed'));
+      Alert.alert(t('error'), t('updateFailed'));
     }
   };
 
@@ -174,7 +179,7 @@ const EditProfileScreen = ({navigation, route}) => {
         name={t('editProfile')}
         isPress={() => navigation.goBack()}
         bgcolor={theme === 'light' ? colors.white : colors.bg_dark}
-        color={theme === 'light' ? colors.bg_dark : colors.white}
+        color={theme === 'light' ? colors.primary : colors.white}
       />
 
       {/* Nội dung chính nằm trong ScrollView */}
@@ -220,7 +225,6 @@ const EditProfileScreen = ({navigation, route}) => {
               editable={false}
               value={formData.email}
               textColor={theme === 'light' ? colors.black : colors.white}
-              onChangeText={value => handleChange('email', value)}
               keyboardType="email-address"
               style={styles.input}
               mode="outlined"
@@ -229,6 +233,8 @@ const EditProfileScreen = ({navigation, route}) => {
                 theme === 'light' ? colors.black : colors.white
               }
               outlineColor={theme === 'light' ? colors.black : colors.white}
+              accessible={true}
+              accessibilityLabel={t('email')}
             />
           </View>
 
@@ -253,7 +259,7 @@ const EditProfileScreen = ({navigation, route}) => {
                 <TextInput.Affix
                   text={`${formData?.phone.length}/10`}
                   textStyle={{
-                    color: theme === 'light' ? colors.black : colors.white
+                    color: theme === 'light' ? colors.black : colors.white,
                   }}
                 />
               }
@@ -268,8 +274,9 @@ const EditProfileScreen = ({navigation, route}) => {
                 selectedValue={formData.gender}
                 onValueChange={value => handleChange('gender', value)}
                 style={styles.picker}
-                
-                dropdownIconColor={theme === 'light' ? colors.black : colors.white}>
+                dropdownIconColor={
+                  theme === 'light' ? colors.black : colors.white
+                }>
                 <Picker.Item label={t('male')} value="male" />
                 <Picker.Item label={t('female')} value="female" />
                 <Picker.Item label={t('other')} value="other" />

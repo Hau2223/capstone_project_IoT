@@ -15,6 +15,7 @@ import {createStyle} from './style';
 import {useIsFocused} from '@react-navigation/native';
 import HeaderCompo from '../../components/HeaderCompo';
 import {white} from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
+import Toast from 'react-native-toast-message';
 
 const languages = [
   {code: 'vi', label: 'Vietnamese', flag: '🇻🇳'},
@@ -31,6 +32,18 @@ const LanguageSettingScreen = ({navigation}) => {
   const changeLanguage = async lang => {
     i18n.changeLanguage(lang);
     setSelectedLang(lang);
+    
+    Toast.show({
+      type: 'success',
+      text1: t('language_changed'),
+      text2:
+        lang === 'en' ? t('switched_to_english') : t('switched_to_vietnamese'),
+      text1Style: {fontSize: 16, color: colors.primary},
+      text2Style: {fontSize: 12, color: colors.black},
+      position: 'top',
+      autoHide: true,
+      visibilityTime: 3000,
+    });
   };
 
   return (

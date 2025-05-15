@@ -43,6 +43,7 @@ const light = StyleSheet.create({
   txtForget: {
     fontStyle: 'italic',
     color: colors.txtForget,
+    fontSize: 15,
     alignSelf: 'flex-start',
   },
   edtInput: {
@@ -57,6 +58,7 @@ const light = StyleSheet.create({
   },
   txtInput: {
     color: colors.black,
+    fontWeight: '500',
     maxWidth: '80%',
   },
   iconPass: {
@@ -86,6 +88,8 @@ const light = StyleSheet.create({
     borderRadius: 30,
   },
   txtBtn: {
+    width: '100%',
+    textAlign: 'center',
     color: colors.loginform,
     fontSize: 18,
   },

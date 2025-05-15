@@ -17,7 +17,12 @@ import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import HeaderCompo from '../../../components/HeaderCompo';
 
-const ComfirmNewPass = ({data, handleInputChange, handleResetPass, handleBack}) => {
+const ComfirmNewPass = ({
+  data,
+  handleInputChange,
+  handleResetPass,
+  handleBack,
+}) => {
   const navigation = useNavigation();
   const {t} = useTranslation();
   const {width} = useWindowDimensions();
@@ -39,11 +44,11 @@ const ComfirmNewPass = ({data, handleInputChange, handleResetPass, handleBack}) 
       newPassword: '',
       cfNewPassword: '',
     };
-    console.log(data.cfNewPassword);
 
     if (!data.newEmail.length) {
       newError.newEmail = t('email_required');
-    } else if (!data.newEmail.endsWith('@gmail.com')) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.newEmail)) {
+      // Kiểm tra định dạng email
       newError.newEmail = t('email_invalid');
     }
 
@@ -78,103 +83,117 @@ const ComfirmNewPass = ({data, handleInputChange, handleResetPass, handleBack}) 
 
   return (
     <View style={styles.cnpWrapper}>
-    <HeaderCompo isPress={handleBack} bgcolor={colors.bg_NaN} color={colors.white}/>
-    <View style={styles.cnpContainer}>
-      <Image
-        style={styles.ceImg}
-        source={require('../../../../assets/icon/ic_logo.png')}
+      <HeaderCompo
+        isPress={handleBack}
+        bgcolor={colors.bg_NaN}
+        color={colors.white}
       />
-      <Text style={styles.cnpTitle}>GreenSprout</Text>
-      <View style={styles.cnpForm}>
-        <Text style={styles.cnpHeading}>{t('forgot_password')}</Text>
-        <View style={styles.cnpFormInner}>
-          {/* Input Email */}
-          <View style={styles.cnpInputGroup}>
-            <View style={styles.cnpInputWrapper}>
-              <TextInput
-                value={data.newEmail}
-                onChangeText={text => handleInputChange('newEmail', text)}
-                placeholder={t('enter_email')}
-                style={styles.cnpTextInput}
-              />
-            </View>
-            {error.newEmail ? (
-              <Text style={styles.cnpErrorText} numberOfLines={2}>
-                {error.newEmail}
-              </Text>
-            ) : null}
-          </View>
-
-          {/* Input new password */}
-          <View style={styles.cnpInputGroup}>
-            <View style={styles.cnpInputWrapper}>
-              <TextInput
-                value={data.newPassword}
-                onChangeText={text => handleInputChange('newPassword', text)}
-                placeholder={t('enter_new_password')}
-                secureTextEntry={!showPassword.newPassword}
-                style={[styles.cnpTextInput, {paddingRight: 40}]}
-              
-              />
-              <TouchableOpacity
-                style={styles.cnpEyeIcon}
-                onPress={() => togglePasswordVisibility('newPassword')}>
-                <Ionicons
-                  name={showPassword.newPassword ? 'eye-off' : 'eye'}
-                  size={22}
-                  color={colors.loginTxt}
+      <View style={styles.cnpContainer}>
+        <Image
+          style={styles.ceImg}
+          source={require('../../../../assets/icon/ic_logo.png')}
+        />
+        <Text style={styles.cnpTitle}>GreenSprout</Text>
+        <View style={styles.cnpForm}>
+          <Text style={styles.cnpHeading}>{t('forgot_password')}</Text>
+          <View style={styles.cnpFormInner}>
+            {/* Input Email */}
+            <View style={styles.cnpInputGroup}>
+              <View style={styles.cnpInputWrapper}>
+                <TextInput
+                  value={data.newEmail}
+                  onChangeText={text => handleInputChange('newEmail', text)}
+                  placeholder={t('enter_email')}
+                  placeholderTextColor={colors.loginTxt}
+                  underlineColorAndroid={colors.bg_NaN}
+                  selectionColor={colors.primary}
+                  style={styles.cnpTextInput}
                 />
-              </TouchableOpacity>
+              </View>
+              {error.newEmail ? (
+                <Text style={styles.cnpErrorText} numberOfLines={2}>
+                  {error.newEmail}
+                </Text>
+              ) : null}
             </View>
 
-            {error.newPassword ? (
-              <Text style={styles.cnpErrorText} numberOfLines={2}>
-                {error.newPassword}
-              </Text>
-            ) : null}
-          </View>
-
-          {/* Input comfirm new Password */}
-          <View style={styles.cnpInputGroup}>
-            <View style={styles.cnpInputWrapper}>
-              <TextInput
-                value={data.cfNewPassword}
-                onChangeText={text => handleInputChange('cfNewPassword', text)}
-                placeholder={t('enter_again_password')}
-                secureTextEntry={!showPassword.cfNewPassword}
-                style={[styles.cnpTextInput, {paddingRight: 40}]}
-              />
-              <TouchableOpacity
-                style={styles.cnpEyeIcon}
-                onPress={() => togglePasswordVisibility('cfNewPassword')}>
-                <Ionicons
-                  name={showPassword.cfNewPassword ? 'eye-off' : 'eye'}
-                  size={22}
-                  color={colors.loginTxt}
+            {/* Input new password */}
+            <View style={styles.cnpInputGroup}>
+              <View style={styles.cnpInputWrapper}>
+                <TextInput
+                  value={data.newPassword}
+                  onChangeText={text => handleInputChange('newPassword', text)}
+                  placeholder={t('enter_new_password')}
+                  secureTextEntry={!showPassword.newPassword}
+                  placeholderTextColor={colors.loginTxt}
+                  underlineColorAndroid={colors.bg_NaN}
+                  selectionColor={colors.primary}
+                  style={[styles.cnpTextInput, {paddingRight: 40}]}
                 />
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.cnpEyeIcon}
+                  onPress={() => togglePasswordVisibility('newPassword')}>
+                  <Ionicons
+                    name={showPassword.newPassword ? 'eye-off' : 'eye'}
+                    size={22}
+                    color={colors.loginTxt}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {error.newPassword ? (
+                <Text style={styles.cnpErrorText} numberOfLines={2}>
+                  {error.newPassword}
+                </Text>
+              ) : null}
             </View>
 
-            {error.cfNewPassword ? (
-              <Text style={styles.cnpErrorText} numberOfLines={2}>
-                {error.cfNewPasswordm}
-              </Text>
-            ) : null}
+            {/* Input comfirm new Password */}
+            <View style={styles.cnpInputGroup}>
+              <View style={styles.cnpInputWrapper}>
+                <TextInput
+                  value={data.cfNewPassword}
+                  onChangeText={text =>
+                    handleInputChange('cfNewPassword', text)
+                  }
+                  placeholder={t('enter_again_password')}
+                  placeholderTextColor={colors.loginTxt}
+                  underlineColorAndroid={colors.bg_NaN}
+                  selectionColor={colors.primary}
+                  secureTextEntry={!showPassword.cfNewPassword}
+                  style={[styles.cnpTextInput, {paddingRight: 40}]}
+                />
+                <TouchableOpacity
+                  style={styles.cnpEyeIcon}
+                  onPress={() => togglePasswordVisibility('cfNewPassword')}>
+                  <Ionicons
+                    name={showPassword.cfNewPassword ? 'eye-off' : 'eye'}
+                    size={22}
+                    color={colors.loginTxt}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {error.cfNewPassword ? (
+                <Text style={styles.cnpErrorText} numberOfLines={2}>
+                  {error.cfNewPassword}
+                </Text>
+              ) : null}
+            </View>
           </View>
+          {/* Button */}
+          <LinearGradient
+            colors={[colors.liner_light1, colors.liner_light2]}
+            start={{x: 0, y: 1}}
+            end={{x: 1, y: 0}}
+            locations={[0, 0.6]}
+            style={styles.cnpButton}>
+            <TouchableOpacity onPress={handleRequest}>
+              <Text style={styles.cnpButtonText}>{t('verify_password')}</Text>
+            </TouchableOpacity>
+          </LinearGradient>
         </View>
-        {/* Button */}
-        <LinearGradient
-          colors={[colors.liner_light1, colors.liner_light2]}
-          start={{x: 0, y: 1}}
-          end={{x: 1, y: 0}}
-          locations={[0, 0.6]}
-          style={styles.cnpButton}>
-          <TouchableOpacity onPress={handleRequest}>
-            <Text style={styles.cnpButtonText}>{t('reset_password')}</Text>
-          </TouchableOpacity>
-        </LinearGradient>
       </View>
-    </View>
     </View>
   );
 };

@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import {StyleSheet} from 'react-native';
 import colors from '../../../assets/common/colorCss';
 
 const light = StyleSheet.create({
@@ -48,12 +48,18 @@ const light = StyleSheet.create({
     backgroundColor: colors.white,
     alignItems: 'center',
   },
-  header2: {
+  loNameId: {
     maxWidth: '75%',
-    color: colors.primary,
-    fontWeight: 'bold',
     borderTopRightRadius: 5,
-    padding: 5,
+  },
+  header2: {
+    color: colors.black,
+    fontWeight: 'bold',
+  },
+  toggleButton: {
+    color: colors.loginTxt,
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   headerButton: {
     maxWidth: '25%',
@@ -73,14 +79,22 @@ const light = StyleSheet.create({
   },
   textStyle: {
     color: colors.black,
+    fontSize: 16,
+  },
+  textValue: {
+    color: colors.black,
     fontSize: 17,
+    textAlign: 'right',
+    fontWeight: '400',
+    width: '100%',
   },
   containerFrame: {
     flex: 1,
     borderRadius: 15,
     borderWidth: 1.5,
     borderColor: colors.borderColor,
-    padding: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 20,
     gap: 10,
     backgroundColor: colors.white,
   },
@@ -110,11 +124,11 @@ const light = StyleSheet.create({
     borderBottomWidth: 0,
   },
   textContent: {
-    width: '65%',
+    width: '60%',
     justifyContent: 'center',
   },
   valueContent: {
-    width: '20%',
+    width: '25%',
     justifyContent: 'center',
     alignItems: 'flex-end',
   },
@@ -156,7 +170,7 @@ const light = StyleSheet.create({
     gap: 15,
     elevation: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
@@ -166,7 +180,8 @@ const light = StyleSheet.create({
     alignItems: 'center',
   },
   modalTitle: {
-    fontSize: 18,
+    width: 'auto',
+    fontSize: 17,
     fontWeight: 'bold',
     color: colors.black,
     textAlign: 'center',
@@ -183,6 +198,7 @@ const light = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 16,
+    fontWeight: '500',
     color: colors.black,
   },
   modalButtonGroup: {
@@ -194,21 +210,23 @@ const light = StyleSheet.create({
   modalButtonPrimary: {
     flex: 1,
     backgroundColor: '#28A745',
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   modalButtonCancel: {
     flex: 1,
     backgroundColor: '#F5A623',
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   modalButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     color: colors.white,
-    fontWeight: 'bold',
+    fontWeight: '900',
   },
   // Custom Dropdown Styles
   controlMenuButton: {
@@ -220,14 +238,41 @@ const light = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 6,
     backgroundColor: colors.white,
-    minWidth: 120,
-    maxWidth: 120,
+    minWidth: 140,
+    maxWidth: 140,
+  },
+  menuContainer: {
+    width: '100%',
+  },
+  menuAnchor: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    backgroundColor: colors.white,
+  },
+  menuAnchorText: {
+    width: '80%',
+    fontSize: 14,
+    color: colors.black,
+  },
+  menuIcon: {
+    marginLeft: 10,
+    fontSize: 26,
+    color: colors.primary,
   },
   selectedUserText: {
-    fontSize: 16,
+    width: '100%',
+    fontSize: 14,
     color: colors.primary,
+    backgroundColor: 'red',
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 5,
   },
   flatList: {
     maxHeight: 150,
@@ -238,11 +283,11 @@ const light = StyleSheet.create({
   },
   menuItem: {
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderColor,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.5)',
   },
   menuItemText: {
-    fontSize: 14,
+    fontSize: 16,
     color: colors.black,
   },
   noMembersText: {
@@ -272,6 +317,9 @@ const light = StyleSheet.create({
   lotxtBlock: {
     width: '70%',
   },
+  controlMenuIcon: {
+    color: colors.primary,
+  },
 });
 
 const dark = StyleSheet.create({
@@ -284,16 +332,29 @@ const dark = StyleSheet.create({
     ...light.container1,
     backgroundColor: colors.bg_dark,
   },
+  titleContainer: {
+    ...light.titleContainer,
+    backgroundColor: colors.bg_dark,
+  },
   header2: {
     ...light.header2,
-    backgroundColor: colors.bg_dark,
+    color: colors.white,
+  },
+  toggleButton: {
+    ...light.toggleButton,
+    color: colors.white,
   },
   headerButton: {
     ...light.headerButton,
     backgroundColor: colors.bg_dark,
   },
+
   textStyle: {
     ...light.textStyle,
+    color: colors.white,
+  },
+  textValue: {
+    ...light.textValue,
     color: colors.white,
   },
   containerFrame: {
@@ -330,13 +391,35 @@ const dark = StyleSheet.create({
     ...light.modalButtonCancel,
     backgroundColor: '#F5A623',
   },
+
   controlMenuButton: {
     ...light.controlMenuButton,
     backgroundColor: colors.bg_dark,
     borderColor: colors.white,
   },
+  menuContainer: {
+    backgroundColor: colors.bg_dark,
+  },
+  menuAnchor: {
+    ...light.menuAnchor,
+    backgroundColor: colors.bg_dark,
+    borderColor: colors.white,
+  },
+  menuAnchorText: {
+    ...light.menuAnchorText,
+    color: colors.white,
+  },
+  selectedUserText: {
+    ...light.menuAnchorText,
+    color: colors.white,
+  },
+  menuIcon: {
+    ...light.menuIcon,
+    color: colors.white,
+  },
   controlMenuIcon: {
     ...light.controlMenuIcon,
+    color: colors.white,
   },
   flatList: {
     ...light.flatList,
@@ -345,7 +428,7 @@ const dark = StyleSheet.create({
   },
   menuItem: {
     ...light.menuItem,
-    borderBottomColor: '#444',
+    borderColor: colors.white,
     backgroundColor: colors.bg_dark,
   },
   menuItemText: {

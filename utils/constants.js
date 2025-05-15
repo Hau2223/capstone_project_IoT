@@ -9,5 +9,5 @@ export const IMAGES = {
   BG_TABLET:
     'https://i.pinimg.com/736x/44/1f/c8/441fc876392ed7e9a95bf412c04d9f54.jpg',
   IMAGES_DF:
-    'https://i.pinimg.com/474x/f9/b3/f7/f9b3f7c26702519818f4d31a44922b21.jpg',
+    'https://coffective.com/wp-content/uploads/2018/06/default-featured-image.png.jpg',
 };

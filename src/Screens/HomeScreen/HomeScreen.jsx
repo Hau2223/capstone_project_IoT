@@ -21,12 +21,8 @@ import {gardenId, meAuth} from '../../../services/authServices';
 import {detailDevice} from '../../../services/deviceServices';
 import colors from '../../../assets/common/colorCss';
 import * as Animatable from 'react-native-animatable';
-import {
-  addMembertoDevice,
-  memBlockList,
-} from '../../../services/menberServices';
+import {addMembertoDevice} from '../../../services/menberServices';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import LinearGradient from 'react-native-linear-gradient';
 import {useTranslation} from 'react-i18next';
 import {ThemeContext} from '../../../assets/common/themeProvider';
 import {createStyle} from './style';
@@ -45,34 +41,10 @@ const GardenList = ({gardens, loading, handleGoToDetail, theme, styles, t}) => {
         <View style={styles.contentSkeleton}>
           <View style={{width: '100%', height: 130, borderRadius: 10}} />
           <View style={{paddingHorizontal: 10, gap: 5}}>
-            <View
-              style={{
-                width: '50%',
-                height: 25,
-                borderRadius: 5,
-              }}
-            />
-            <View
-              style={{
-                width: '100%',
-                height: 15,
-                borderRadius: 5,
-              }}
-            />
-            <View
-              style={{
-                width: '100%',
-                height: 15,
-                borderRadius: 5,
-              }}
-            />
-            <View
-              style={{
-                width: '100%',
-                height: 15,
-                borderRadius: 5,
-              }}
-            />
+            <View style={{width: '50%', height: 25, borderRadius: 5}} />
+            <View style={{width: '100%', height: 15, borderRadius: 5}} />
+            <View style={{width: '100%', height: 15, borderRadius: 5}} />
+            <View style={{width: '100%', height: 15, borderRadius: 5}} />
             <View style={{width: '100%', height: 15, borderRadius: 5}} />
           </View>
         </View>
@@ -117,7 +89,6 @@ const GardenList = ({gardens, loading, handleGoToDetail, theme, styles, t}) => {
               humidity: humiditySensor,
               luminosity: luminositySensor,
               moisture: moistureSensor,
-              stream: streamSensor,
             } = sensorMap;
 
             const {
@@ -130,8 +101,8 @@ const GardenList = ({gardens, loading, handleGoToDetail, theme, styles, t}) => {
               <View style={styles.itemWrapper}>
                 <ItemHomePage
                   name_area={item?.data?.name_area}
-                  temperature={`${temperatureSensor?.value ?? 0}`}
-                  moisture={`${moistureSensor?.value ?? 0}`}
+                  temperature={`${temperatureSensor?.value}`}
+                  moisture={`${moistureSensor?.value}`}
                   water={`${
                     waterControl?.status === true
                       ? t('status_on')
@@ -143,7 +114,7 @@ const GardenList = ({gardens, loading, handleGoToDetail, theme, styles, t}) => {
                       : t('status_off')
                   }`}
                   img_area={item?.data?.img_area}
-                  luminosity={`${luminositySensor?.value ?? 0}%`}
+                  luminosity={luminositySensor?.value}
                   onPress={() => handleGoToDetail(item)}
                 />
               </View>
@@ -162,13 +133,50 @@ const HomeScreen = ({navigation}) => {
   const isFocused = useIsFocused();
   const [modalVisible, setModalVisible] = useState(false);
   const [modalDevice, setModalDevice] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(20);
   const [deviceId, setDeviceId] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const viewRef = useRef(null);
   const [gardens, setGardens] = useState([]);
   const [user, setUser] = useState(null);
+
+  const fetchGardens = useCallback(async () => {
+    try {
+      const res = await gardenId();
+      if (res.status === 200 && Array.isArray(res.data)) {
+        const dataGarden = await Promise.all(
+          res.data.map(async id => {
+            try {
+              const deviceData = await detailDevice({id});
+              return deviceData;
+            } catch (deviceErr) {
+              console.error(`Error fetching device ${id}:`, deviceErr);
+              return null; // Return null for failed device fetches
+            }
+          }),
+        );
+        // Filter out null values and ensure valid data
+        const validGardens = dataGarden.filter(garden => garden && garden.data);
+        setGardens(validGardens);
+        const me = await meAuth();
+        if (me.status === 200) {
+          setUser(me.data._id);
+        } else {
+          setError('Failed to fetch user data');
+        }
+        return validGardens; // Return valid gardens array
+      } else {
+        throw new Error('Invalid response from gardenId API');
+      }
+    } catch (err) {
+      console.error('Error fetching gardens:', err);
+      setError(err.message || 'Error fetching garden data');
+      setGardens([]); // Set to empty array on error
+      return []; // Always return an empty array on error
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const handleGoToDetail = useCallback(
     item => {
@@ -178,38 +186,10 @@ const HomeScreen = ({navigation}) => {
     [navigation],
   );
 
-  const fetchGardens = useCallback(async () => {
-    try {
-      const res = await gardenId();
-      if (res.status === 200) {
-        const dataGarden = await Promise.all(
-          res.data.map(async id => {
-            const deviceData = await detailDevice({id});
-            return deviceData;
-          }),
-        );
-        setGardens(dataGarden);
-        const me = await meAuth();
-        if (me.status === 200) {
-          setUser(me.data._id);
-        } else {
-          setError('Failed to fetch user data');
-        }
-      }
-    } catch (err) {
-      setError(err.message || 'Error fetching user data');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useFocusEffect(
     useCallback(() => {
       fetchGardens();
-      const interval = setInterval(() => {
-        fetchGardens();
-      }, 5000);
-
+      const interval = setInterval(fetchGardens, 5000); // Polling every 5 seconds
       return () => clearInterval(interval);
     }, [fetchGardens]),
   );
@@ -225,7 +205,6 @@ const HomeScreen = ({navigation}) => {
       const onBackPress = () => {
         const currentRoute =
           navigation.getState().routes[navigation.getState().index].name;
-
         if (currentRoute === 'Home') {
           BackHandler.exitApp();
           return true;
@@ -234,9 +213,7 @@ const HomeScreen = ({navigation}) => {
           return true;
         }
       };
-
       BackHandler.addEventListener('hardwareBackPress', onBackPress);
-
       return () =>
         BackHandler.removeEventListener('hardwareBackPress', onBackPress);
     }, [navigation]),
@@ -249,40 +226,25 @@ const HomeScreen = ({navigation}) => {
           type: 'error',
           text1: t('alert_error'),
           text2: t('enter_valid_device_code'),
-          text1Style: {fontSize: 20, color: colors.black},
-          text2Style: {fontSize: 15, color: colors.black},
+          text1Style: {fontSize: 16, color: colors.black},
+          text2Style: {fontSize: 12, color: colors.black},
           position: 'top',
           autoHide: true,
-          visibilityTime: 3000,
+          visibilityTime: 2500,
         });
         return;
       }
       try {
         setLoading(true);
-        // const resblock = await memBlockList({id_esp});
-        // if (resblock.message === 'Success') {
-        //   const userExists = resblock.data.some(item => item.userId === user);
-        //   if (userExists) {
-        //     Toast.show({
-        //       type: 'info',
-        //       text1: t('alert_info'),
-        //       text2: t('cannot_add_device'),
-        //       position: 'top',
-        //       autoHide: true,
-        //       visibilityTime: 3000,
-        //     });
-        //     return;
-        //   }
-        // }
         const res = await addMembertoDevice({id_esp});
-        if (res.message === 'Member added successfully') {
+        if (res.message === 'Member added successfully' || res.message === 'First member added as owner') {
           await fetchGardens();
           Toast.show({
             type: 'success',
             text1: t('alert_info'),
             text2: t('garden_added_successfully'),
-            text1Style: {fontSize: 20, color: colors.black},
-            text2Style: {fontSize: 15, color: colors.black},
+            text1Style: {fontSize: 16, color: colors.primary},
+            text2Style: {fontSize: 12, color: colors.black},
             position: 'top',
             autoHide: true,
             visibilityTime: 3000,
@@ -290,13 +252,13 @@ const HomeScreen = ({navigation}) => {
         }
       } catch (err) {
         const errMsg = err.response?.data?.message || err.message;
-        if (errMsg === 'User is blocked') {
+        if (errMsg === 'Member already exists') {
           Toast.show({
-            type: 'info',
-            text1: t('alert_info'),
-            text2: t('cannot_add_device'),
-            text1Style: {fontSize: 20, color: colors.black},
-            text2Style: {fontSize: 15, color: colors.black},
+            type: 'error',
+            text1: t('alert_error'),
+            text2: t('device_already_added'),
+            text1Style: {fontSize: 16, color: colors.black, fontWeight: 'bold'},
+            text2Style: {fontSize: 12, color: colors.black, fontWeight: '400'},
             position: 'top',
             autoHide: true,
             visibilityTime: 3000,
@@ -305,9 +267,9 @@ const HomeScreen = ({navigation}) => {
           Toast.show({
             type: 'error',
             text1: t('alert_error'),
-            text2: errMsg || t('failed_to_add_device'),
-            text1Style: {fontSize: 20, color: colors.black},
-            text2Style: {fontSize: 15, color: colors.black},
+            text2: t('failed_to_add_device'),
+            text1Style: {fontSize: 16, color: colors.black, fontWeight: 'bold'},
+            text2Style: {fontSize: 12, color: colors.black, fontWeight: '400'},
             position: 'top',
             autoHide: true,
             visibilityTime: 3000,
@@ -317,34 +279,19 @@ const HomeScreen = ({navigation}) => {
         setLoading(false);
       }
     },
-    [fetchGardens, t, user],
+    [fetchGardens, t],
   );
 
-  // Filter gardens based on user's role in members array
-  const ownerGardens =
-    gardens && Array.isArray(gardens)
-      ? gardens.filter(garden =>
-          garden?.data?.members?.some(
-            member => member.userId === user && member.role === 'owner',
-          ),
-        )
-      : [];
-
-  const memberGardens =
-    gardens && Array.isArray(gardens)
-      ? gardens.filter(garden =>
-          garden?.data?.members?.some(
-            member => member.userId === user && member.role === 'member',
-          ),
-        )
-      : [];
-
-  const Gardensall =
-    gardens && Array.isArray(gardens)
-      ? gardens.filter(garden =>
-          garden?.data?.members?.some(member => member.userId === user),
-        )
-      : [];
+  const ownerGardens = gardens.filter(garden =>
+    garden?.data?.members?.some(
+      member => member.userId === user && member.role === 'owner',
+    ),
+  );
+  const memberGardens = gardens.filter(garden =>
+    garden?.data?.members?.some(
+      member => member.userId === user && member.role === 'member',
+    ),
+  );
 
   return (
     <View style={styles.frame}>
@@ -358,10 +305,10 @@ const HomeScreen = ({navigation}) => {
         <View style={styles.header1}>
           <Text style={styles.textHeader}>{t('your_garden')}</Text>
         </View>
-        <CustomAlert
+        {/* <CustomAlert
           visible={modalVisible}
           onClose={() => setModalVisible(false)}
-        />
+        /> */}
       </View>
       <Tab.Navigator
         screenOptions={{
@@ -427,7 +374,7 @@ const HomeScreen = ({navigation}) => {
         <TouchableOpacity
           onPress={() => setModalDevice(true)}
           style={styles.floatingButton}>
-          <Icon name="add-circle" size={60} color={colors.primary} />
+          <Icon name="add" size={55} color={colors.white} />
         </TouchableOpacity>
       </Animatable.View>
 
