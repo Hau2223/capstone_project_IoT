@@ -25,7 +25,8 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
     }
     if (!data.email.length) {
       newError.email = t('email_required');
-    } else if (!data.email.endsWith('@gmail.com')) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      // Kiểm tra định dạng email
       newError.email = t('email_invalid');
     }
 
@@ -61,6 +62,7 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
                 onChangeText={text => handleInputChange('name', text)}
                 placeholder={t('enter_name')}
                 placeholderTextColor={colors.loginTxt}
+                selectionColor={colors.primary}
                 underlineColorAndroid="transparent"
                 style={styles.rqTextInput}
               />
@@ -75,6 +77,7 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
                 onChangeText={text => handleInputChange('email', text)}
                 placeholder={t('enter_email')}
                 placeholderTextColor={colors.loginTxt}
+                selectionColor={colors.primary}
                 underlineColorAndroid="transparent"
                 style={styles.rqTextInput}
               />
@@ -93,7 +96,7 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
                 secureTextEntry={!showPassword}
                 placeholder={t('enter_password')}
                 underlineColorAndroid={colors.white}
-                electionColor={colors.loginTxt}
+                selectionColor={colors.primary}
                 placeholderTextColor={colors.loginTxt}
                 style={[styles.rqTextInput, {flex: 1}]}
               />
@@ -105,7 +108,7 @@ const Request = ({data, handleInputChange, handleData, handleRegister}) => {
                 />
               </Pressable>
             </View>
-            {error.email && (
+            {error.password && (
               <Text style={styles.rqErrorText}>{error.password}</Text>
             )}
           </View>

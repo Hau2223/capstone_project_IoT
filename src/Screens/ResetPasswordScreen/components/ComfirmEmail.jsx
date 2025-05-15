@@ -45,7 +45,7 @@ const ComfirmEmail = ({
               onChangeText={text => handleInputChange('newEmail', text)}
               placeholder={t('enter_email')}
               placeholderTextColor={colors.white}
-              style={[styles.ceFormLabel, styles.ceTextInput]}
+              style={styles.ceTextInput}
             />
           </View>
           <LinearGradient
@@ -54,7 +54,7 @@ const ComfirmEmail = ({
             end={{x: 1, y: 0}}
             locations={[0, 0.5]}
             style={styles.ceButton}>
-            <Pressable onPress={handlePress}>
+            <Pressable onPress={handlePress} style={styles.touchableArea}>
               <Text style={styles.ceButtonText}>{t('send_code')}</Text>
             </Pressable>
           </LinearGradient>

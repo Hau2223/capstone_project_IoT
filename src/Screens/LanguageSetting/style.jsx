@@ -28,7 +28,7 @@ const light = StyleSheet.create({
   },
   txtCurrent: {
     color: colors.black,
-    fontWeight: '500'
+    fontWeight: '500',
   },
   txtFlapCurrent: {
     fontSize: 24,
@@ -53,6 +53,7 @@ const light = StyleSheet.create({
     gap: 10,
   },
   languageItem: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.primary,
@@ -71,16 +72,17 @@ const light = StyleSheet.create({
   },
   bodyLan: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
     gap: 5,
   },
   languageFlap: {
+    textAlign: 'left',
     fontSize: 24,
     color: 'white',
     marginLeft: 5,
   },
   languageText: {
+    width: '60%',
     fontSize: 18,
     color: 'white',
   },
@@ -103,7 +105,7 @@ const dark = StyleSheet.create({
   txtChooseLan: {
     ...light.txtChooseLan,
     color: colors.white,
-  }
+  },
 });
 
 export const createStyle = mode => {

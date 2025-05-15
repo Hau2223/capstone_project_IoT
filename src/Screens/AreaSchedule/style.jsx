@@ -6,13 +6,38 @@ const light = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white,
   },
+  header: {
+    width: '100%',
+    flexDirection: 'row',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  header1: {
+    width: '80%',
+    justifyContent: 'center',
+  },
+  textHeader: {
+    color: colors.primary,
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
 });
 
 const dark = StyleSheet.create({
-container: {
+  container: {
     ...light.container,
-    backgroundColor: colors.bg_dark
-}
+    backgroundColor: colors.bg_dark,
+  },
+  header: {
+    ...light.header,
+  },
+  header1: {
+    ...light.header1,
+  },
+  textHeader: {
+    ...light.textHeader,
+    color: colors.white,
+  },
 });
 
 export const createStyle = mode => {

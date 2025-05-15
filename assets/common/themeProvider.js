@@ -1,6 +1,7 @@
 import React, {createContext, useState, useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Appearance} from 'react-native';
+import Toast from 'react-native-toast-message';
 
 export const ThemeContext = createContext();
 

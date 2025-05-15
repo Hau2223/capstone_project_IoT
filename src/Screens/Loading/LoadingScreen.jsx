@@ -12,6 +12,7 @@ import colors from '../../../assets/common/colorCss';
 import {useIsFocused, useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {UserContext} from '../../../utils/UserContext'; // Import UserContext
+import { fonts } from '../../../assets/common/fontCss';
 
 const LoadingScreen = () => {
   const isFocused = useIsFocused();
@@ -110,7 +111,7 @@ const styles = StyleSheet.create({
     bottom: '5%',
     left: '10%',
     right: '10%',
-    height: 20,
+    height: 25,
     backgroundColor: colors.bg_primary,
     borderWidth: 2,
     borderColor: colors.white,
@@ -133,12 +134,12 @@ const styles = StyleSheet.create({
   },
   progressText: {
     color: colors.white,
-    fontSize: 12,
+    fontSize: fonts.FontSize.M,
     fontWeight: 'bold',
     zIndex: 1,
     textAlign: 'center',
     width: '100%',
-    backgroundColor: 'transparent',
+    backgroundColor: colors.bg_NaN,
   },
 });
 

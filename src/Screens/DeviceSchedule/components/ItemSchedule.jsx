@@ -33,20 +33,20 @@ const ItemSchedule = ({
         <Text style={styles.header2}>{tenKhu}</Text>
         <View style={styles.FrameShowSchedule}>
           {hasSchedules ? (
-            <>
+            <View style={{flexDirection: 'row', gap: 10}}>
               {schedules &&
                 schedules
                   .slice(0, 2)
                   .map(item => (
                     <BtnShowSchedule
                       key={item._id}
-                      textBtnSchedule={`${item.startTime}/${item.duration} ${t('minute')}`}
+                      textBtnSchedule={`${item.startTime}`}
                     />
                   ))}
               {schedules && schedules.length > 2 && (
                 <Text style={styles.moreText}>...</Text>
               )}
-            </>
+            </View>
           ) : (
             <Text style={styles.noScheduleText}>{t('no_schedule_yet')}</Text>
           )}

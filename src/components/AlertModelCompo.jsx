@@ -28,18 +28,30 @@ const AlertModelCompo = ({
         return {
           icon: 'checkmark-circle',
           color: '#4CAF50',
+          colorbtn: colors.primary,
           defaultTitle: 'Success',
         };
       case t('alert_warning'):
         return {
           icon: 'alert-circle',
           color: '#FF9800',
+          colorbtn: colors.primary,
           defaultTitle: 'Warning',
         };
       case t('alert_error'):
-        return {icon: 'close-circle', color: '#F44336', defaultTitle: 'Error'};
+        return {
+          icon: 'close-circle',
+          color: '#F44336',
+          defaultTitle: 'Error',
+          colorbtn: colors.primary,
+        };
       case t('alert_loading'):
-        return {icon: 'reload', color: '#007BFF', defaultTitle: 'Loading...'};
+        return {
+          icon: 'reload',
+          color: '#007BFF',
+          defaultTitle: 'Loading...',
+          colorbtn: colors.primary,
+        };
       default:
         return {
           icon: 'information-circle',
@@ -49,7 +61,7 @@ const AlertModelCompo = ({
     }
   };
 
-  const {icon, color, defaultTitle} = getConfig();
+  const {icon, color, defaultTitle, colorbtn} = getConfig();
   const alertTitle = title || defaultTitle;
 
   return (
@@ -57,8 +69,7 @@ const AlertModelCompo = ({
       visible={isVisible}
       animationType="none"
       transparent={true}
-      statusBarTranslucent={true}
-      >
+      statusBarTranslucent={true}>
       <View style={styles.backdrop}>
         <Animatable.View
           animation={isVisible ? 'fadeIn' : 'fadeOut'}
@@ -79,14 +90,14 @@ const AlertModelCompo = ({
 
           {type === t('alert_warning') && (
             <TouchableOpacity
-              style={[styles.button, {backgroundColor: color}]}
+              style={[styles.button, {backgroundColor: colorbtn}]}
               onPress={onConfirm}>
               <Text style={styles.buttonText}>Ok</Text>
             </TouchableOpacity>
           )}
           {type === t('alert_success') && (
             <TouchableOpacity
-              style={[styles.button, {backgroundColor: color}]}
+              style={[styles.button, {backgroundColor: colorbtn}]}
               onPress={onConfirm}>
               <Text style={styles.buttonText}>OK</Text>
             </TouchableOpacity>
@@ -123,8 +134,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: 10,
+    color: colors.black,
   },
   message: {
+    width: '100%',
+    color: colors.black,
+    fontWeight: '400',
     fontSize: 16,
     marginVertical: 10,
     textAlign: 'center',
@@ -135,10 +150,11 @@ const styles = StyleSheet.create({
   },
   button: {
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 20,
     marginHorizontal: 5,
     borderRadius: 5,
-    alignItems: 'center',
+    backgroundColor: 'red',
+    alignSelf: 'center',
   },
   cancelButton: {
     backgroundColor: '#ccc',

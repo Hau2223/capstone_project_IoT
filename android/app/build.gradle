@@ -119,6 +119,22 @@ android {
             dependsOn tasks.named('copyReactNativeVectorIconFonts')
         }    
     }
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def appName = "GreenSprout"
+            def versionName = variant.versionName
+            def buildType = variant.buildType.name
+
+            if (output.outputFileName?.endsWith(".apk")) {
+                output.outputFileName = "${appName}-${versionName}-${buildType}.apk"
+            }
+
+            if (output.outputFileName?.endsWith(".aab")) {
+                output.outputFileName = "${appName}-${versionName}-${buildType}.aab"
+            }
+        }
+    }
+
 }
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin

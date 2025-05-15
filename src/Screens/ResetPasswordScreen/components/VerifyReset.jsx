@@ -9,7 +9,12 @@ import LinearGradient from 'react-native-linear-gradient';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import HeaderCompo from '../../../components/HeaderCompo';
 
-const VerifyReset = ({email, handleVerifyOTP, handleReSendCode, handleBack}) => {
+const VerifyReset = ({
+  email,
+  handleVerifyOTP,
+  handleReSendCode,
+  handleBack,
+}) => {
   const {t} = useTranslation();
   const {theme} = useContext(ThemeContext);
   const styles = createStyle(theme);
@@ -37,48 +42,64 @@ const VerifyReset = ({email, handleVerifyOTP, handleReSendCode, handleBack}) => 
   };
 
   return (
-    <SafeAreaView style={styles.vrWrapper} >
-    <HeaderCompo isPress={handleBack} bgcolor={colors.bg_NaN} color={colors.white}/>
-    <View style={styles.vrContainer}>
-     
-      <Image
-        style={styles.vrImg}
-        source={require('../../../../assets/icon/ic_logo.png')}
+    <SafeAreaView style={styles.vrWrapper}>
+      <HeaderCompo
+        isPress={handleBack}
+        bgcolor={colors.bg_NaN}
+        color={colors.white}
       />
-      <Text style={styles.vrTitle}>{t('otp_verification')}</Text>
-      <Text style={styles.vrSubText}>
-        {t('otp_sent_message')} {'\n'}
-        {email}
-      </Text>
-      <View style={styles.vrForm}>
-        <OtpInput
-          numberOfDigits={4}
-          onTextChange={text => setOtp(text)}
-          disabled={false}
-          textInputProps={{
-            accessibilityLabel: 'One-Time Password',
-          }}
-          theme={{
-            pinCodeContainerStyle: {
-              backgroundColor: colors.white,
-              width: 50,
-              height: 50,
-              borderRadius: 8,
-              marginHorizontal: 5,
-              focusedPinCodeContainerStyle: colors.green,
-              borderWidth: 2,
-            },
-            pinCodeTextStyle: {
-              color: colors.green,
-            },
-          }}
+      <View style={styles.vrContainer}>
+        <Image
+          style={styles.vrImg}
+          source={require('../../../../assets/icon/ic_logo.png')}
         />
-        <View style={styles.otpContainer}>
-          {timer > 0 && (
-            <Text style={styles.vrResendText}>
-              {t('remaining_time')} {formatTime(timer)}
-            </Text>
-          )}
+        <Text style={styles.vrTitle}>{t('otp_verification')}</Text>
+        <Text style={styles.vrSubText}>
+          {t('otp_sent_message')} {'\n'}
+          {email}
+        </Text>
+        <View style={styles.vrForm}>
+          <OtpInput
+            numberOfDigits={4}
+            onTextChange={text => setOtp(text)}
+            disabled={false}
+            textInputProps={{
+              accessibilityLabel: 'One-Time Password',
+            }}
+            theme={{
+              pinCodeContainerStyle: {
+                backgroundColor: colors.white,
+                width: 50,
+                height: 50,
+                borderRadius: 8,
+                marginHorizontal: 5,
+                focusedPinCodeContainerStyle: colors.green,
+                borderWidth: 2,
+              },
+              pinCodeTextStyle: {
+                color: colors.green,
+              },
+            }}
+          />
+          <View style={styles.otpContainer}>
+            {timer > 0 && (
+              <Text style={styles.vrResendText}>
+                {t('remaining_time')} {formatTime(timer)}
+              </Text>
+            )}
+          </View>
+
+          <LinearGradient
+            colors={[colors.liner_light1, colors.liner_light2]}
+            start={{x: 0, y: 1}}
+            end={{x: 1, y: 0}}
+            locations={[0, 0.6]}
+            style={styles.vrButton}>
+            <Pressable onPress={() => handleVerifyOTP(otp)}>
+              <Text style={styles.vrButtonText}>{t('verify')}</Text>
+            </Pressable>
+          </LinearGradient>
+
           <Text style={styles.vrNoticeText}>
             {t('did_not_receive_code')}{' '}
             <Text style={styles.vrResendText} onPress={handleResend}>
@@ -86,19 +107,7 @@ const VerifyReset = ({email, handleVerifyOTP, handleReSendCode, handleBack}) => 
             </Text>
           </Text>
         </View>
-
-        <LinearGradient
-          colors={[colors.liner_light1, colors.liner_light2]}
-          start={{x: 0, y: 1}}
-          end={{x: 1, y: 0}}
-          locations={[0, 0.6]}
-          style={styles.vrButton}>
-          <Pressable onPress={() => handleVerifyOTP(otp)}>
-            <Text style={styles.vrButtonText}>{t('verify')}</Text>
-          </Pressable>
-        </LinearGradient>
       </View>
-    </View>
     </SafeAreaView>
   );
 };

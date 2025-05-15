@@ -36,6 +36,8 @@ const SetTimerScreen = ({route, navigation}) => {
   const styles = createStyle(theme);
   const isFocused = useIsFocused();
   const {item} = route.params;
+  // console.log(item);
+  
   const isNewSchedule = item?.isNewSchedule;
   const existingSchedule = item?.schedule;
 
@@ -219,18 +221,18 @@ const SetTimerScreen = ({route, navigation}) => {
             startTime: formattedTime,
             repeat: repeatDays,
             status: existingSchedule.isWatering || false,
-            duration: duration,
+            duration: duration * 60,
           },
         };
 
-        console.log(
-          'Update data being sent:',
-          JSON.stringify(updateData, null, 2),
-        );
+        // console.log(
+        //   'Update data being sent:',
+        //   JSON.stringify(updateData, null, 2),
+        // );
 
         // Call update API
         const response = await updateSchedule(updateData);
-        console.log('Raw API response:', response);
+
 
         // Parse response if it's a string
         let parsedResponse = response;
@@ -242,7 +244,6 @@ const SetTimerScreen = ({route, navigation}) => {
           }
         }
 
-        console.log('Parsed API response:', parsedResponse);
 
         if (
           parsedResponse &&
@@ -250,7 +251,7 @@ const SetTimerScreen = ({route, navigation}) => {
             parsedResponse.status === 200 ||
             parsedResponse.status === true)
         ) {
-          console.log('Schedule updated successfully');
+          // console.log('Schedule updated successfully');
           navigation.goBack();
         } else {
           console.error('Failed to update schedule. Response:', parsedResponse);
@@ -264,16 +265,16 @@ const SetTimerScreen = ({route, navigation}) => {
             startTime: formattedTime,
             repeat: repeatDays,
             status: false,
-            duration: duration,
+            duration: duration * 60,
           },
         };
 
-        console.log('Add schedule data:', JSON.stringify(addData, null, 2));
+        // console.log('Add schedule data:', JSON.stringify(addData, null, 2));
         const response = await addSchedule(addData);
-        console.log('Add schedule response:', response);
+        // console.log('Add schedule response:', response);
 
         if (response && response.message === 'Schedule added successfully') {
-          console.log('Schedule added successfully');
+          // console.log('Schedule added successfully');
           navigation.goBack();
         } else {
           console.error('Failed to add schedule. Response:', response);
@@ -443,6 +444,7 @@ const SetTimerScreen = ({route, navigation}) => {
               <View style={[styles.durationPickerContainer, {paddingHorizontal: 24, paddingVertical: 28}]}> 
                 <Text
                   style={{
+                    width: '100%',
                     fontSize: 28,
                     fontWeight: 'bold',
                     color: theme === 'light' ? colors.primary : colors.white,

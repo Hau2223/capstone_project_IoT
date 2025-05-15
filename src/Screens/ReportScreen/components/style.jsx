@@ -90,14 +90,16 @@ const light = StyleSheet.create({
     minHeight: 90,
   },
   cardTitle: {
-    fontSize: 15,
+    width: '100%',
+    fontSize: 14,
     color: colors.txt_cardReport,
     marginBottom: 8,
     textAlign: 'center',
     fontWeight: '600',
   },
   cardValue: {
-    fontSize: 26,
+    width: '100%',
+    fontSize: 20,
     fontWeight: 'bold',
     color: colors.black,
     textAlign: 'center',
@@ -159,11 +161,15 @@ const dark = StyleSheet.create({
     ...light.pointerLabel,
     backgroundColor: colors.white,
   },
+  pointerText: {
+    ...light.pointerText,
+    color: colors.black,
+  },
   card: {
     ...light.card,
     backgroundColor: colors.bg_cardReport_dark,
     borderColor: colors.white,
-  }, 
+  },
   cardTitle: {
     ...light.cardTitle,
     color: colors.white,
@@ -184,8 +190,7 @@ const dark = StyleSheet.create({
   modeButtonText: {
     ...light.modeButtonText,
     color: colors.white,
-  }
-  
+  },
 });
 
 export const createStyle = mode => {

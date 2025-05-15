@@ -71,12 +71,13 @@ function MyTabs() {
       screenOptions={{
         tabBarStyle: {
           backgroundColor: theme === 'dark' ? colors.bg_dark : colors.white,
-          height: 55,
+          height: 60,
           borderTopWidth: 0,
-          elevation: 0,
+          // elevation: 5,
+          // shadowColor: colors.red,
         },
         tabBarPressColor: 'transparent',
-        tabBarPressOpacity: 1,
+        // tabBarPressOpacity: 1,
         tabBarItemStyle: {
           pressEffect: 'none', // Tắt hiệu ứng nhấp
         },
@@ -106,7 +107,7 @@ function MyTabs() {
         options={{
           headerShown: false,
           // tabBarBadge: 48,
-          tabBarLabel: t('wateringSchedule'),
+          tabBarLabel: t('adjust'),
           tabBarIcon: ({focused}) => getTabBarIcon('Statics', focused, theme),
         }}
       />
@@ -115,6 +116,7 @@ function MyTabs() {
         component={ReportScreen}
         options={{
           headerShown: false,
+
           tabBarLabel: t('statistical'),
           tabBarIcon: ({focused}) => getTabBarIcon('Reports', focused, theme),
         }}
@@ -124,6 +126,7 @@ function MyTabs() {
         component={SettingScreen}
         options={{
           headerShown: false,
+
           tabBarLabel: t('setting'),
           tabBarIcon: ({focused}) => getTabBarIcon('Setting', focused, theme),
         }}
@@ -201,7 +204,7 @@ const Navigator = () => {
                 <StackNav.Screen
                   name="AccountInfo"
                   component={AccountInfoScreen}
-                  options={{headerShown: false, animation: 'fade'}}
+                  options={{headerShown: false, animation: 'slide_from_right'}}
                 />
                 <StackNav.Screen
                   name="ChangePassword"

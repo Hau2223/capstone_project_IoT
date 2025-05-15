@@ -23,7 +23,7 @@ const light = StyleSheet.create({
   },
   textHeader: {
     color: colors.primary,
-    fontSize: 32,
+    fontSize: 22,
     fontWeight: 'bold',
     marginLeft: 20,
   },
@@ -36,7 +36,7 @@ const light = StyleSheet.create({
     paddingHorizontal: 5,
   },
   frameItem: {
-    height: 200,
+    height: 180,
     width: '100%',
     borderRadius: 15,
     position: 'relative',
@@ -61,7 +61,7 @@ const light = StyleSheet.create({
   },
   txtArea: {
     color: colors.white,
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   itemWrapper: {

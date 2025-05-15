@@ -38,19 +38,14 @@ const AlarmScreen = ({route, navigation}) => {
     if (item.id_esp) {
       fetchSchedules();
       const interval = setInterval(() => {
-        fetchSchedules(true); // Pass true to indicate background refresh
+        fetchSchedules(); // Pass true to indicate background refresh
       }, 5000);
       return () => clearInterval(interval);
     }
   }, [item.id_esp]);
 
-  const fetchSchedules = async (isBackgroundRefresh = false) => {
+  const fetchSchedules = async () => {
     try {
-      // Only show loading indicator on initial load
-      if (!isBackgroundRefresh) {
-        setLoading(true);
-      }
-
       setError(null);
 
       // Make sure we have the required parameters
@@ -72,7 +67,7 @@ const AlarmScreen = ({route, navigation}) => {
         const formattedSchedules = response.data.map((schedule, index) => ({
           id: schedule._id || index.toString(),
           numbClock: schedule.startTime,
-          timer: `${schedule.duration} ${t('minute')}`,
+          timer: `${schedule.duration/60} ${t('minute')}`,
           calendar: formatRepeatDays(schedule.repeat),
           isWatering: schedule.status,
           // Add raw data for sorting
@@ -158,9 +153,7 @@ const AlarmScreen = ({route, navigation}) => {
         previousSchedulesRef.current = [];
       }
     } finally {
-      if (!isBackgroundRefresh) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
@@ -308,13 +301,13 @@ const AlarmScreen = ({route, navigation}) => {
     ]);
   };
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <Text>{t('saving')}</Text>
-      </View>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <View style={styles.container}>
+  //       <Text>{t('saving')}</Text>
+  //     </View>
+  //   );
+  // }
 
   if (error) {
     return (
@@ -336,7 +329,7 @@ const AlarmScreen = ({route, navigation}) => {
         isPress={() => navigation.goBack()}
         bgcolor={colors.bg_NaN}
         name={item.tenKhu}
-        color={theme === 'light' ? colors.black : colors.white}
+        color={theme === 'light' ? colors.pr : colors.white}
       />
       <View style={styles.header}>
         <View style={styles.header1}>
@@ -364,7 +357,7 @@ const AlarmScreen = ({route, navigation}) => {
                 />
               </View>
             )}
-            contentContainerStyle={{ paddingBottom: 80 }}
+            
           />
         )}
       </View>

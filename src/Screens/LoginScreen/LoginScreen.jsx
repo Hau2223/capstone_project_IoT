@@ -158,7 +158,7 @@ const LoginScreen = () => {
             <TextInput
               ref={textInputUserRef}
               value={email}
-              selectionColor={colors.loginTxt}
+              selectionColor={colors.primary}
               underlineColorAndroid="transparent"
               onChangeText={text => setEmail(text)}
               onFocus={() => setFocusedFieldEmail('email')}
@@ -185,7 +185,7 @@ const LoginScreen = () => {
             <TextInput
               ref={textInputPassRef}
               value={password}
-              selectionColor={colors.loginTxt}
+              selectionColor={colors.primary}
               underlineColorAndroid="transparent"
               onChangeText={text => setPassword(text)}
               onFocus={() => setFocusedFieldPass('password')}

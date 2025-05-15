@@ -70,21 +70,40 @@ const light = StyleSheet.create({
     backgroundColor: colors.secondary,
   },
   rowItem: {
+    width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   label: {
+    width: '45%',
+    fontSize: 16,
+    color: colors.white,
+    fontWeight: 'bold',
+  },
+  value: {
+    width: '55%',
+    maxWidth: '55%',
+    fontSize: 16,
+    color: colors.white,
+    flexShrink: 1,
+    textAlign: 'right',
+    fontWeight: '400',
+  },
+  labelGarden: {
+    width: '80%',
     fontSize: 16,
     color: colors.white,
     fontWeight: 'bold',
     maxWidth: '60%',
   },
-  value: {
+  valueGarden: {
+    width: '20%',
     fontSize: 16,
     color: colors.white,
     flexShrink: 1,
     textAlign: 'right',
+    fontWeight: '400',
     maxWidth: '60%',
   },
   versionContainer: {
@@ -93,8 +112,11 @@ const light = StyleSheet.create({
     alignItems: 'center',
   },
   versionText: {
+    width: '100%',
+    textAlign: 'center',
     color: colors.black,
-    fontSize: 12,
+    fontSize: 13,
+    fontWeight: '400',
   },
 });
 
@@ -106,8 +128,8 @@ const dark = StyleSheet.create({
   },
   versionText: {
     ...light.versionText,
-    color: colors.white
-  }
+    color: colors.white,
+  },
 });
 
 export const createStyle = mode => {

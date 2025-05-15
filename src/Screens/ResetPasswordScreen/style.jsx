@@ -16,7 +16,7 @@ const light = StyleSheet.create({
   },
   ceFormLogin: {
     width: '80%',
-    borderRadius: 39,
+
     alignItems: 'center',
     alignSelf: 'center',
     gap: 30,
@@ -31,7 +31,7 @@ const light = StyleSheet.create({
     color: colors.white,
   },
   ceSubText: {
-    width: '70%',
+    width: '80%',
     textAlign: 'center',
     fontSize: 18,
     fontWeight: 'bold',
@@ -42,28 +42,37 @@ const light = StyleSheet.create({
     alignItems: 'center',
   },
   ceFormLabel: {
+    width: '80%',
+    textAlign: 'center',
+    fontWeight: '500',
     color: colors.white,
-    fontSize: 16,
+    fontSize: 15,
   },
   ceTextInput: {
     width: '100%',
     fontStyle: 'italic',
-    fontWeight: '500',
-
+    fontWeight: '400',
     textDecorationStyle: 'solid',
     fontSize: 16,
+    color: colors.white,
     paddingHorizontal: 10,
     borderBottomWidth: 2,
     borderBottomColor: colors.white,
   },
   ceButton: {
     width: '100%',
-    padding: 15,
     backgroundColor: colors.loginBtn,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: colors.white,
-    borderRadius: 20,
+    borderRadius: 15,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  touchableArea: {
+    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.bg_NaN,
   },
   ceButtonText: {
     color: colors.white,
@@ -107,6 +116,7 @@ const light = StyleSheet.create({
     gap: 20,
   },
   vrNoticeText: {
+    width: '100%',
     color: colors.white,
     fontSize: 15,
     textAlign: 'center',
@@ -135,7 +145,7 @@ const light = StyleSheet.create({
 
   //NewPassword
   cnpWrapper: {
-    flex: 1
+    flex: 1,
   },
   cnpContainer: {
     flex: 0.85,
@@ -148,7 +158,6 @@ const light = StyleSheet.create({
     color: colors.white,
     fontWeight: 'bold',
     maxWidth: '70%',
-
   },
   cnpForm: {
     width: '80%',
@@ -156,14 +165,14 @@ const light = StyleSheet.create({
     borderRadius: 30,
     alignItems: 'center',
     paddingVertical: 10,
-    gap: 20
+    gap: 20,
   },
   cnpHeading: {
-    fontSize: 26,
+    fontSize: 21,
     color: colors.primary,
     fontWeight: 'bold',
     alignSelf: 'flex-start',
-    paddingHorizontal: 10,
+    paddingHorizontal: 15,
   },
   cnpFormInner: {
     width: '100%',
@@ -187,12 +196,14 @@ const light = StyleSheet.create({
   cnpTextInput: {
     flex: 1,
     fontSize: 16,
+    fontWeight: '400',
     color: colors.black,
   },
   cnpEyeIcon: {
     alignItems: 'center',
   },
   cnpErrorText: {
+    width: '100%',
     color: 'red',
     fontSize: 13,
     paddingHorizontal: 10,
@@ -208,12 +219,14 @@ const light = StyleSheet.create({
   cnpButtonText: {
     color: colors.white,
     fontSize: 17,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });
 const dark = StyleSheet.create({
   ...light,
   container: {
-    ...light.container
+    ...light.container,
   },
 });
 

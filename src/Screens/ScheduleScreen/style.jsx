@@ -47,13 +47,13 @@ const light = StyleSheet.create({
     flex: 1,
   },
   itemLabel: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '600',
     color: colors.white,
     marginBottom: 8,
   },
   itemCount: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.white,
   },

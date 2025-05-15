@@ -38,8 +38,8 @@ const light = StyleSheet.create({
     alignItems: 'center',
   },
   image: {
-    width: 50,
-    height: 50,
+    width: 60,
+    height: 60,
     borderRadius: 5,
     marginRight: 10,
   },
@@ -49,7 +49,7 @@ const light = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: colors.black,
+    color: colors.primary,
   },
   idEsp: {
     fontSize: 14,
@@ -58,9 +58,11 @@ const light = StyleSheet.create({
   sliderContainer: {
     marginTop: 15,
     alignItems: 'center',
-
   },
   sliderLabel: {
+    width: '100%',
+    textAlign: 'center',
+    fontWeight: '400',
     fontSize: 14,
     color: colors.black,
     marginBottom: 5,

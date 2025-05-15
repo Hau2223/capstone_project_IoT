@@ -19,8 +19,8 @@ const light = StyleSheet.create({
     justifyContent: 'center',
   },
   textHeader: {
-    color: colors.primary,
-    fontSize: 24,
+    color: colors.black,
+    fontSize: 20,
     fontWeight: 'bold',
   },
   itemAlarm: {
@@ -50,15 +50,17 @@ const light = StyleSheet.create({
   textTimer: {
     height: '50%',
     width: '100%',
+
   },
   txtNumClock: {
-    fontSize: 30,
+    fontSize: 24,
     fontWeight: 'bold',
     justifyContent: 'center',
     color: colors.black,
   },
   txtTimer: {
-    fontSize: 16,
+
+    fontSize: 14,
     fontWeight: '500',
     justifyContent: 'center',
     color: colors.black,
@@ -123,6 +125,10 @@ const dark = StyleSheet.create({
   container: {
     ...light.container,
     backgroundColor: colors.bg_dark,
+  },
+  textHeader: {
+    ...light.textHeader,
+    color: colors.white,
   },
   txtNumClock: {
     ...light.txtNumClock,

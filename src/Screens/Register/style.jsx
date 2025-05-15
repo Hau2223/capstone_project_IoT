@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import {StyleSheet} from 'react-native';
 import colors from '../../../assets/common/colorCss';
 
 const light = StyleSheet.create({
@@ -76,6 +76,7 @@ const light = StyleSheet.create({
   rqTextInput: {
     color: colors.black,
     maxWidth: '90%',
+    fontWeight: '500',
   },
   rqInputPasswordWrapper: {
     flexDirection: 'row',
@@ -96,7 +97,7 @@ const light = StyleSheet.create({
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 5,
+    gap: 7,
   },
   rqButton: {
     width: '80%',
@@ -111,21 +112,25 @@ const light = StyleSheet.create({
     width: '100%',
     height: 36,
     justifyContent: 'center',
-    alignItems: 'center',
     borderRadius: 30,
   },
   rqButtonText: {
+    width: '100%',
+    textAlign: 'center',
     color: colors.loginform,
     fontSize: 17,
   },
   rqTextLink: {
+    width: '80%',
+    textAlign: 'center',
+    fontWeight: '500',
     fontSize: 13,
     color: colors.black,
   },
   rqTextLogin: {
     fontWeight: 'bold',
     color: colors.primary,
-    fontSize: 14,
+    fontSize: 15,
   },
   // ComfirmEmail
   ceContainer: {
@@ -180,7 +185,6 @@ const light = StyleSheet.create({
     backgroundColor: colors.loginBtn,
     borderRadius: 20,
     alignItems: 'center',
-
   },
   cetouchableArea: {
     width: '100%',
@@ -189,7 +193,7 @@ const light = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 30,
   },
-  
+
   ceButtonText: {
     color: colors.white,
     fontSize: 18,
@@ -228,6 +232,7 @@ const light = StyleSheet.create({
     gap: 20,
   },
   vrNoticeText: {
+    width: '100%',
     color: colors.white,
     fontSize: 15,
     textAlign: 'center',

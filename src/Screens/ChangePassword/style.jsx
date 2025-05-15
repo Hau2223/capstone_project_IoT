@@ -11,6 +11,8 @@ const light = StyleSheet.create({
     width: '90%',
     marginVertical: 10,
     backgroundColor: colors.white,
+    elevation: 5,
+    shadowColor: colors.black,
     padding: 10,
     borderRadius: 15,
     gap: 15,
@@ -20,6 +22,8 @@ const light = StyleSheet.create({
   },
   input: {
     height: 40,
+    fontSize: 16,
+    fontWeight: '200',
   },
   label: {
     fontSize: 16,
@@ -53,6 +57,7 @@ const dark = StyleSheet.create({
   },
   content: {
     ...light.content,
+    shadowColor: colors.white,
     backgroundColor: colors.bg_dark,
   },
   label: {

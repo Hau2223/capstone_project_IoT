@@ -78,7 +78,7 @@ const DevicesListScreen = ({navigation, route}) => {
                   control.status ? t('status_on') : t('status_off')
                 }`;
               } else {
-                statusText = `${t('status_label')} - - -`;
+                statusText = `${t('status_label')} None`;
               }
             }
 
@@ -144,7 +144,7 @@ const DevicesListScreen = ({navigation, route}) => {
           )}
           nestedScrollEnabled={true}
           contentContainerStyle={styles.listContainer}
-          ListFooterComponent={<View style={{height: 20}} />}
+          ListFooterComponent={<View style={{height: 60}} />}
         />
       </View>
     </View>

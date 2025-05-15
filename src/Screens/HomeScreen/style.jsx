@@ -18,7 +18,7 @@ const light = StyleSheet.create({
   },
   textHeader: {
     color: colors.primary,
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: 'bold',
   },
   header2: {
@@ -84,8 +84,12 @@ const light = StyleSheet.create({
   floatingButtonWrapper: {
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 30 : 10,
-    right: 10,
+    right: 15,
     zIndex: 1000,
+  },
+  floatingButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 30,
   },
   modalOverlay: {
     flex: 1,
@@ -105,7 +109,7 @@ const light = StyleSheet.create({
     gap: 15,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: colors.black,
   },
@@ -116,8 +120,9 @@ const light = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: 16,
+    fontSize: 15,
     color: colors.black,
+    fontWeight: '400',
   },
   modalButtonGroup: {
     flexDirection: 'row',
@@ -153,6 +158,7 @@ const light = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingBottom: 15,
+
     elevation: 5,
     shadowColor: colors.black,
   },
@@ -167,7 +173,7 @@ const light = StyleSheet.create({
   },
   headerCompo: {
     color: colors.primary,
-    fontSize: 25,
+    fontSize: 20,
     fontWeight: '800',
     textAlign: 'justify',
   },
@@ -197,7 +203,7 @@ const dark = StyleSheet.create({
   },
   container: {
     ...light.container,
-    backgroundColor: colors.bg_dark, 
+    backgroundColor: colors.bg_dark,
   },
   modalContainer: {
     ...light.modalContainer,
@@ -216,6 +222,7 @@ const dark = StyleSheet.create({
     ...light.item,
     backgroundColor: colors.bg_dark,
     borderColor: colors.white,
+    borderWidth: 2,
   },
   imgStyle: {
     ...light.imgStyle,
